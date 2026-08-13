@@ -137,325 +137,304 @@ export const NESTED_NAV = [
   { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN"] },
 
   {
-    id: "group-people",
-    label: "People",
+    id: "folder-members",
+    module: "MEMBERS",
+    label: "Members",
     icon: Users,
     children: [
-      {
-        id: "folder-members",
-        module: "MEMBERS",
-        label: "Members",
-        icon: Users,
-        children: [
-          { id: "m-jain", label: "Jain Members", route: "/admin/members" },
-          { id: "m-non-jain", label: "Non-Jain Members", route: "/admin/non-jain-members" },
-          { id: "m-family", label: "Family Management", route: "/admin/family" },
-          { id: "m-import", label: "Import Members", route: "/admin/members?import=true" },
-          { id: "m-export", label: "Export Members", route: "/admin/members?export=true" }
-        ]
-      },
-      {
-        id: "folder-volunteers",
-        module: "VOLUNTEERS",
-        label: "Volunteers",
-        icon: HandshakeIcon,
-        children: [
-          { id: "v-mgt", label: "Volunteer Management", route: "/admin/volunteers" },
-          { id: "v-reg", label: "Volunteer Registration", route: "/admin/coming-soon?module=Volunteer Registration", featureFlag: true },
-          { id: "v-assign", label: "Volunteer Assignment", route: "/admin/coming-soon?module=Volunteer Assignment", featureFlag: true },
-          { id: "v-att", label: "Volunteer Attendance", route: "/admin/coming-soon?module=Volunteer Attendance", featureFlag: true },
-          { id: "v-rep", label: "Volunteer Reports", route: "/admin/reports?tab=volunteers" }
-        ]
-      },
-      {
-        id: "folder-ms",
-        module: "MONKS",
-        label: "MS Management",
-        icon: HandHeart,
-        children: [
-          { id: "ms-profiles", label: "MS Profiles", route: "/admin/monks" },
-          { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: true },
-          { id: "ms-groups", label: "MS Groups", route: "/admin/coming-soon?module=MS Groups", featureFlag: true },
-          { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: true },
-          { id: "ms-route", label: "Current Route", route: "/admin/routes" },
-          { id: "ms-planning", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: true },
-          { id: "ms-journey", label: "Journey History", route: "/admin/journey-logs" },
-          { id: "ms-chaturmas", label: "Chaturmas", route: "/admin/chaturmas" },
-          { id: "ms-tapasya", label: "Tapasya", route: "/admin/coming-soon?module=Tapasya", featureFlag: true },
-          { id: "ms-timeline", label: "Timeline", route: "/admin/coming-soon?module=Timeline", featureFlag: true },
-          { id: "ms-followers", label: "Followers", route: "/admin/coming-soon?module=Followers", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-staff",
-        module: "STAFF",
-        label: "Staff",
-        icon: Briefcase,
-        children: [
-          { id: "st-mgt", label: "Staff Management", route: "/admin/staff" },
-          { id: "st-reg", label: "Staff Registration", route: "/admin/staff?action=register" },
-          { id: "st-qr", label: "Staff QR Cards", route: "/admin/coming-soon?module=Staff QR Cards", featureFlag: true },
-          { id: "st-att", label: "Attendance", route: "/admin/staff?tab=attendance" },
-          { id: "st-leave", label: "Leave Management", route: "/admin/staff?tab=leaves" },
-          { id: "st-docs", label: "Documents", route: "/admin/staff?tab=documents" },
-          { id: "st-hours", label: "Working Hours", route: "/admin/staff?tab=hours" }
-        ]
-      },
-      {
-        id: "folder-committee",
-        module: "STAFF",
-        label: "Committee",
-        icon: UsersRound,
-        featureFlag: true,
-        children: [
-          { id: "com-members", label: "Committee Members", route: "/admin/coming-soon?module=Committee Members" },
-          { id: "com-desig", label: "Designations", route: "/admin/coming-soon?module=Committee Designations" },
-          { id: "com-dir", label: "Contact Directory", route: "/admin/coming-soon?module=Committee Directory" }
-        ]
-      }
+      { id: "m-jain", label: "Jain Members", route: "/admin/members" },
+      { id: "m-non-jain", label: "Non-Jain Members", route: "/admin/non-jain-members" },
+      { id: "m-family", label: "Family Management", route: "/admin/family" },
+      { id: "m-import", label: "Import Members", route: "/admin/members?import=true" },
+      { id: "m-export", label: "Export Members", route: "/admin/members?export=true" }
+    ]
+  },
+  {
+    id: "folder-ms",
+    module: "MONKS",
+    label: "MS Management",
+    icon: HandHeart,
+    children: [
+      { id: "ms-profiles", label: "MS Profiles", route: "/admin/monks" },
+      { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: true },
+      { id: "ms-groups", label: "MS Groups", route: "/admin/coming-soon?module=MS Groups", featureFlag: true },
+      { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: true },
+      { id: "ms-route", label: "Current Route", route: "/admin/routes" },
+      { id: "ms-planning", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: true },
+      { id: "ms-journey", label: "Journey History", route: "/admin/journey-logs" },
+      { id: "ms-chaturmas", label: "Chaturmas", route: "/admin/chaturmas" },
+      { id: "ms-tapasya", label: "Tapasya", route: "/admin/coming-soon?module=Tapasya", featureFlag: true },
+      { id: "ms-timeline", label: "Timeline", route: "/admin/coming-soon?module=Timeline", featureFlag: true },
+      { id: "ms-followers", label: "Followers", route: "/admin/coming-soon?module=Followers", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-staff",
+    module: "STAFF",
+    label: "Staff",
+    icon: Briefcase,
+    children: [
+      { id: "st-mgt", label: "Staff Management", route: "/admin/staff" },
+      { id: "st-reg", label: "Staff Registration", route: "/admin/staff?action=register" },
+      { id: "st-qr", label: "Staff QR Cards", route: "/admin/coming-soon?module=Staff QR Cards", featureFlag: true },
+      { id: "st-att", label: "Attendance", route: "/admin/staff?tab=attendance" },
+      { id: "st-leave", label: "Leave Management", route: "/admin/staff?tab=leaves" },
+      { id: "st-docs", label: "Documents", route: "/admin/staff?tab=documents" },
+      { id: "st-hours", label: "Working Hours", route: "/admin/staff?tab=hours" }
+    ]
+  },
+  {
+    id: "folder-committee",
+    module: "STAFF",
+    label: "Committee",
+    icon: UsersRound,
+    featureFlag: true,
+    children: [
+      { id: "com-members", label: "Committee Members", route: "/admin/coming-soon?module=Committee Members" },
+      { id: "com-desig", label: "Designations", route: "/admin/coming-soon?module=Committee Designations" },
+      { id: "com-dir", label: "Contact Directory", route: "/admin/coming-soon?module=Committee Directory" }
     ]
   },
 
   {
-    id: "group-orgs",
-    label: "Organizations",
+    id: "folder-temple",
+    module: "TEMPLES",
+    label: "Temple",
     icon: Landmark,
     children: [
-      {
-        id: "folder-temple",
-        module: "TEMPLES",
-        label: "Temple",
-        icon: Landmark,
-        children: [
-          { id: "t-mgt", label: "Temple Management", route: "/admin/temples" },
-          { id: "t-info", label: "Temple Information", route: "/admin/coming-soon?module=Temple Information", featureFlag: true },
-          { id: "t-fac", label: "Facilities", route: "/admin/coming-soon?module=Temple Facilities", featureFlag: true },
-          { id: "t-gal", label: "Gallery", route: "/admin/gallery" },
-          { id: "t-com", label: "Committee", route: "/admin/coming-soon?module=Temple Committee", featureFlag: true },
-          { id: "t-vol", label: "Volunteers", route: "/admin/volunteers" },
-          { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: true },
-          { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: true },
-          { id: "t-dhaja", label: "Dhaja", route: "/admin/coming-soon?module=Temple Dhaja", featureFlag: true },
-          { id: "t-chat", label: "Chaturmas", route: "/admin/chaturmas" },
-          { id: "t-social", label: "Social Links", route: "/admin/coming-soon?module=Temple Social Links", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-jc",
-        module: "JAIN_CENTERS",
-        label: "Jain Centre",
-        icon: Building2,
-        children: [
-          { id: "jc-mgt", label: "Jain Centre Management", route: "/admin/jain-centers" },
-          { id: "jc-info", label: "Centre Information", route: "/admin/coming-soon?module=Centre Information", featureFlag: true },
-          { id: "jc-fac", label: "Facilities", route: "/admin/coming-soon?module=Jain Centre Facilities", featureFlag: true },
-          { id: "jc-gal", label: "Gallery", route: "/admin/gallery" },
-          { id: "jc-com", label: "Committee", route: "/admin/coming-soon?module=Jain Centre Committee", featureFlag: true },
-          { id: "jc-vol", label: "Volunteers", route: "/admin/volunteers" },
-          { id: "jc-not", label: "Notices", route: "/admin/coming-soon?module=Jain Centre Notices", featureFlag: true },
-          { id: "jc-rev", label: "Reviews", route: "/admin/coming-soon?module=Jain Centre Reviews", featureFlag: true },
-          { id: "jc-social", label: "Social Links", route: "/admin/coming-soon?module=Jain Centre Social Links", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-dharamshala",
-        module: "DHARAMSHALAS",
-        label: "Dharamshala",
-        icon: Hotel,
-        children: [
-          { id: "d-mgt", label: "Dharamshala Management", route: "/admin/dharamshalas" },
-          { id: "d-build", label: "Buildings", route: "/admin/coming-soon?module=Buildings", featureFlag: true },
-          { id: "d-floor", label: "Floors", route: "/admin/coming-soon?module=Floors", featureFlag: true },
-          { id: "d-room", label: "Rooms", route: "/admin/coming-soon?module=Dharamshala Rooms", featureFlag: true },
-          { id: "d-cat", label: "Room Categories", route: "/admin/coming-soon?module=Room Categories", featureFlag: true },
-          { id: "d-am", label: "Amenities", route: "/admin/coming-soon?module=Amenities", featureFlag: true },
-          { id: "d-pr", label: "Pricing", route: "/admin/coming-soon?module=Room Pricing", featureFlag: true },
-          { id: "d-fac", label: "Facilities", route: "/admin/coming-soon?module=Dharamshala Facilities", featureFlag: true },
-          { id: "d-gal", label: "Gallery", route: "/admin/gallery" },
-          { id: "d-rule", label: "Rules", route: "/admin/coming-soon?module=Dharamshala Rules", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-bhojanshala",
-        module: "DHARAMSHALAS",
-        label: "Bhojanshala",
-        icon: Sigma,
-        children: [
-          { id: "bh-mgt", label: "Bhojanshala Management", route: "/admin/coming-soon?module=Bhojanshala Management", featureFlag: true },
-          { id: "bh-time", label: "Timings", route: "/admin/coming-soon?module=Bhojanshala Timings", featureFlag: true },
-          { id: "bh-menu", label: "Menu", route: "/admin/coming-soon?module=Bhojanshala Menu", featureFlag: true },
-          { id: "bh-pass", label: "Pass Management", route: "/admin/coming-soon?module=Bhojanshala Pass Management", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-st",
-        module: "STHANAKS",
-        label: "Sthanaks",
-        icon: HomeIcon,
-        children: [
-          { id: "st-stanak-mgt", label: "Sthanak Management", route: "/admin/stanaks" }
-        ]
-      },
-      {
-        id: "folder-pages",
-        module: "COMMUNITY_PAGES",
-        label: "Community Pages",
-        icon: Globe,
-        children: [
-          { id: "cp-my", label: "My Page", route: "/admin/community-pages" },
-          { id: "cp-info", label: "Page Information", route: "/admin/coming-soon?module=Community Page Information", featureFlag: true },
-          { id: "cp-gal", label: "Gallery", route: "/admin/gallery" },
-          { id: "cp-fol", label: "Followers", route: "/admin/coming-soon?module=Community Page Followers", featureFlag: true },
-          { id: "cp-rev", label: "Reviews", route: "/admin/coming-soon?module=Community Page Reviews", featureFlag: true },
-          { id: "cp-social", label: "Social Links", route: "/admin/coming-soon?module=Community Page Social Links", featureFlag: true },
-          { id: "cp-seo", label: "SEO & Sharing", route: "/admin/coming-soon?module=Community Page SEO", featureFlag: true }
-        ]
-      }
+      { id: "t-mgt", label: "Temple Management", route: "/admin/temples" },
+      { id: "t-info", label: "Temple Information", route: "/admin/coming-soon?module=Temple Information", featureFlag: true },
+      { id: "t-fac", label: "Facilities", route: "/admin/coming-soon?module=Temple Facilities", featureFlag: true },
+      { id: "t-gal", label: "Gallery", route: "/admin/gallery" },
+      { id: "t-com", label: "Committee", route: "/admin/coming-soon?module=Temple Committee", featureFlag: true },
+      { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: true },
+      { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: true },
+      { id: "t-dhaja", label: "Dhaja", route: "/admin/coming-soon?module=Temple Dhaja", featureFlag: true },
+      { id: "t-chat", label: "Chaturmas", route: "/admin/chaturmas" },
+      { id: "t-social", label: "Social Links", route: "/admin/coming-soon?module=Temple Social Links", featureFlag: true }
     ]
   },
-
   {
-    id: "group-community",
-    label: "Community",
+    id: "folder-jc",
+    module: "JAIN_CENTERS",
+    label: "Jain Centre",
+    icon: Building2,
+    children: [
+      { id: "jc-mgt", label: "Jain Centre Management", route: "/admin/jain-centers" },
+      { id: "jc-info", label: "Centre Information", route: "/admin/coming-soon?module=Centre Information", featureFlag: true },
+      { id: "jc-fac", label: "Facilities", route: "/admin/coming-soon?module=Jain Centre Facilities", featureFlag: true },
+      { id: "jc-gal", label: "Gallery", route: "/admin/gallery" },
+      { id: "jc-com", label: "Committee", route: "/admin/coming-soon?module=Jain Centre Committee", featureFlag: true },
+      { id: "jc-not", label: "Notices", route: "/admin/coming-soon?module=Jain Centre Notices", featureFlag: true },
+      { id: "jc-rev", label: "Reviews", route: "/admin/coming-soon?module=Jain Centre Reviews", featureFlag: true },
+      { id: "jc-social", label: "Social Links", route: "/admin/coming-soon?module=Jain Centre Social Links", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-dharamshala-sa",
+    module: "DHARAMSHALAS",
+    label: "Dharamshala",
+    icon: Hotel,
+    roles: ["SUPER_ADMIN"],
+    children: [
+      { id: "d-mgt", label: "Dharamshala Management", route: "/admin/dharamshalas" },
+      { id: "d-build", label: "Buildings", route: "/admin/dharamshala/buildings" },
+      { id: "d-floor", label: "Floors", route: "/admin/dharamshala/floors" },
+      { id: "d-room", label: "Rooms", route: "/admin/dharamshala/rooms" },
+      { id: "d-cat", label: "Room Categories", route: "/admin/dharamshala/categories" },
+      { id: "d-am", label: "Amenities", route: "/admin/dharamshala/amenities" },
+      { id: "d-pr", label: "Pricing", route: "/admin/dharamshala/pricing" },
+      { id: "d-fac", label: "Facilities", route: "/admin/dharamshala/facilities" },
+      { id: "d-gal", label: "Gallery", route: "/admin/dharamshala/gallery" },
+      { id: "d-rule", label: "Rules", route: "/admin/dharamshala/rules" }
+    ]
+  },
+  {
+    id: "folder-dharamshala-admin",
+    module: "DHARAMSHALAS",
+    label: "Dharamshala",
+    icon: Hotel,
+    roles: ["DHARAMSHALA_ADMIN", "TEMPLE_ADMIN", "JAIN_CENTER_ADMIN", "JC_ADMIN", "MONK_ADMIN", "SUB_ADMIN", "STAFF", "ORG_ADMIN"],
+    children: [
+      { id: "d-list-admin", module: "DHARAMSHALAS", label: "Dharamshalas", route: "/admin/dharamshalas" },
+      { id: "d-mgt-admin", module: "DHARAMSHALAS", label: "Dharamshala Management", route: "/admin/dharamshala/management" },
+      { id: "d-book-admin", module: "DHARAMSHALAS", label: "Bookings", route: "/admin/dharamshala/bookings" }
+    ]
+  },
+  {
+    id: "folder-bhojanshala",
+    module: "DHARAMSHALAS",
+    label: "Bhojanshala",
+    icon: Sigma,
+    children: [
+      { id: "bh-mgt", label: "Bhojanshala Management", route: "/admin/bhojanshala-management" }
+    ]
+  },
+  {
+    id: "folder-st",
+    module: "STHANAKS",
+    label: "Sthanaks",
+    icon: HomeIcon,
+    children: [
+      { id: "st-stanak-mgt", label: "Sthanak Management", route: "/admin/stanaks" }
+    ]
+  },
+  {
+    id: "folder-pages",
+    module: "COMMUNITY_PAGES",
+    label: "Community Pages",
+    icon: Globe,
+    children: [
+      { id: "cp-my", label: "My Page", route: "/admin/community-pages" },
+      { id: "cp-info", label: "Page Information", route: "/admin/coming-soon?module=Community Page Information", featureFlag: true },
+      { id: "cp-gal", label: "Gallery", route: "/admin/gallery" },
+      { id: "cp-fol", label: "Followers", route: "/admin/coming-soon?module=Community Page Followers", featureFlag: true },
+      { id: "cp-rev", label: "Reviews", route: "/admin/coming-soon?module=Community Page Reviews", featureFlag: true },
+      { id: "cp-social", label: "Social Links", route: "/admin/coming-soon?module=Community Page Social Links", featureFlag: true },
+      { id: "cp-seo", label: "SEO & Sharing", route: "/admin/coming-soon?module=Community Page SEO", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-feed",
+    module: "FEED",
+    label: "Feed",
     icon: Newspaper,
     children: [
-      {
-        id: "folder-feed",
-        module: "FEED",
-        label: "Feed",
-        icon: Newspaper,
-        children: [
-          { id: "fe-mgt", label: "Feed Management", route: "/admin/feed" },
-          { id: "fe-create", label: "Create Post", route: "/admin/create-post" },
-          { id: "fe-sched", label: "Scheduled Posts", route: "/admin/scheduled-posts" },
-          { id: "fe-feat", label: "Featured Posts", route: "/admin/featured-posts" },
-          { id: "fe-rep", label: "Reported Posts", route: "/admin/reported-posts" },
-          { id: "fe-an", label: "Feed Analytics", route: "/admin/feed-analytics" }
-        ]
-      },
-      {
-        id: "folder-events",
-        module: "EVENTS",
-        label: "Events",
-        icon: PartyPopper,
-        children: [
-          { id: "ev-cat", label: "Event Categories", route: "/admin/coming-soon?module=Event Categories", featureFlag: true },
-          { id: "ev-mgt", label: "Event Management", route: "/admin/events" },
-          { id: "ev-sched", label: "Event Schedule", route: "/admin/coming-soon?module=Event Schedule", featureFlag: true },
-          { id: "ev-reg", label: "Registrations", route: "/admin/coming-soon?module=Event Registrations", featureFlag: true },
-          { id: "ev-att", label: "Attendees", route: "/admin/coming-soon?module=Event Attendees", featureFlag: true },
-          { id: "ev-vol", label: "Volunteers", route: "/admin/volunteers" },
-          { id: "ev-seat", label: "Seating Layout", route: "/admin/seating-layout" },
-          { id: "ev-tcat", label: "Ticket Categories", route: "/admin/ticket-categories" },
-          { id: "ev-pr", label: "Pricing", route: "/admin/coming-soon?module=Event Ticket Pricing", featureFlag: true },
-          { id: "ev-coup", label: "Coupons", route: "/admin/coming-soon?module=Event Coupons", featureFlag: true },
-          { id: "ev-qr", label: "QR Check-in", route: "/admin/coming-soon?module=Event QR Check-in", featureFlag: true },
-          { id: "ev-qrep", label: "Check-in Reports", route: "/admin/coming-soon?module=Check-in Reports", featureFlag: true },
-          { id: "ev-an", label: "Event Analytics", route: "/admin/event-analytics" }
-        ]
-      },
-      {
-        id: "folder-news",
-        module: "NEWS",
-        label: "News",
-        icon: ScrollText,
-        children: [
-          { id: "ne-mgt", label: "News Management", route: "/admin/news" },
-          { id: "ne-cat", label: "Categories", route: "/admin/coming-soon?module=News Categories", featureFlag: true },
-          { id: "ne-feat", label: "Featured News", route: "/admin/coming-soon?module=Featured News", featureFlag: true },
-          { id: "ne-sched", label: "Scheduled News", route: "/admin/coming-soon?module=Scheduled News", featureFlag: true },
-          { id: "ne-arch", label: "Archived News", route: "/admin/coming-soon?module=Archived News", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-ann",
-        module: "ANNOUNCEMENTS",
-        label: "Announcements",
-        icon: Megaphone,
-        children: [
-          { id: "an-mgt", label: "Announcement Management", route: "/admin/announcements" },
-          { id: "an-pri", label: "Priority Announcements", route: "/admin/coming-soon?module=Priority Announcements", featureFlag: true },
-          { id: "an-sched", label: "Scheduled Announcements", route: "/admin/coming-soon?module=Scheduled Announcements", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-polls",
-        module: "POLLS",
-        label: "Polls",
-        icon: BarChart3,
-        children: [
-          { id: "po-mgt", label: "Poll Management", route: "/admin/polls" },
-          { id: "po-resp", label: "Responses", route: "/admin/coming-soon?module=Poll Responses", featureFlag: true },
-          { id: "po-res", label: "Poll Results", route: "/admin/coming-soon?module=Poll Results", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-tours",
-        module: "TOURS",
-        label: "Tours",
-        icon: Route,
-        children: [
-          { id: "to-mgt", label: "Tour Management", route: "/admin/tours" },
-          { id: "to-sched", label: "Tour Schedule", route: "/admin/coming-soon?module=Tour Schedule", featureFlag: true },
-          { id: "to-reg", label: "Registrations", route: "/admin/coming-soon?module=Tour Registrations", featureFlag: true },
-          { id: "to-part", label: "Participants", route: "/admin/coming-soon?module=Tour Participants", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-99",
-        module: "TOURS",
-        label: "99 Management",
-        icon: GitBranch,
-        featureFlag: true,
-        children: [
-          { id: "99-cat", label: "99 Categories", route: "/admin/coming-soon?module=99 Categories" },
-          { id: "99-mgt", label: "99 Management", route: "/admin/coming-soon?module=99 Management" },
-          { id: "99-part", label: "Participants", route: "/admin/coming-soon?module=99 Participants" },
-          { id: "99-rep", label: "Completion Reports", route: "/admin/coming-soon?module=99 Completion Reports" }
-        ]
-      },
-      {
-        id: "folder-counter",
-        module: "COUNTERS",
-        label: "Spiritual Counter",
-        icon: Sigma,
-        children: [
-          { id: "sc-cat", label: "Counter Categories", route: "/admin/counters" },
-          { id: "sc-stats", label: "Member Statistics", route: "/admin/coming-soon?module=Member Counter Stats", featureFlag: true },
-          { id: "sc-global", label: "Global Statistics", route: "/admin/coming-soon?module=Global Counter Stats", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-tcalendar",
-        module: "CALENDAR",
-        label: "Tithi Calendar",
-        icon: Calendar,
-        children: [
-          { id: "tc-mgt", label: "Calendar Management", route: "/admin/calendar" },
-          { id: "tc-types", label: "Calendar Types", route: "/admin/coming-soon?module=Calendar Types", featureFlag: true },
-          { id: "tc-tithi", label: "Tithi Management", route: "/admin/coming-soon?module=Tithi Management", featureFlag: true }
-        ]
-      },
-      {
-        id: "folder-notif",
-        module: "NOTIFICATIONS",
-        label: "Notifications",
-        icon: Bell,
-        children: [
-          { id: "nt-push", label: "Push Notifications", route: "/admin/coming-soon?module=Push Notifications", featureFlag: true },
-          { id: "nt-wa", label: "WhatsApp", route: "/admin/coming-soon?module=WhatsApp Notifications", featureFlag: true },
-          { id: "nt-sms", label: "SMS", route: "/admin/coming-soon?module=SMS Notifications", featureFlag: true },
-          { id: "nt-email", label: "Email", route: "/admin/coming-soon?module=Email Notifications", featureFlag: true },
-          { id: "nt-hist", label: "Notification History", route: "/admin/notifications" }
-        ]
-      },
-      {
-        id: "folder-varshitap",
-        module: "TOURS", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: true
-      }
+      { id: "fe-mgt", label: "Feed Management", route: "/admin/feed" },
+      { id: "fe-create", label: "Create Post", route: "/admin/create-post" },
+      { id: "fe-sched", label: "Scheduled Posts", route: "/admin/scheduled-posts" },
+      { id: "fe-feat", label: "Featured Posts", route: "/admin/featured-posts" },
+      { id: "fe-rep", label: "Reported Posts", route: "/admin/reported-posts" },
+      { id: "fe-an", label: "Feed Analytics", route: "/admin/feed-analytics" }
     ]
   },
-
+  {
+    id: "folder-events",
+    module: "EVENTS",
+    label: "Events",
+    icon: PartyPopper,
+    children: [
+      { id: "ev-cat", label: "Event Categories", route: "/admin/coming-soon?module=Event Categories", featureFlag: true },
+      { id: "ev-mgt", label: "Event Management", route: "/admin/events" },
+      { id: "ev-sched", label: "Event Schedule", route: "/admin/coming-soon?module=Event Schedule", featureFlag: true },
+      { id: "ev-reg", label: "Registrations", route: "/admin/coming-soon?module=Event Registrations", featureFlag: true },
+      { id: "ev-att", label: "Attendees", route: "/admin/coming-soon?module=Event Attendees", featureFlag: true },
+      { id: "ev-seat", label: "Seating Layout", route: "/admin/seating-layout" },
+      { id: "ev-tcat", label: "Ticket Categories", route: "/admin/ticket-categories" },
+      { id: "ev-pr", label: "Pricing", route: "/admin/coming-soon?module=Event Ticket Pricing", featureFlag: true },
+      { id: "ev-coup", label: "Coupons", route: "/admin/coming-soon?module=Event Coupons", featureFlag: true },
+      { id: "ev-qr", label: "QR Check-in", route: "/admin/coming-soon?module=Event QR Check-in", featureFlag: true },
+      { id: "ev-qrep", label: "Check-in Reports", route: "/admin/coming-soon?module=Check-in Reports", featureFlag: true },
+      { id: "ev-an", label: "Event Analytics", route: "/admin/event-analytics" }
+    ]
+  },
+  {
+    id: "folder-volunteers",
+    label: "Volunteers",
+    icon: HandshakeIcon,
+    children: [
+      { id: "vol-mgt", label: "Volunteer Management", route: "/admin/volunteers" }
+    ]
+  },
+  {
+    id: "folder-news",
+    module: "NEWS",
+    label: "News",
+    icon: ScrollText,
+    children: [
+      { id: "ne-mgt", label: "News Management", route: "/admin/news" },
+      { id: "ne-cat", label: "Categories", route: "/admin/coming-soon?module=News Categories", featureFlag: true },
+      { id: "ne-feat", label: "Featured News", route: "/admin/coming-soon?module=Featured News", featureFlag: true },
+      { id: "ne-sched", label: "Scheduled News", route: "/admin/coming-soon?module=Scheduled News", featureFlag: true },
+      { id: "ne-arch", label: "Archived News", route: "/admin/coming-soon?module=Archived News", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-ann",
+    module: "ANNOUNCEMENTS",
+    label: "Announcements",
+    icon: Megaphone,
+    children: [
+      { id: "an-mgt", label: "Announcement Management", route: "/admin/announcements" },
+      { id: "an-pri", label: "Priority Announcements", route: "/admin/coming-soon?module=Priority Announcements", featureFlag: true },
+      { id: "an-sched", label: "Scheduled Announcements", route: "/admin/coming-soon?module=Scheduled Announcements", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-polls",
+    module: "POLLS",
+    label: "Polls",
+    icon: BarChart3,
+    children: [
+      { id: "po-mgt", label: "Poll Management", route: "/admin/polls" },
+      { id: "po-resp", label: "Responses", route: "/admin/coming-soon?module=Poll Responses", featureFlag: true },
+      { id: "po-res", label: "Poll Results", route: "/admin/coming-soon?module=Poll Results", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-tours",
+    module: "TOURS",
+    label: "Tours",
+    icon: Route,
+    children: [
+      { id: "to-mgt", label: "Tour Management", route: "/admin/tours" },
+      { id: "to-sched", label: "Tour Schedule", route: "/admin/coming-soon?module=Tour Schedule", featureFlag: true },
+      { id: "to-reg", label: "Registrations", route: "/admin/coming-soon?module=Tour Registrations", featureFlag: true },
+      { id: "to-part", label: "Participants", route: "/admin/coming-soon?module=Tour Participants", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-99",
+    module: "TOURS",
+    label: "99 Management",
+    icon: GitBranch,
+    featureFlag: true,
+    children: [
+      { id: "99-cat", label: "99 Categories", route: "/admin/coming-soon?module=99 Categories" },
+      { id: "99-mgt", label: "99 Management", route: "/admin/coming-soon?module=99 Management" },
+      { id: "99-part", label: "Participants", route: "/admin/coming-soon?module=99 Participants" },
+      { id: "99-rep", label: "Completion Reports", route: "/admin/coming-soon?module=99 Completion Reports" }
+    ]
+  },
+  {
+    id: "folder-counter",
+    module: "COUNTERS",
+    label: "Spiritual Counter",
+    icon: Sigma,
+    children: [
+      { id: "sc-cat", label: "Counter Categories", route: "/admin/counters" },
+      { id: "sc-stats", label: "Member Statistics", route: "/admin/coming-soon?module=Member Counter Stats", featureFlag: true },
+      { id: "sc-global", label: "Global Statistics", route: "/admin/coming-soon?module=Global Counter Stats", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-tcalendar",
+    module: "CALENDAR",
+    label: "Tithi Calendar",
+    icon: Calendar,
+    children: [
+      { id: "tc-mgt", label: "Calendar Management", route: "/admin/calendar" },
+      { id: "tc-types", label: "Calendar Types", route: "/admin/coming-soon?module=Calendar Types", featureFlag: true },
+      { id: "tc-tithi", label: "Tithi Management", route: "/admin/coming-soon?module=Tithi Management", featureFlag: true }
+    ]
+  },
+  {
+    id: "folder-notif",
+    module: "NOTIFICATIONS",
+    label: "Notifications",
+    icon: Bell,
+    children: [
+      { id: "nt-push", label: "Push Notifications", route: "/admin/coming-soon?module=Push Notifications", featureFlag: true },
+      { id: "nt-wa", label: "WhatsApp", route: "/admin/coming-soon?module=WhatsApp Notifications", featureFlag: true },
+      { id: "nt-sms", label: "SMS", route: "/admin/coming-soon?module=SMS Notifications", featureFlag: true },
+      { id: "nt-email", label: "Email", route: "/admin/coming-soon?module=Email Notifications", featureFlag: true },
+      { id: "nt-hist", label: "Notification History", route: "/admin/notifications" }
+    ]
+  },
+  {
+    id: "folder-varshitap",
+    module: "TOURS", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: true
+  },
   {
     id: "group-bookings",
     label: "Bookings",

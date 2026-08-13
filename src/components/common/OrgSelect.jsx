@@ -7,9 +7,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * Organization picker shown to Super Admins on org-scoped pages.
  * Calls onChange(orgId) when a selection is made.
  */
-export function OrgSelect({ value, onChange, label = "Organization", className = "", testId = "org-select" }) {
+export function OrgSelect({ value, onChange, label = "Organization", className = "", testId = "org-select", options }) {
   const { t } = useLanguage();
   const { orgs, loading } = useOrgs();
+
+  const displayOrgs = options || orgs;
 
   return (
     <div className={className}>
@@ -17,7 +19,7 @@ export function OrgSelect({ value, onChange, label = "Organization", className =
       <SearchableSelect
         value={value || ""}
         onValueChange={onChange}
-        options={orgs.map((o) => ({
+        options={displayOrgs.map((o) => ({
           value: o.id,
           label: `${o.name}${o.city ? ` · ${o.city}` : ""}`
         }))}

@@ -166,6 +166,17 @@ export const ROUTE_TO_MODULE = {
 
   "/dharamshalas": "DHARAMSHALAS",
   "/dharamshala-management": "DHARAMSHALAS",
+  "/dharamshala/management": "DHARAMSHALAS",
+  "/dharamshala/bookings": "DHARAMSHALAS",
+  "/dharamshala/buildings": "DHARAMSHALAS",
+  "/dharamshala/floors": "DHARAMSHALAS",
+  "/dharamshala/rooms": "DHARAMSHALAS",
+  "/dharamshala/categories": "DHARAMSHALAS",
+  "/dharamshala/amenities": "DHARAMSHALAS",
+  "/dharamshala/pricing": "DHARAMSHALAS",
+  "/dharamshala/facilities": "DHARAMSHALAS",
+  "/dharamshala/gallery": "DHARAMSHALAS",
+  "/dharamshala/rules": "DHARAMSHALAS",
 
   "/jain-centers": "JAIN_CENTERS",
   "/stanaks": "STHANAKS",
@@ -350,6 +361,15 @@ export function buildCapabilities({ role, modules, permissions, overrides } = {}
   const grantedSet = grantSupplied
     ? { ...fromModules, ...fromOverrides }
     : fromPermissions;
+
+  // Implicitly grant EVENTS, ANNOUNCEMENTS, and VOLUNTEERS to any admin who has an organization module
+  const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALA", "COMMUNITY_PAGES"];
+  const hasOrgModule = orgModules.some((mod) => grantedSet[mod] !== undefined);
+  if (hasOrgModule) {
+    if (grantedSet.EVENTS === undefined) grantedSet.EVENTS = null;
+    if (grantedSet.ANNOUNCEMENTS === undefined) grantedSet.ANNOUNCEMENTS = null;
+    if (grantedSet.VOLUNTEERS === undefined) grantedSet.VOLUNTEERS = null;
+  }
 
   for (const [moduleKey, grantActions] of Object.entries(grantedSet)) {
     if (moduleKey === "DASHBOARD") continue;

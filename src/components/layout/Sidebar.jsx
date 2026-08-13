@@ -371,10 +371,20 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, hasDailyBhojanshal
     const moduleKey = ownModule || parentModule;
     if (!moduleKey) return false;
     if (moduleKey && moduleKey !== "DASHBOARD") {
-      const isAllowed = granted.some((m) => {
+      let isAllowed = granted.some((m) => {
         const key = typeof m === "string" ? m : m.module;
         return key === moduleKey || key?.toUpperCase() === moduleKey.toUpperCase();
       });
+
+      // Implicitly allow EVENTS, ANNOUNCEMENTS, and VOLUNTEERS if the admin has any organization module
+      if (!isAllowed && (moduleKey === "EVENTS" || moduleKey === "ANNOUNCEMENTS" || moduleKey === "VOLUNTEERS")) {
+        const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALA", "COMMUNITY_PAGES"];
+        isAllowed = granted.some((m) => {
+          const key = typeof m === "string" ? m : m.module;
+          return orgModules.includes(key?.toUpperCase());
+        });
+      }
+
       if (!isAllowed) return false;
     }
   } else if (!isSuperAdmin) {
@@ -452,14 +462,18 @@ function scoreNavRoute(route, pathname, search) {
 }
 
 let activeNavCache = { key: null, id: null };
-function resolveActiveNavId(pathname, search) {
-  const key = `${pathname}${search}`;
+function resolveActiveNavId(pathname, search, allowedIds = null) {
+  const key = `${pathname}${search}${allowedIds ? allowedIds.join(",") : ""}`;
   if (activeNavCache.key === key) return activeNavCache.id;
+  
   let bestId = null;
   let bestScore = 0;
+  
   for (const item of RENDERED_NAV_ITEMS) {
+    if (allowedIds && !allowedIds.includes(item.id)) continue;
+    
     const score = scoreNavRoute(item.route, pathname, search);
-    if (score > bestScore) {   // strict > keeps the first item on a tie
+    if (score > bestScore) {   
       bestScore = score;
       bestId = item.id;
     }
@@ -475,11 +489,13 @@ function NavLeaf({ item, collapsed, onNavigate, indent }) {
   const Icon = item.icon;
   const hex = getHex(item.route);
 
-  // Exactly one nav item is active for any given URL — see resolveActiveNavId.
-  const active =
-    !!item.route &&
-    !!item.id &&
-    item.id === resolveActiveNavId(location.pathname, location.search);
+  // Find allowed IDs dynamically from parent component if needed, 
+  // but to avoid prop drilling we can just compare the route directly as a fallback if the ID doesn't match but score is 80+
+  const bestId = resolveActiveNavId(location.pathname, location.search);
+  const isBestMatch = item.id === bestId;
+  const isRouteMatch = item.route && (item.route === location.pathname || location.pathname.startsWith(item.route + "/")) && scoreNavRoute(item.route, location.pathname, location.search) >= 80;
+  
+  const active = !!item.route && !!item.id && (isBestMatch || (isRouteMatch && bestId !== item.id));
 
   if (!item.route) return null;
 

@@ -40,29 +40,33 @@ function mapPost(p_, i) {
   return {
     id: p_.id || p_.publicId || i,
     title: p_.title,
-    body: p_.body || p_.content || "",
-    category: p_.category || "Community",
-    org: p_.organization?.name || p_.author?.name || "",
-    orgCity: p_.organization?.city || "",
-    orgArea: p_.organization?.area || "",
-    sect: p_.organization?.sect || "",
-    subCommunity: p_.organization?.subSect || "",
-    entityType: p_.entityType || p_.organization?.type || "",
-    entityPublicId: p_.organization?.publicId || p_.entityPublicId || "",
+    body: p_.body || p_.content || p_.description || "",
+    category: p_.category?.name || p_.category || "Community",
+    org: p_.organization?.name || p_.author?.name || "System",
+    orgCity: p_.organization?.city || p_.communityPage?.city || "",
+    orgArea: p_.organization?.area || p_.communityPage?.area || "",
+    sect: p_.organization?.sect || p_.communityPage?.sect || "",
+    subCommunity: p_.organization?.subSect || p_.communityPage?.subCommunity || "",
+    entityType: p_.entityType || p_.organization?.type || "COMMUNITY",
+    entityPublicId: p_.organization?.publicId || p_.communityPage?.publicId || p_.entityPublicId || "",
     // organizationId is a real top-level field on the post (confirmed by
     // admin FeedPage.jsx's own org-scoping check at its "edit" gate) — the
     // org's actual backend id, unlike entityPublicId above. Needed to call
     // the real follow endpoint; see followPost below for why the org's
     // *type* still has to be resolved separately.
-    orgId: p_.organizationId || p_.organization?.id || "",
+    orgId: p_.organizationId || p_.organization?.id || p_.communityPage?.id || "",
     daysAgo: relativeTime(p_.publishedAt || p_.createdAt),
     views: compactNumber(p_.viewCount ?? 0),
     liked: Boolean(p_.isLiked),
     bookmarked: Boolean(p_.isBookmarked),
     isAd: Boolean(p_.isSponsored ?? p_.isAd),
-    emoji: p_.emoji || "🛕",
+    emoji: p_.emoji || "📰",
     cta: p_.ctaLabel || null,
     ctaTo: p_.ctaTo || null,
+    images: Array.isArray(p_.images) ? p_.images : typeof p_.images === 'string' ? p_.images.split(',') : [],
+    videoUrl: p_.videoUrl || "",
+    pdfUrl: p_.pdfUrl || "",
+    coverUrl: p_.coverUrl || "",
     // §4.11.4 — polls have no standalone listing endpoint (only vote/results),
     // so they ride along on whichever feed post embeds them.
     poll: p_.poll || null,
@@ -199,7 +203,7 @@ export default function MemberFeedPage() {
 
   const onShare = (post) => {
     if (navigator.share) {
-      navigator.share({ title: post.title, text: post.body, url: window.location.href });
+      navigator.share({ title: post.title, text: post.body, url: window.location.href }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success(t("Link copied to clipboard"));
@@ -372,9 +376,38 @@ export default function MemberFeedPage() {
                 )}
 
                 {/* Body Content */}
-                <div className="space-y-1">
-                  <h2 className="text-sm font-black text-slate-900 leading-snug">{post.title}</h2>
-                  <p className="text-xs text-slate-600 leading-relaxed">{post.body}</p>
+                <div className="space-y-3">
+                  {post.coverUrl && (
+                    <div className="rounded-xl overflow-hidden mb-2">
+                      <img src={post.coverUrl} alt="" className="w-full max-h-64 object-cover" />
+                    </div>
+                  )}
+                  {post.title && <h2 className="text-sm font-black text-slate-900 leading-snug">{post.title}</h2>}
+                  {post.body && <p className="text-xs text-slate-600 leading-relaxed">{post.body}</p>}
+                  
+                  {post.images && post.images.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {post.images.map((img, imIdx) => (
+                        <div key={imIdx} className="rounded-lg overflow-hidden border">
+                          <img src={img} alt="" className="w-full object-cover h-32" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {post.videoUrl && (
+                    <a href={post.videoUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 p-2 rounded-lg mt-2 hover:bg-blue-100 transition-colors">
+                      <Sparkles className="h-4 w-4" />
+                      <span>Watch Video</span>
+                    </a>
+                  )}
+
+                  {post.pdfUrl && (
+                    <a href={post.pdfUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 p-2 rounded-lg mt-2 hover:bg-red-100 transition-colors">
+                      <Newspaper className="h-4 w-4" />
+                      <span>Read Document (PDF)</span>
+                    </a>
+                  )}
                 </div>
 
                 {/* Poll (§4.11.4) */}

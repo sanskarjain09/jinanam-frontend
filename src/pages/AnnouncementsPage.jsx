@@ -7,12 +7,19 @@ import { formatDateTime } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useOrgs, orgOptions } from "@/hooks/useOrgs";
+import { api } from "@/lib/api";
 
 export default function AnnouncementsPage() {
   const { t } = useLanguage();
-  const { canDo } = useAuth();
+  const { canDo, user, isSuperAdmin } = useAuth();
   const [openCreate, setOpenCreate] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const { orgs } = useOrgs();
+
+  // Filter orgs to only those the admin manages (unless Super Admin)
+  const myOrgs = isSuperAdmin ? orgs : orgs.filter((o) => user?.organizationIds?.includes(o.id));
+  const orgOpts = orgOptions(myOrgs);
 
   const columns = [
     { key: "title", header: t("Announcement"), render: (r) => (
@@ -44,9 +51,25 @@ export default function AnnouncementsPage() {
         onOpenChange={setOpenCreate}
         title={t("New Announcement")}
         endpoint="/announcements"
+        onSubmit={async (payload) => {
+          const { organizations, ...rest } = payload;
+          if (Array.isArray(organizations) && organizations.length > 0) {
+            // Post for each selected organization
+            const promises = organizations.map((orgId) =>
+              api.post("/announcements", { ...rest, organizationId: orgId })
+            );
+            await Promise.all(promises);
+            return {}; // Return dummy response for success
+          } else {
+            // Platform-wide announcement (or single org if payload.organizationId was set elsewhere, though we use `organizations` array here)
+            const res = await api.post("/announcements", rest);
+            return res.data?.data;
+          }
+        }}
         onSaved={() => setReloadKey((k) => k + 1)}
         testId="announcement-form"
         fields={[
+          ...(myOrgs.length > 0 ? [{ name: "organizations", label: t("Organizations"), type: "multi-select", options: orgOpts, required: true, placeholder: t("Select organizations...") }] : []),
           { name: "title", label: t("Title"), required: true },
           { name: "body", label: t("Message"), type: "textarea", required: true },
         ]}

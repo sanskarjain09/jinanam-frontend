@@ -128,7 +128,8 @@ export default function VolunteersPage() {
   const { t } = useLanguage();
   const { orgs } = useOrgs();
   const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const myOrgs = isSuperAdmin ? orgs : orgs.filter((o) => user?.organizationIds?.includes(o.id));
+  const orgId = selectedOrg || myOrgs[0]?.id;
   const [opportunities, setOpportunities] = useState([]);
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -244,9 +245,15 @@ export default function VolunteersPage() {
         }
       />
 
-      {isSuperAdmin && (
+      {(isSuperAdmin || myOrgs.length > 1) && (
         <div className="mb-4">
-          <OrgSelect value={orgId} onChange={setSelectedOrg} label={t("volunteers.viewingFor", "Viewing applications for")} testId="volunteers-org-select" />
+          <OrgSelect
+            value={orgId}
+            onChange={setSelectedOrg}
+            options={myOrgs}
+            label={t("volunteers.viewingFor", "Viewing applications for")}
+            testId="volunteers-org-select"
+          />
         </div>
       )}
 

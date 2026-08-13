@@ -3,7 +3,7 @@
  * All tabs: Info · Gallery (bulk upload) · Trustees · Contacts · Notices · Reviews · Dhaja · Chaturmas
  * Every tab has Add + Edit + Delete with confirmation.
  */
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { api, extractErrorMessage, STATIC_URL, API_BASE } from "@/lib/api";
 import { Card } from "@/components/ui/card";
@@ -22,7 +22,7 @@ import {
   Pencil, Camera, Upload, Plus, Trash2, Star, BellRing,
   MessageSquare, Flag, X, Loader2, CheckCircle, Image, Printer,
   BookOpen, Coffee, Home, Shield, AlertTriangle, Calendar,
-  Link as LinkIcon, ExternalLink, Sparkles, Mail
+  Link as LinkIcon, ExternalLink, Sparkles, Mail, Megaphone
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
@@ -575,7 +575,7 @@ function NoticesTab({ notices, apiPrefix, orgId, onRefresh, canEdit }) {
           })}
         </div>
       ) : (
-        <EmptyState title={t("No notices published")} icon={BellRing} description={t("Notice board updates appear here.")} />
+        <EmptyState title={t("No notices or announcements published")} icon={BellRing} description={t("Notice board updates appear here.")} />
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -607,6 +607,102 @@ function NoticesTab({ notices, apiPrefix, orgId, onRefresh, canEdit }) {
         </DialogContent>
       </Dialog>
       <Confirm open={!!deleteTarget} message={t("Delete this notice permanently?")} onConfirm={doDelete} onCancel={() => setDeleteTarget(null)} />
+    </div>
+  );
+}
+
+/* ─── Announcements Tab ─────────────────────────────────────────────────────── */
+function AnnouncementsTab({ announcements, apiPrefix, orgId, onRefresh, canEdit }) {
+  const { t } = useLanguage();
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title: "", body: "" });
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const save = async () => {
+    if (!form.title || !form.body) { toast.error(t("Fill in title and announcement text.")); return; }
+    setSaving(true);
+    try {
+      const payload = {
+        title: form.title,
+        body: form.body,
+        visibilityConfig: {}
+      };
+      await api.post(`${apiPrefix}/${orgId}/announcements`, payload);
+      toast.success(t("Announcement published."));
+      setOpen(false);
+      setForm({ title: "", body: "" });
+      onRefresh();
+    } catch (e) { toast.error(extractErrorMessage(e)); }
+    finally { setSaving(false); }
+  };
+
+  const doDelete = async () => {
+    try {
+      await api.delete(`${apiPrefix}/${orgId}/announcements/${deleteTarget.id}`);
+      toast.success(t("Announcement deleted."));
+      setDeleteTarget(null);
+      onRefresh();
+    } catch (e) { toast.error(extractErrorMessage(e)); }
+  };
+
+  return (
+    <div>
+      {canEdit && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={() => setOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("Publish Announcement")}</Button>
+        </div>
+      )}
+      {announcements?.length > 0 ? (
+        <div className="space-y-3">
+          {announcements.map((a, i) => (
+            <Card key={a.id || i} className="p-4 group relative border-l-4 bg-white border-l-blue-500">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-800">{a.title}</h4>
+                  <p className="text-xs text-slate-600 mt-1.5 leading-relaxed whitespace-pre-wrap">{a.body}</p>
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="text-[10px] text-slate-400 font-mono-num">
+                      {t("Published:")} {formatDate(a.createdAt)}
+                    </span>
+                  </div>
+                </div>
+                {canEdit && (
+                  <PermissionGate action="DELETE">
+                    <button onClick={() => setDeleteTarget(a)} className="opacity-0 group-hover:opacity-100 text-red-455 hover:text-red-650 shrink-0 ml-2">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </PermissionGate>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={t("No announcements published")} icon={Megaphone} description={t("Important announcements will appear here.")} />
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{t("Publish Announcement")}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">{t("Announcement Title *")}</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("e.g. Mahavir Janma Kalyanak Celebration")} />
+            </div>
+            <div>
+              <Label className="text-xs">{t("Content *")}</Label>
+              <textarea rows={4} className="w-full mt-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} placeholder={t("Write announcement details…")} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("Cancel")}</Button>
+            <Button onClick={save} disabled={saving}>{saving ? t("Publishing…") : t("Publish announcement")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Confirm open={!!deleteTarget} message={t("Delete this announcement permanently?")} onConfirm={doDelete} onCancel={() => setDeleteTarget(null)} />
     </div>
   );
 }
@@ -3491,6 +3587,271 @@ function resolveOrgConfig(pathname) {
   return hit || { entityLabel: "Temple", apiPrefix: "/temples", basePath: "/admin/temples" };
 }
 
+/* ─── Events Tab ────────────────────────────────────────────────────────────── */
+function EventsTab({ orgId, canEdit }) {
+  const { t } = useLanguage();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title: "", description: "", venue: "", startAt: "", endAt: "" });
+  const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const fetchEvents = () => {
+    setLoading(true);
+    api.get(`/events/org/${orgId}`)
+      .then(res => setEvents(res.data?.data?.items || []))
+      .catch(e => console.error(e))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchEvents();
+  }, [orgId]);
+
+  const save = async () => {
+    if (!form.title || !form.startAt || !form.endAt) {
+      toast.error(t("Title, start date, and end date are required."));
+      return;
+    }
+    setSaving(true);
+    try {
+      const startIso = new Date(form.startAt).toISOString();
+      const endIso = new Date(form.endAt).toISOString();
+      await api.post(`/events`, {
+        ...form,
+        startAt: startIso,
+        endAt: endIso,
+        organizationId: orgId,
+        isPaid: false,
+        status: "PUBLISHED"
+      });
+      toast.success(t("Event created."));
+      setOpen(false);
+      setForm({ title: "", description: "", venue: "", startAt: "", endAt: "" });
+      fetchEvents();
+    } catch (e) { toast.error(extractErrorMessage(e)); }
+    finally { setSaving(false); }
+  };
+
+  const doDelete = async () => {
+    try {
+      await api.post(`/events/${deleteTarget.id}/cancel`, { reason: "Cancelled by Admin" });
+      toast.success(t("Event cancelled."));
+      setDeleteTarget(null);
+      fetchEvents();
+    } catch (e) { toast.error(extractErrorMessage(e)); }
+  };
+
+  return (
+    <div>
+      {canEdit && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={() => setOpen(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("Create Free Event")}</Button>
+        </div>
+      )}
+      {loading ? (
+        <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>
+      ) : events.length > 0 ? (
+        <div className="space-y-3">
+          {events.map((ev) => (
+            <Card key={ev.id} className={`p-4 group relative border-l-4 ${ev.status === "CANCELLED" ? "border-l-red-500 opacity-70" : "border-l-indigo-500"} bg-white`}>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="font-bold text-slate-800">{ev.title}</h4>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200">
+                      {t("Free Entry")}
+                    </span>
+                    {ev.status !== "PUBLISHED" && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                        {ev.status}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">{ev.description || "—"}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <Calendar className="h-3 w-3" /> {formatDate(ev.startAt)} - {formatDate(ev.endAt)}
+                    </span>
+                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {ev.venue || "TBD"}
+                    </span>
+                    <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                      <Users className="h-3 w-3" /> {ev._count?.rsvps || 0} {t("Registered")}
+                    </span>
+                  </div>
+                </div>
+                {canEdit && ev.status !== "CANCELLED" && (
+                  <PermissionGate action="EDIT">
+                    <button onClick={() => setDeleteTarget(ev)} className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-650 shrink-0 ml-2">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </PermissionGate>
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={t("No events")} icon={Calendar} description={t("Create free events to invite members.")} />
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{t("Create Free Event")}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">{t("Event Title *")}</Label>
+              <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder={t("e.g. Mahavir Jayanti Celebration")} />
+            </div>
+            <div>
+              <Label className="text-xs">{t("Description")}</Label>
+              <textarea rows={3} className="w-full mt-1 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder={t("Event details...")} />
+            </div>
+            <div>
+              <Label className="text-xs">{t("Venue")}</Label>
+              <Input value={form.venue} onChange={(e) => setForm({ ...form, venue: e.target.value })} placeholder={t("Event location")} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">{t("Start Date & Time *")}</Label>
+                <Input type="datetime-local" className="mt-1" value={form.startAt} onChange={(e) => setForm({ ...form, startAt: e.target.value })} />
+              </div>
+              <div>
+                <Label className="text-xs">{t("End Date & Time *")}</Label>
+                <Input type="datetime-local" className="mt-1" value={form.endAt} onChange={(e) => setForm({ ...form, endAt: e.target.value })} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>{t("Cancel")}</Button>
+            <Button onClick={save} disabled={saving}>{saving ? t("Creating...") : t("Create Event")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Confirm open={!!deleteTarget} message={t("Cancel this event?")} onConfirm={doDelete} onCancel={() => setDeleteTarget(null)} />
+    </div>
+  );
+}
+
+/* ─── Timeline Tab ──────────────────────────────────────────────────────────── */
+function TimelineTab({ orgId, notices = [], chaturmasStays = [] }) {
+  const { t } = useLanguage();
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    api.get(`/events/org/${orgId}?status=PUBLISHED`)
+      .then(res => setEvents(res.data?.data?.items || []))
+      .catch(e => console.error(e))
+      .finally(() => setLoading(false));
+  }, [orgId]);
+
+  // Merge events, notices, chaturmas into one list and sort by date
+  const timelineItems = useMemo(() => {
+    const items = [];
+
+    // Add Events
+    events.forEach(ev => {
+      items.push({
+        id: `ev-${ev.id}`,
+        type: 'event',
+        title: ev.title,
+        description: ev.description,
+        startDate: new Date(ev.startAt),
+        endDate: new Date(ev.endAt),
+        meta: ev.venue || "TBD",
+        icon: <Calendar className="h-4 w-4 text-indigo-500" />,
+        badge: t("Event"),
+        color: "bg-indigo-50 text-indigo-700 border-indigo-200"
+      });
+    });
+
+    // Add Notices
+    notices.forEach(n => {
+      const pubDate = new Date(n.createdAt);
+      const expDate = (n.endDate || n.expiryDate || n.expiresAt) ? new Date(n.endDate || n.expiryDate || n.expiresAt) : null;
+      items.push({
+        id: `nt-${n.id}`,
+        type: 'notice',
+        title: n.title,
+        description: n.body || n.content || n.description,
+        startDate: pubDate,
+        endDate: expDate,
+        meta: n.isPinned ? t("Pinned") : null,
+        icon: <BellRing className="h-4 w-4 text-orange-500" />,
+        badge: t("Notice"),
+        color: "bg-orange-50 text-orange-700 border-orange-200"
+      });
+    });
+
+    // Add Chaturmas
+    chaturmasStays.forEach(c => {
+      items.push({
+        id: `ch-${c.id}`,
+        type: 'chaturmas',
+        title: t(`Chaturmas ${c.year}`),
+        description: c.monkName || c.monk?.fullName || "—",
+        startDate: new Date(c.startDate || `${c.year}-07-01`),
+        endDate: new Date(c.endDate || `${c.year}-11-15`),
+        meta: c.status,
+        icon: <BookOpen className="h-4 w-4 text-cyan-500" />,
+        badge: t("Chaturmas"),
+        color: "bg-cyan-50 text-cyan-700 border-cyan-200"
+      });
+    });
+
+    // Sort descending by startDate
+    return items.sort((a, b) => b.startDate - a.startDate);
+  }, [events, notices, chaturmasStays, t]);
+
+  if (loading) {
+    return <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      {timelineItems.length > 0 ? (
+        <div className="relative border-l-2 border-slate-200 ml-3 pl-5 space-y-6">
+          {timelineItems.map((item) => (
+            <div key={item.id} className="relative">
+              <div className="absolute -left-[30px] top-1 h-6 w-6 bg-white border-2 border-slate-200 rounded-full flex items-center justify-center">
+                {item.icon}
+              </div>
+              <Card className="p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${item.color}`}>
+                    {item.badge}
+                  </span>
+                  <h4 className="font-bold text-slate-800 text-sm">{item.title}</h4>
+                </div>
+                <div className="text-xs text-slate-600 mt-2 leading-relaxed whitespace-pre-wrap">
+                  {item.description}
+                </div>
+                <div className="flex flex-wrap items-center gap-4 mt-3 pt-3 border-t border-slate-50">
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {formatDate(item.startDate)} {item.endDate ? `— ${formatDate(item.endDate)}` : ""}
+                  </span>
+                  {item.meta && (
+                    <span className="text-[10px] text-slate-400 font-medium">
+                      • {item.meta}
+                    </span>
+                  )}
+                </div>
+              </Card>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={t("No timeline events")} icon={Calendar} description={t("Nothing to show in the timeline yet.")} />
+      )}
+    </div>
+  );
+}
+
 export default function OrgDetailPage(props) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -3762,8 +4123,8 @@ export default function OrgDetailPage(props) {
       <Tabs defaultValue="info">
         <TabsList className="mb-5 flex-wrap h-auto gap-1 bg-slate-100/80 p-1 rounded-xl">
           {(isDharamshala
-            ? ["info", "accommodations", "food", "trustees", "volunteers", "rules", "bank", "gallery", "reviews"]
-            : ["info", "gallery", "trustees", "contacts", "notices", "reviews", "dhaja", "chaturmas", "bhojanshala"]
+            ? ["info", "accommodations", "food", "trustees", "volunteers", "rules", "bank", "gallery", "reviews", "timeline", "events"]
+            : ["info", "gallery", "trustees", "contacts", "notices", "announcements", "reviews", "dhaja", "chaturmas", "bhojanshala", "timeline", "events"]
           ).map((tab) => {
             if ((entityLabel !== "Temple" && entityLabel !== "Jain Center") && tab === "chaturmas") return null;
             if (tab === "bhojanshala" && (!org.hasBhojanshala || org.bhojanshalaAvailability?.toLowerCase() == "daily")) return null;
@@ -3771,10 +4132,11 @@ export default function OrgDetailPage(props) {
               <TabsTrigger key={tab} value={tab} data-testid={`tab-${tab}`}
                 className="capitalize rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold py-2 px-3">
                 {tab === "dhaja" ? t("🚩 Dhaja") : tab === "gallery" ? t("🖼 Gallery") : tab === "trustees" ? t("👥 Trustees") :
-                 tab === "contacts" ? t("📞 Contacts") : tab === "notices" ? t("📢 Notices") : tab === "reviews" ? t("⭐ Reviews") :
+                 tab === "contacts" ? t("📞 Contacts") : tab === "notices" ? t("📢 Notices") : tab === "announcements" ? t("📢 Announcements") : tab === "reviews" ? t("⭐ Reviews") :
                  tab === "chaturmas" ? t("❄️ Chaturmas") : tab === "accommodations" ? t("🏨 Rooms & Rates") :
                  tab === "food" ? t("🥗 Bhojanalay") : tab === "volunteers" ? t("🤝 Volunteers") :
                  tab === "bhojanshala" ? t("🥗 Bhojanshala") :
+                 tab === "timeline" ? t("📅 Timeline") : tab === "events" ? t("🎉 Events") :
                  tab === "rules" ? t("📋 Safety & Rules") : tab === "bank" ? t("💰 Banking") : t("ℹ Info")}
               </TabsTrigger>
             );
@@ -4134,6 +4496,10 @@ export default function OrgDetailPage(props) {
           <NoticesTab notices={org.notices} apiPrefix={apiPrefix} orgId={org.id} onRefresh={loadOrg} canEdit={canEdit} />
         </TabsContent>
 
+        <TabsContent value="announcements">
+          <AnnouncementsTab announcements={org.announcements} apiPrefix={apiPrefix} orgId={org.id} onRefresh={loadOrg} canEdit={canEdit} />
+        </TabsContent>
+
         <TabsContent value="reviews">
           <ReviewsTab reviews={org.reviews} apiPrefix={apiPrefix} orgId={org.id} onRefresh={loadOrg} isSuperAdmin={isSuperAdmin} canEdit={canEdit} />
         </TabsContent>
@@ -4161,6 +4527,14 @@ export default function OrgDetailPage(props) {
               </div>
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="events">
+          <EventsTab orgId={org.id} canEdit={canEdit} />
+        </TabsContent>
+
+        <TabsContent value="timeline">
+          <TimelineTab orgId={org.id} notices={org.notices || []} chaturmasStays={org.chaturmasStays || []} />
         </TabsContent>
       </Tabs>
 

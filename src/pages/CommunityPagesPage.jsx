@@ -501,6 +501,8 @@ export default function CommunityPagesPage() {
   };
 
   // ─── Render ───────────────────────────────────────────────────────────────
+  const isPageOwner = isSuperAdmin || Boolean(detailPage?.owners?.some((o) => o.userId === user?.id));
+
   return (
     <div data-testid="community-pages-page" className="space-y-5">
       <PageHeader
@@ -898,8 +900,8 @@ export default function CommunityPagesPage() {
                   </div>
                   <div className="flex gap-2 items-center">
                     {detailLoading && <Loader2 className="h-4 w-4 animate-spin text-orange-500" />}
-                    {/* Edit button for page owners */}
-                    {canDo("COMMUNITY_PAGES", "EDIT") && (
+                    {/* Edit button for page owners and Super Admins */}
+                    {(isSuperAdmin || (detailPage.owners && detailPage.owners.some((o) => o.userId === user?.id))) && (
                       <Button size="sm" variant="outline" onClick={() => setOpenEdit(true)}
                         className="h-8 text-xs font-bold hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300">
                         <Edit className="h-3.5 w-3.5 mr-1.5" /> {t("Edit Page")}
@@ -1015,8 +1017,8 @@ export default function CommunityPagesPage() {
                       </div>
                     )}
 
-                    {/* Join / Leave button for regular members */}
-                    {!isSuperAdmin && !canDo("COMMUNITY_PAGES", "EDIT") && (
+                    {/* Non-owners see a standard Join/Leave button */}
+                    {!isPageOwner && (
                       <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center justify-between">
                         <div>
                           <div className="text-sm font-bold text-slate-800">{t("Join this Community")}</div>
@@ -1128,7 +1130,7 @@ export default function CommunityPagesPage() {
                               </div>
                             </div>
                             <div className="flex gap-1.5 shrink-0">
-                              {memberTab === "PENDING" && canDo("COMMUNITY_PAGES", "EDIT") && (
+                              {memberTab === "PENDING" && isPageOwner && (
                                 <>
                                   <Button size="sm" onClick={() => decideMember(m.id, "APPROVED")}
                                     className="h-7 text-xs bg-emerald-500 hover:bg-emerald-600 text-white">
@@ -1140,7 +1142,7 @@ export default function CommunityPagesPage() {
                                   </Button>
                                 </>
                               )}
-                              {memberTab === "APPROVED" && canDo("COMMUNITY_PAGES", "EDIT") && (
+                              {memberTab === "APPROVED" && isPageOwner && (
                                 <Button size="sm" variant="outline" onClick={() => removeMember(m.id)}
                                   className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50">
                                   <UserX className="h-3 w-3 mr-1" /> {t("Remove")}
@@ -1158,7 +1160,7 @@ export default function CommunityPagesPage() {
                 {detailTab === "feed" && (
                   <div className="space-y-4">
                     {/* Create post (owner only) */}
-                    {canDo("COMMUNITY_PAGES", "EDIT") && (
+                    {isPageOwner && (
                       <div className="bg-white border rounded-xl p-4 space-y-3">
                         <h4 className="text-xs font-bold text-slate-700">{t("Publish a New Update")}</h4>
                         <div className="grid grid-cols-2 gap-3">
@@ -1265,7 +1267,7 @@ export default function CommunityPagesPage() {
                           </div>
                         );
                     })()}
-                    {canDo("COMMUNITY_PAGES", "EDIT") && (
+                    {isPageOwner && (
                       <p className="text-xs text-slate-400 italic text-center">
                         {t("To update gallery images, contact the platform admin or use the edit form.")}
                       </p>

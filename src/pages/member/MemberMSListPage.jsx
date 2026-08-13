@@ -12,18 +12,20 @@ import { useMemberList, relativeTime, compactNumber, longDate } from "@/hooks/us
 
 /** Maps an API monk row onto the fields this page renders. */
 function mapMS(m, i) {
+  const rawStatus = m.tracking?.status || m.trackingStatus || m.status || "Offline";
+
   return {
     id: m.id || m.publicId || i,
-    name: m.fullName || m.name,
+    name: m.dikshaName || m.fullName || m.name || "Unknown MS",
     title: m.title || m.designation || "",
     sect: m.sect || "",
-    status: m.trackingStatus || m.status || "Offline",
-    location: m.currentLocation || m.city || "",
-    currentPlace: m.currentLocation || m.city || "",
-    chaturmas: m.chaturmasPlace || m.chaturmas || "",
+    status: rawStatus,
+    location: m.currentTemple?.city || m.currentTemple?.name || m.currentLocation || m.city || "Unknown Location",
+    currentPlace: m.currentTemple?.name || m.currentLocation || m.city || "",
+    chaturmas: m.chaturmasHistory?.current || m.chaturmasPlace || m.chaturmas || "-",
     followers: compactNumber(m.followerCount ?? 0),
     count: m.followerCount ?? 0,
-    pravachan: m.pravachanTime || "",
+    pravachan: m.routine?.pravachan || m.pravachanTime || "-",
     image: m.photoUrl || m.image || null,
   };
 }
@@ -42,7 +44,7 @@ export default function MemberMSListPage() {
 
   return (
     <div className="space-y-8">
-      
+
       {/* ── Top Header Banner ────────────────────────────────────────────── */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs">
         <div>

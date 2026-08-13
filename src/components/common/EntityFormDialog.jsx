@@ -99,11 +99,12 @@ export function EntityFormDialog({
                   rows={3}
                   data-testid={`${testId}-${f.name}`}
                 />
-              ) : f.type === "select" ? (
+              ) : f.type === "select" || f.type === "multi-select" ? (
                 <SearchableSelect
-                  value={values[f.name] || ""}
+                  value={values[f.name] || (f.type === "multi-select" ? [] : "")}
                   onValueChange={(v) => setField(f.name, v)}
                   options={f.options || []}
+                  multiple={f.type === "multi-select"}
                   placeholder={f.placeholder || `Select ${f.label}`}
                   className="mt-1"
                   data-testid={`${testId}-${f.name}`}

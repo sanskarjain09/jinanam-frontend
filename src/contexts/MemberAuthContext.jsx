@@ -144,12 +144,12 @@ export function MemberAuthProvider({ children }) {
     [acceptSession]
   );
 
-  const requestOtp = useCallback(async (mobile) => {
+  const requestOtp = useCallback(async (mobile, purpose = "LOGIN") => {
     setLoading(true);
     try {
       const { data } = await memberClient.post("/auth/otp/request", {
         mobile,
-        purpose: "LOGIN",
+        purpose,
       });
       return data?.data;
     } finally {
@@ -158,13 +158,13 @@ export function MemberAuthProvider({ children }) {
   }, []);
 
   const verifyOtp = useCallback(
-    async ({ mobile, otp }) => {
+    async ({ mobile, otp, purpose = "LOGIN" }) => {
       setLoading(true);
       try {
         const { data } = await memberClient.post("/auth/otp/verify", {
           mobile,
           otp,
-          purpose: "LOGIN",
+          purpose,
           ...device(),
         });
         return acceptSession(data?.data);

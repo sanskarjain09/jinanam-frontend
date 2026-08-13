@@ -15,6 +15,10 @@ import LandingPage from "@/pages/LandingPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import PolicyPage from "@/pages/PolicyPage";
+import BuildingsPage from "./pages/dharamshala/BuildingsPage";
+import RoomsPage from "./pages/dharamshala/RoomsPage";
+import DharamshalaManagementPage from "./pages/dharamshala/DharamshalaManagementPage";
+import DharamshalaBookingsPage from "./pages/dharamshala/DharamshalaBookingsPage";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const SADashboardPage = lazy(() => import("@/pages/SADashboardPage"));
@@ -61,6 +65,7 @@ import { Toaster } from "@/components/ui/sonner";
 const CommitteePage = StaffPage;
 const PassManagementPage = OrgListPage;
 const SthanaksPage = OrgListPage;
+const BhojanshalaManagementPage = lazy(() => import("@/pages/BhojanshalaManagementPage"));
 
 /* ─── Member Panel Page Imports ───────────────────────────────────────────── */
 import MemberLayout from "@/components/member/MemberLayout";
@@ -330,10 +335,11 @@ export default function App() {
                 <Route path="amenities" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="pricing" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="rules" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="bhojanshala-management" element={<OrgListPage defaultType="BHOJANSHALA" />} />
-                <Route path="timings" element={<OrgListPage defaultType="BHOJANSHALA" />} />
-                <Route path="menu" element={<OrgListPage defaultType="BHOJANSHALA" />} />
-                <Route path="pass-management" element={<PassManagementPage />} />
+                <Route path="bhojanshala-management" element={<BhojanshalaManagementPage />} />
+                <Route path="bhojanshala" element={<BhojanshalaManagementPage />} />
+                <Route path="timings" element={<BhojanshalaManagementPage />} />
+                <Route path="menu" element={<BhojanshalaManagementPage />} />
+                <Route path="pass-management" element={<BhojanshalaManagementPage />} />
                 <Route path="sthanak-management" element={<SthanaksPage />} />
                 <Route path="stanaks" element={<SthanaksPage />} />
                 <Route path="my-page" element={<CommunityPagesPage />} />
@@ -439,6 +445,20 @@ export default function App() {
                 <Route path="account-status" element={<AccountStatusPage />} />
                 <Route path="roles-permissions" element={<RolesPermissionsPage />} />
                 <Route path="admins" element={<AdminsPage />} />
+                
+                {/* Dedicated Dharamshala Management Pages */}
+                <Route path="dharamshala/management" element={<DharamshalaManagementPage />} />
+                <Route path="dharamshala/bookings" element={<DharamshalaBookingsPage />} />
+                <Route path="dharamshala/buildings" element={<BuildingsPage />} />
+                <Route path="dharamshala/floors" element={<BuildingsPage />} />
+                <Route path="dharamshala/rooms" element={<RoomsPage />} />
+                <Route path="dharamshala/categories" element={<ComingSoonPage />} />
+                <Route path="dharamshala/amenities" element={<ComingSoonPage />} />
+                <Route path="dharamshala/pricing" element={<ComingSoonPage />} />
+                <Route path="dharamshala/facilities" element={<ComingSoonPage />} />
+                <Route path="dharamshala/gallery" element={<ComingSoonPage />} />
+                <Route path="dharamshala/rules" element={<ComingSoonPage />} />
+
                 <Route path="coming-soon" element={<ComingSoonPage />} />
                 {/* Unknown /admin/* → A Dashboard (accessible to every admin
                     role, including temple/dharamshala/JC). Was sa-dashboard,

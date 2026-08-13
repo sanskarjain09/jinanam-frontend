@@ -42,13 +42,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
  */
 const SearchableSelect = React.forwardRef(function SearchableSelect(
   {
-    value = "",
+    value, // string or array if multiple
     onValueChange,
     options = [],
     placeholder = "Select…",
     searchPlaceholder = "Search…",
     emptyText = "No results found.",
     disabled = false,
+    multiple = false,
     className,
     align = "start",
     ...props
@@ -60,16 +61,32 @@ const SearchableSelect = React.forwardRef(function SearchableSelect(
 
   // Find the label for the current value
   const selectedLabel = React.useMemo(() => {
+    if (multiple) {
+      if (!Array.isArray(value) || value.length === 0) return null;
+      if (value.length === 1) {
+        const found = options.find((o) => String(o.value) === String(value[0]));
+        return found ? t(found.label) : value[0];
+      }
+      return `${value.length} selected`;
+    }
     if (!value) return null;
     const found = options.find((o) => String(o.value) === String(value));
     return found ? t(found.label) : value;
-  }, [value, options, t]);
+  }, [value, options, t, multiple]);
 
   function handleSelect(optValue) {
-    // Always select the clicked value. (Previously toggled off on same value,
-    // which confused users who tapped the current selection.)
-    onValueChange?.(optValue);
-    setOpen(false);
+    if (multiple) {
+      const arr = Array.isArray(value) ? [...value] : [];
+      const valStr = String(optValue);
+      if (arr.some((v) => String(v) === valStr)) {
+        onValueChange?.(arr.filter((v) => String(v) !== valStr));
+      } else {
+        onValueChange?.([...arr, optValue]);
+      }
+    } else {
+      onValueChange?.(optValue);
+      setOpen(false);
+    }
   }
 
   return (
@@ -114,7 +131,7 @@ const SearchableSelect = React.forwardRef(function SearchableSelect(
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      String(value) === String(opt.value)
+                      (multiple ? Array.isArray(value) && value.some((v) => String(v) === String(opt.value)) : String(value) === String(opt.value))
                         ? "opacity-100 text-orange-500"
                         : "opacity-0"
                     )}

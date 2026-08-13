@@ -14,6 +14,7 @@ import { extractErrorMessage } from "@/lib/api";
 import { useMemberAuth } from "@/contexts/MemberAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { PhoneField } from "@/components/common/PhoneInput";
 
 /**
  * 75+ Murtipujak Gacchas Master List (§2)
@@ -164,7 +165,7 @@ export default function MemberRegisterPage() {
     if (!mobile.trim()) { toast.error(t("Mobile Number is required.")); return; }
     setBusy(true);
     try {
-      await requestOtp(mobile.trim());
+      await requestOtp(mobile.trim(), "REGISTER");
       setOtpSent(true);
       toast.success(t("MSG91 OTP sent to (+91)."));
     } catch (err) { toast.error(extractErrorMessage(err)); }
@@ -175,7 +176,7 @@ export default function MemberRegisterPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      const res = await verifyOtp({ mobile: mobile.trim(), otp });
+      const res = await verifyOtp({ mobile: mobile.trim(), otp, purpose: "REGISTER" });
       setRegistrationToken(res?.registrationToken || res?.registration_token || null);
       toast.success(t("Mobile number verified successfully."));
       setStep(1);

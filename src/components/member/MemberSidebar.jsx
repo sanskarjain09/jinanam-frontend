@@ -34,6 +34,7 @@ const MENU_GROUPS = [
       { to: "/member/feed?filter=sponsored", label: "Sponsored Posts" },
     ],
   },
+  /*
   {
     id: "OFFERS",
     label: "OFFERS",
@@ -44,6 +45,7 @@ const MENU_GROUPS = [
       { to: "/member/offers#saved", label: "Saved Offers" },
     ],
   },
+  */
   {
     id: "EXPLORE",
     label: "EXPLORE",
@@ -73,7 +75,7 @@ const MENU_GROUPS = [
       { to: "/member/digital-id", label: "Digital ID & QR" },
       { to: "/member/wallet", label: "My Digital Wallet" },
       { to: "/member/bookings", label: "My Bookings & Tickets" },
-      { to: "/member/donations", label: "My Donations" },
+      // { to: "/member/donations", label: "My Donations" },
       { to: "/member/visits", label: "My Temple Visits" },
       { to: "/member/following", label: "Following" },
       { to: "/member/notifications", label: "Notifications History" },
