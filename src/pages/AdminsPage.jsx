@@ -206,7 +206,7 @@ export default function AdminsPage() {
   const handleToggleAdminStatus = async (admin) => {
     const nextStatus = (admin.status === "ACTIVE" || !admin.status) ? "INACTIVE" : "ACTIVE";
     try {
-      await api.patch(`/auth/admins/${admin.id}/status`, { status: nextStatus }).catch(() => null);
+      await api.patch(`/auth/admins/${admin.id}/status`, { active: nextStatus === "ACTIVE" });
       setAdmins((prev) => prev.map((a) => (a.id === admin.id ? { ...a, status: nextStatus } : a)));
       toast.success(`Admin status updated to ${nextStatus}.`);
     } catch (e) {
@@ -322,19 +322,11 @@ export default function AdminsPage() {
         grantedModules: selectedAdminTabs,
         permissions: toPermissionsPayload(selectedAdminTabs),
         ...grantMeta,
-      }).catch(() => null);
+      });
 
-      // 3. Update /auth/admins/:id
-      await api.put(`/auth/admins/${targetId}`, {
-        grantedModules: selectedAdminTabs,
-        modules: flatModuleKeys,
-        ...grantMeta,
-      }).catch(() => null);
+      // 3. (Removed incorrect /auth/admins/:id call which caused 404 Route Not Found)
 
-      // 4. Update /settings/users/:userId/permission-overrides
-      await api.post(`/settings/users/${targetId}/permission-overrides`, {
-        overrides: toOverridesPayload(selectedAdminTabs),
-      }).catch(() => null);
+      // 4. (Removed redundant /settings/users/:userId/permission-overrides call, which is already handled entirely on the backend by updateAdminModules)
 
       toast.success(`Tab access permissions updated for ${tabAccessAdmin.firstName || "Administrator"}.`);
       setTabAccessAdmin(null);

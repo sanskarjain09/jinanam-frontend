@@ -314,7 +314,7 @@ function saveExpanded(state) {
 const ROUTE_TO_MODULE_MAP = ROUTE_TO_MODULE;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function isNodeAllowed(node, isSuperAdmin, user, authModules, hasDailyBhojanshala = false, parentModule = null) {
+function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}, parentModule = null) {
   if (!node) return false;
 
   // 1. Role-based check — applies to everyone including Super Admin
@@ -325,12 +325,16 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, hasDailyBhojanshal
     }
   }
 
-  if (node.id === "folder-bhojanshala" || node.id?.startsWith("bh-")) {
-    if (!hasDailyBhojanshala) {
-      return false;
-    }
-    // If they have a daily bhojanshala, bypass the module permission check for this folder
-    return true;
+  if (node.id === "folder-bhojanshala" || node.id?.startsWith("bh-") || node.id === "flat-bhojanshala") {
+    if (!orgFacilities.hasBhojanshala && !isSuperAdmin) return false;
+  }
+  
+  if (node.id === "folder-dharamshala-admin" || node.id === "flat-dharamshalas" || node.id?.startsWith("d-")) {
+    if (!orgFacilities.hasDharamshala && !isSuperAdmin) return false;
+  }
+  
+  if (node.id === "br-path") {
+    if (!orgFacilities.hasPathshala && !isSuperAdmin) return false;
   }
 
   // Super Admin sees all tabs that passed the role check
@@ -348,17 +352,23 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, hasDailyBhojanshal
   if (isDashboard) return true;
 
   // A folder's own module (if it has one) becomes the fallback for its children,
-  // so a leaf whose route we can't map — "Temple Information", "Facilities",
-  // and the other coming-soon entries under Temple — is governed by the tab it
-  // sits under instead of being hidden. Granting TEMPLES therefore reveals the
-  // whole Temple folder, not just "Temple Management".
   const ownModule = node.module || moduleForRoute(route);
+  
+  // 0. Org Admin Controller Check (activeModules)
+  // SETTINGS, DASHBOARD, and MODULE_CONTROLLER are administrative modules that are always available if the user has role/tab access,
+  // they should NOT be disabled by the activeModules list (which only applies to PLATFORM_MODULES).
+  if (!isSuperAdmin && ownModule && ownModule !== "SETTINGS" && ownModule !== "DASHBOARD" && ownModule !== "MODULE_CONTROLLER" && orgFacilities.activeModules) {
+    if (!orgFacilities.activeModules.has(ownModule)) {
+      return false; // Not activated by org
+    }
+  }
+
   const effectiveParentModule = ownModule || parentModule;
 
   // For parent containers (sections or folders with children), allow if ANY child is allowed
   if (node.children && Array.isArray(node.children) && node.children.length > 0) {
     return node.children.some((child) =>
-      isNodeAllowed(child, isSuperAdmin, user, granted, hasDailyBhojanshala, effectiveParentModule)
+      isNodeAllowed(child, isSuperAdmin, user, granted, orgFacilities, effectiveParentModule)
     );
   }
 
@@ -376,9 +386,9 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, hasDailyBhojanshal
         return key === moduleKey || key?.toUpperCase() === moduleKey.toUpperCase();
       });
 
-      // Implicitly allow EVENTS, ANNOUNCEMENTS, and VOLUNTEERS if the admin has any organization module
-      if (!isAllowed && (moduleKey === "EVENTS" || moduleKey === "ANNOUNCEMENTS" || moduleKey === "VOLUNTEERS")) {
-        const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALA", "COMMUNITY_PAGES"];
+      // Implicitly allow EVENTS, ANNOUNCEMENTS, VOLUNTEERS, and MODULE_CONTROLLER if the admin has any organization module
+      if (!isAllowed && (moduleKey === "EVENTS" || moduleKey === "ANNOUNCEMENTS" || moduleKey === "VOLUNTEERS" || moduleKey === "MODULE_CONTROLLER")) {
+        const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALAS", "COMMUNITY_PAGES"];
         isAllowed = granted.some((m) => {
           const key = typeof m === "string" ? m : m.module;
           return orgModules.includes(key?.toUpperCase());
@@ -640,13 +650,13 @@ function SectionHeader({ node, expanded, onToggle, collapsed }) {
 }
 
 // ─── FLAT MODE renderer ────────────────────────────────────────────────────────
-function FlatNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, expandedState, onToggle, hasDailyBhojanshala }) {
+function FlatNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, expandedState, onToggle, orgFacilities }) {
   const { t } = useLanguage();
   const sections = [];
   let current = null;
 
   for (const item of FLAT_NAV) {
-    if (!isNodeAllowed(item, isSuperAdmin, user, authModules, hasDailyBhojanshala)) continue;
+    if (!isNodeAllowed(item, isSuperAdmin, user, authModules, orgFacilities)) continue;
 
     if (item.isSeparator) {
       if (current) sections.push(current);
@@ -695,9 +705,9 @@ function FlatNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, expan
 }
 
 // ─── NESTED MODE renderer (2 explicit levels, no recursion) ───────────────────
-function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, expandedState, onToggle, hasDailyBhojanshala }) {
+function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, expandedState, onToggle, orgFacilities }) {
   return NESTED_NAV.map((topNode) => {
-    if (!isNodeAllowed(topNode, isSuperAdmin, user, authModules, hasDailyBhojanshala)) return null;
+    if (!isNodeAllowed(topNode, isSuperAdmin, user, authModules, orgFacilities)) return null;
 
     const hasChildren = topNode.children && topNode.children.length > 0;
     const topExpanded = expandedState[topNode.id] !== false;
@@ -713,7 +723,8 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
       );
     }
 
-    const visibleTopChildren = topNode.children.filter((c) => isNodeAllowed(c, isSuperAdmin, user, authModules, hasDailyBhojanshala));
+    const effectiveTopModule = topNode.module || moduleForRoute(topNode.route);
+    const visibleTopChildren = topNode.children.filter((c) => isNodeAllowed(c, isSuperAdmin, user, authModules, orgFacilities, effectiveTopModule));
     if (visibleTopChildren.length === 0) return null;
 
     return (
@@ -728,7 +739,7 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
         {!collapsed && topExpanded && (
           <ul className="mt-1 space-y-0.5">
             {visibleTopChildren.map((child) => {
-              if (!isNodeAllowed(child, isSuperAdmin, user, authModules, hasDailyBhojanshala)) return null;
+              if (!isNodeAllowed(child, isSuperAdmin, user, authModules, orgFacilities, effectiveTopModule)) return null;
 
               const hasGrandchildren = child.children && child.children.length > 0;
               const childExpanded = expandedState[child.id] !== false;
@@ -738,7 +749,8 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
                 return <NavLeaf key={child.id} item={child} collapsed={collapsed} onNavigate={onNavigate} />;
               }
 
-              const visibleGrand = child.children.filter((g) => isNodeAllowed(g, isSuperAdmin, user, authModules, hasDailyBhojanshala));
+              const effectiveChildModule = child.module || moduleForRoute(child.route) || effectiveTopModule;
+              const visibleGrand = child.children.filter((g) => isNodeAllowed(g, isSuperAdmin, user, authModules, orgFacilities, effectiveChildModule));
               if (visibleGrand.length === 0) return null;
 
               // Level-2 group with level-3 leaves
@@ -754,7 +766,7 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
                   {!collapsed && childExpanded && (
                     <ul className="ml-3 pl-3 border-l border-white/10 space-y-0.5 mt-0.5">
                       {visibleGrand.map((grand) => {
-                        if (!isNodeAllowed(grand, isSuperAdmin, user, authModules, hasDailyBhojanshala)) return null;
+                        if (!isNodeAllowed(grand, isSuperAdmin, user, authModules, orgFacilities, effectiveChildModule)) return null;
 
                         const hasGreat = grand.children && grand.children.length > 0;
                         const grandExpanded = expandedState[grand.id] !== false;
@@ -767,7 +779,8 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
                         }
 
                         // Level-3 group (render its children flat — max depth 4)
-                        const visibleGreat = grand.children.filter((g) => isNodeAllowed(g, isSuperAdmin, user, authModules, hasDailyBhojanshala));
+                        const effectiveGrandModule = grand.module || moduleForRoute(grand.route) || effectiveChildModule;
+                        const visibleGreat = grand.children.filter((g) => isNodeAllowed(g, isSuperAdmin, user, authModules, orgFacilities, effectiveGrandModule));
                         return (
                           <li key={grand.id} className="list-none">
                             <SubGroupToggle
@@ -805,7 +818,7 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
   const { isSuperAdmin, user, modules: authModules } = useAuth();
 
   const [expandedState, setExpandedState] = useState(() => loadExpanded());
-  const [hasDailyBhojanshala, setHasDailyBhojanshala] = useState(false);
+  const [orgFacilities, setOrgFacilities] = useState({ hasBhojanshala: false, hasDharamshala: false, hasPathshala: false, activeModules: new Set() });
 
   useEffect(() => {
     let isMounted = true;
@@ -816,11 +829,26 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
           .then((res) => {
             if (!isMounted) return;
             const temples = res.data?.data?.items || res.data?.data || [];
-            const hasDaily = temples.some(t => {
+            const hasBhojanshala = temples.some(t => {
               const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
-              return matchesOrg && t.hasBhojanshala === true && t.bhojanshalaAvailability?.toLowerCase() === "daily";
+              return matchesOrg && (t.type === "BHOJANSHALA" || t.hasBhojanshala === true);
             });
-            setHasDailyBhojanshala(hasDaily);
+            const hasDharamshala = temples.some(t => {
+              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              return matchesOrg && (t.type === "DHARAMSHALA" || t.hasDharamshala === true);
+            });
+            const hasPathshala = temples.some(t => {
+              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              return matchesOrg && t.hasPathshala === true;
+            });
+            const activeModulesSet = new Set();
+            temples.forEach(t => {
+              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              if (matchesOrg && Array.isArray(t.activeModules)) {
+                t.activeModules.forEach(m => activeModulesSet.add(m));
+              }
+            });
+            setOrgFacilities({ hasBhojanshala, hasDharamshala, hasPathshala, activeModules: activeModulesSet });
           })
           .catch((err) => {
             console.error("Failed to fetch temples for sidebar:", err);
@@ -897,7 +925,7 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
               authModules={authModules}
               expandedState={expandedState}
               onToggle={handleToggle}
-              hasDailyBhojanshala={hasDailyBhojanshala}
+              orgFacilities={orgFacilities}
             />
           ) : (
             <NestedNav
@@ -908,7 +936,7 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
               authModules={authModules}
               expandedState={expandedState}
               onToggle={handleToggle}
-              hasDailyBhojanshala={hasDailyBhojanshala}
+              orgFacilities={orgFacilities}
             />
           )}
         </nav>

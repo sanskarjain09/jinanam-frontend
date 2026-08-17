@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Search, MapPin, Navigation, Star, ChevronRight,
   Building2, Users, Sparkles, Newspaper, CalendarCheck,
-  Heart, BookOpen, Map, Filter, X
+  Heart, BookOpen, Map, Filter, X, Bookmark, Coffee
 } from "lucide-react";
 import { Link , useSearchParams, useOutletContext } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,8 @@ import { useMemberList, compactNumber } from "@/hooks/useMemberList";
 import { useVisibilityEngine } from "@/contexts/VisibilityEngineContext";
 import { formatDistance } from "@/lib/geo";
 import LocationPrompt from "@/components/member/LocationPrompt";
+import { BhojanshalaBookingModal } from "@/components/modals/BhojanshalaBookingModal";
+
 
 /* ─── Demo data ──────────────────────────────────────────────────────────── */
 const CATEGORIES = [
@@ -30,9 +32,19 @@ const CATEGORIES = [
 
 
 /* ─── Result cards ──────────────────────────────────────────────────────── */
-function TempleResult({ item }) {
+function TempleResult({ item, category, onBookFood }) {
+  const { isEntityFollowed, toggleFollow } = useVisibilityEngine();
+  const followed = isEntityFollowed(item.publicId);
+  const isBhojanshala = category === "bhojanshala" || item.type === "BHOJANSHALA" || item.bhojanshalaPublished;
+
+  let linkTo = `/member/temples/${item.id}`;
+  if (category === "bhojanshala") linkTo = `/member/bhojanshalas/${item.id}`;
+  else if (category === "dharamshala") linkTo = `/member/dharamshalas/${item.id}`;
+  else if (category === "pathshala") linkTo = `/member/pathshalas/${item.id}`;
+  else if (category === "events") linkTo = `/member/events/${item.id}`;
+
   return (
-    <Link to={`/member/temples/${item.id}`} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 shadow-sm p-3 hover:shadow-md transition-shadow">
+    <Link to={linkTo} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 shadow-sm p-3 hover:shadow-md transition-shadow">
       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-2xl shrink-0">
         🛕
       </div>
@@ -44,9 +56,16 @@ function TempleResult({ item }) {
         </div>
         <div className="text-[9px] text-slate-400 mt-0.5 truncate">{item.community}</div>
         <div className="flex items-center gap-2 mt-1">
-          <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", item.open ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600")}>
-            {item.open ? "Open" : "Closed"}
-          </span>
+          {category !== "events" && item.type !== "EVENT" && (
+            <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", item.open ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600")}>
+              {item.open ? "Open" : "Closed"}
+            </span>
+          )}
+          {item.isRsvped && (
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+              Joined
+            </span>
+          )}
           <span className="text-[9px] text-slate-400 flex items-center gap-0.5">
             <Star className="h-2.5 w-2.5 text-amber-400 fill-amber-400" /> {item.rating}
           </span>
@@ -58,12 +77,31 @@ function TempleResult({ item }) {
           </span>
         </div>
       </div>
+      <div className="flex flex-row items-center justify-center gap-2 shrink-0">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleFollow(item.publicId, { type: "temple", apiId: item.apiId, name: item.name, image: "🛕", category: "temple" });
+          }}
+          className={cn(
+            "p-2 rounded-xl text-xs font-bold border transition-colors",
+            followed ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+          )}
+          title={followed ? "Followed" : "Follow Entity"}
+        >
+          <Bookmark className={cn("h-4 w-4", followed && "fill-amber-500 text-amber-500")} />
+        </button>
+      </div>
       <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
     </Link>
   );
 }
 
 function MSResult({ item }) {
+  const { isEntityFollowed, toggleFollow } = useVisibilityEngine();
+  const followed = isEntityFollowed(item.publicId);
+
   return (
     <Link to={`/member/ms/${item.id}`} className="flex items-center gap-3 bg-white rounded-2xl border border-slate-100 shadow-sm p-3 hover:shadow-md transition-shadow">
       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-saffron-50 to-amber-100 border-2 border-amber-200 flex items-center justify-center text-2xl shrink-0">
@@ -85,6 +123,20 @@ function MSResult({ item }) {
           </span>
         </div>
       </div>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleFollow(item.publicId, { type: "ms", apiId: item.apiId, name: item.name, image: "🙏", category: "ms" });
+        }}
+        className={cn(
+          "p-2 rounded-xl text-xs font-bold border transition-colors shrink-0",
+          followed ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+        )}
+        title={followed ? "Followed" : "Follow MS"}
+      >
+        <Bookmark className={cn("h-4 w-4", followed && "fill-amber-500 text-amber-500")} />
+      </button>
       <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
     </Link>
   );
@@ -108,27 +160,44 @@ const CATEGORY_SOURCE = {
   community:    { path: "/community-pages", label: "community pages" },
 };
 
-/** Normalises rows from very different endpoints into one card shape. */
 function mapResult(r, i) {
+  const isEvent = r.type === "EVENT" || r.status === "PUBLISHED" || r.status === "RSVP_SALES_OPEN" || r.status === "LIVE" || r.status === "COMPLETED" || r.status === "CANCELLED";
+  let open = true;
+  if (isEvent) {
+    const end = new Date(r.endAt || r.end_at || r.startAt || r.start_at);
+    const validStatus = ["PUBLISHED", "RSVP_SALES_OPEN", "LIVE"].includes(r.status);
+    open = validStatus && (!isNaN(end.getTime()) ? end >= new Date() : true);
+  } else {
+    open = r.isOpen ?? r.status === "ACTIVE" ?? true;
+  }
+
   return {
     id: r.id || r.publicId || i,
+    apiId: r.id,
+    publicId: r.publicId,
     name: r.name || r.fullName || r.title,
     city: r.city || r.location || r.currentLocation || "",
     community: [r.sect, r.subSect || r.gacchaName].filter(Boolean).join(" · "),
-    // Kept for the distance calc at render time (§4.3.4/§4.15.6); the API's
-    // own `distance` string, if present, is used until a GPS fix is available.
     distance: r.distance || "",
     latitude: r.latitude ?? r.lat ?? null,
     longitude: r.longitude ?? r.lng ?? null,
-    open: r.isOpen ?? r.status === "ACTIVE" ?? true,
+    open,
     rating: r.rating ?? null,
     followers: compactNumber(r.followerCount ?? 0),
+    type: r.type || (r.status === "PUBLISHED" || r.status === "RSVP_SALES_OPEN" || r.status === "LIVE" ? "EVENT" : undefined),
+    isRsvped: r.isRsvped,
+    rsvpStatus: r.rsvpStatus,
+    hasBhojanshala: r.hasBhojanshala,
+    bhojanshalaPublished: r.bhojanshalaPublished,
+    dharamshalaPublished: r.dharamshalaPublished,
+    pathshalaPublished: r.pathshalaPublished,
   };
 }
 
 export default function MemberExplorePage() {
   const { t } = useLanguage();
   const [search, setSearch] = useState("");
+  const [bookBhojanshalaId, setBookBhojanshalaId] = useState(null);
   // The sidebar links to /member/explore?cat=jaincentre|dharamshala|bhojanshala
   // and ?q=. Nothing read those params, so four sidebar tabs all rendered the
   // same unfiltered directory.
@@ -269,7 +338,7 @@ export default function MemberExplorePage() {
                 results.map((item) =>
                   activeCategory === "ms"
                     ? <MSResult key={item.id} item={item} />
-                    : <TempleResult key={item.id} item={item} />
+                    : <TempleResult key={item.id} item={item} category={activeCategory} onBookFood={(id) => setBookBhojanshalaId(id)} />
                 )
               )}
             </div>
@@ -301,6 +370,14 @@ export default function MemberExplorePage() {
             ))}
           </div>
         </section>
+      )}
+
+      {bookBhojanshalaId && (
+        <BhojanshalaBookingModal 
+          open={!!bookBhojanshalaId} 
+          onClose={() => setBookBhojanshalaId(null)} 
+          orgId={bookBhojanshalaId} 
+        />
       )}
     </div>
   );

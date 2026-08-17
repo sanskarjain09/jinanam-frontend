@@ -49,6 +49,9 @@ const AnnouncementsPage = lazy(() => import("@/pages/AnnouncementsPage"));
 const GalleryPage = lazy(() => import("@/pages/GalleryPage"));
 const VolunteersPage = lazy(() => import("@/pages/VolunteersPage"));
 const SupportTicketsPage = lazy(() => import("@/pages/SupportTicketsPage"));
+const FeedbackPage = lazy(() => import("@/pages/FeedbackPage"));
+const IncorrectReportsPage = lazy(() => import("@/pages/IncorrectReportsPage"));
+const FaqPage = lazy(() => import("@/pages/FaqPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const NotificationPreferencesPage = lazy(() => import("@/pages/NotificationPreferencesPage"));
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
@@ -60,6 +63,7 @@ const SubscriptionPlansPage = lazy(() => import("@/pages/SubscriptionPlansPage")
 const AccountStatusPage = lazy(() => import("@/pages/AccountStatusPage"));
 const RolesPermissionsPage = lazy(() => import("@/pages/RolesPermissionsPage"));
 const AdminsPage = lazy(() => import("@/pages/AdminsPage"));
+const ModuleControllerPage = lazy(() => import("@/pages/ModuleControllerPage"));
 import ComingSoonPage from "@/pages/ComingSoonPage";
 import { Toaster } from "@/components/ui/sonner";
 const CommitteePage = StaffPage;
@@ -73,10 +77,12 @@ const MemberLoginPage = lazy(() => import("@/pages/member/MemberLoginPage"));
 const MemberRegisterPage = lazy(() => import("@/pages/member/MemberRegisterPage"));
 const MemberHomePage = lazy(() => import("@/pages/member/MemberHomePage"));
 const MemberFeedPage = lazy(() => import("@/pages/member/MemberFeedPage"));
+const MemberBookmarksPage = lazy(() => import("@/pages/member/MemberBookmarksPage"));
 const MemberOffersPage = lazy(() => import("@/pages/member/MemberOffersPage"));
 const MemberExplorePage = lazy(() => import("@/pages/member/MemberExplorePage"));
 const MemberSpiritualPage = lazy(() => import("@/pages/member/MemberSpiritualPage"));
 const MemberProfilePage = lazy(() => import("@/pages/member/MemberProfilePage"));
+const MemberEditProfilePage = lazy(() => import("@/pages/member/MemberEditProfilePage"));
 const MemberNewsPage = lazy(() => import("@/pages/member/MemberNewsPage"));
 const MemberMSListPage = lazy(() => import("@/pages/member/MemberMSListPage"));
 const MemberMSDetailPage = lazy(() => import("@/pages/member/MemberMSDetailPage"));
@@ -101,7 +107,12 @@ const MyBookingsPage = lazy(() => import("@/pages/member/MyBookingsPage"));
 const BookingDetailPage = lazy(() => import("@/pages/member/BookingDetailPage"));
 const MemberDonationsPage = lazy(() => import("@/pages/member/MemberDonationsPage"));
 const MemberEventsPage = lazy(() => import("@/pages/member/MemberEventsPage"));
+const MemberEventDetailPage = lazy(() => import("@/pages/member/MemberEventDetailPage"));
 const MyTicketsPage = lazy(() => import("@/pages/member/MyTicketsPage"));
+const MemberBhojanshalaPassesPage = lazy(() => import("@/pages/member/MemberBhojanshalaPassesPage"));
+const MemberBhojanshalaDetailPage = lazy(() => import("@/pages/member/MemberBhojanshalaDetailPage"));
+const MemberDharamshalaDetailPage = lazy(() => import("@/pages/member/MemberDharamshalaDetailPage"));
+const MemberPathshalaDetailPage = lazy(() => import("@/pages/member/MemberPathshalaDetailPage"));
 
 /**
  * SmartRouteResolver — Handles un-prefixed URLs dynamically for logged-in user.
@@ -335,6 +346,7 @@ export default function App() {
                 <Route path="amenities" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="pricing" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="rules" element={<OrgListPage defaultType="DHARAMSHALA" />} />
+                <Route path="bhojanshalas" element={<OrgListPage defaultType="BHOJANSHALA" />} />
                 <Route path="bhojanshala-management" element={<BhojanshalaManagementPage />} />
                 <Route path="bhojanshala" element={<BhojanshalaManagementPage />} />
                 <Route path="timings" element={<BhojanshalaManagementPage />} />
@@ -428,6 +440,9 @@ export default function App() {
                 <Route path="devices" element={<DevicesPage />} />
                 <Route path="system-health" element={<DevicesPage />} />
                 <Route path="support-tickets" element={<SupportTicketsPage />} />
+                <Route path="feedback" element={<FeedbackPage />} />
+                <Route path="incorrect-reports" element={<IncorrectReportsPage />} />
+                <Route path="faq" element={<FaqPage />} />
                 <Route path="general-inquiries" element={<SupportTicketsPage />} />
                 <Route path="complaints" element={<SupportTicketsPage />} />
                 <Route path="faqs" element={<SupportTicketsPage />} />
@@ -445,6 +460,7 @@ export default function App() {
                 <Route path="account-status" element={<AccountStatusPage />} />
                 <Route path="roles-permissions" element={<RolesPermissionsPage />} />
                 <Route path="admins" element={<AdminsPage />} />
+                <Route path="module-controller" element={<ModuleControllerPage />} />
                 
                 {/* Dedicated Dharamshala Management Pages */}
                 <Route path="dharamshala/management" element={<DharamshalaManagementPage />} />
@@ -497,10 +513,12 @@ export default function App() {
                 <Route index element={<Navigate to="/member/home" replace />} />
                 <Route path="home" element={<MemberHomePage />} />
                 <Route path="feed" element={<MemberFeedPage />} />
+                <Route path="bookmarks" element={<MemberBookmarksPage />} />
                 <Route path="offers" element={<MemberOffersPage />} />
                 <Route path="explore" element={<MemberExplorePage />} />
                 <Route path="spiritual" element={<MemberSpiritualPage />} />
                 <Route path="profile" element={<MemberProfilePage />} />
+                <Route path="profile/edit" element={<MemberEditProfilePage />} />
                 <Route path="news" element={<MemberNewsPage />} />
                 <Route path="ms" element={<MemberMSListPage />} />
                 <Route path="ms/:id" element={<MemberMSDetailPage />} />
@@ -525,7 +543,12 @@ export default function App() {
                 <Route path="donations" element={<MemberDonationsPage />} />
                 <Route path="visits" element={<MemberVisitsPage />} />
                 <Route path="events" element={<MemberEventsPage />} />
+                <Route path="events/:id" element={<MemberEventDetailPage />} />
                 <Route path="tickets" element={<MyTicketsPage />} />
+                <Route path="bhojanshala-passes" element={<MemberBhojanshalaPassesPage />} />
+                <Route path="bhojanshalas/:id" element={<MemberBhojanshalaDetailPage />} />
+                <Route path="dharamshalas/:id" element={<MemberDharamshalaDetailPage />} />
+                <Route path="pathshalas/:id" element={<MemberPathshalaDetailPage />} />
                 {/* Member-scoped catch-all. Without it an unknown /member/* URL
                     fell through to SmartRouteResolver, which prefixes /admin for
                     admin sessions — that is how member tabs landed in the admin

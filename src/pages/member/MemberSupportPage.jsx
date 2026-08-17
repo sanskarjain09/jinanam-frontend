@@ -1,24 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  HelpCircle, Phone, MessageSquare, ShieldAlert, LifeBuoy, FileText, Send, CheckCircle
+  HelpCircle, Phone, MessageSquare, ShieldAlert, LifeBuoy, FileText, Send, CheckCircle, Loader2, Clock, CheckSquare, Activity, X
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
+import { memberClient } from "@/lib/memberClient";
+import { extractErrorMessage } from "@/lib/api";
 
 export default function MemberSupportPage() {
   const { t } = useLanguage();
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [ticketId, setTicketId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const [tickets, setTickets] = useState([]);
+  const [loadingTickets, setLoadingTickets] = useState(true);
+  const [showMyTicketsModal, setShowMyTicketsModal] = useState(false);
+
+  const fetchMyTickets = async () => {
+    try {
+      setLoadingTickets(true);
+      const res = await memberClient.get("/support-tickets/my");
+      setTickets(res.data?.data || res.data || []);
+    } catch (err) {
+      console.error(err);
+      toast.error(t("Failed to load your tickets"));
+    } finally {
+      setLoadingTickets(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyTickets();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!subject.trim() || !message.trim()) {
       toast.error(t("Please enter both subject and message."));
       return;
     }
-    setSubmitted(true);
-    toast.success(t("Support ticket submitted! Ticket ID: #JIN-9842"));
+    setIsSubmitting(true);
+    try {
+      const res = await memberClient.post("/support-tickets", {
+        type: "OTHER",
+        subject: subject.trim(),
+        description: message.trim(),
+      });
+      setTicketId(res.data?.data?.publicId || res.data?.publicId || "#JIN-????");
+      setSubmitted(true);
+      toast.success(t("Support ticket submitted!"));
+      // Refresh the tickets list
+      fetchMyTickets();
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,6 +75,13 @@ export default function MemberSupportPage() {
             24/7 Helpline, Emergency Medical & Yatra Assistance, and Support Ticket Management.
           </p>
         </div>
+        <button
+          onClick={() => setShowMyTicketsModal(true)}
+          className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shrink-0 shadow-md"
+        >
+          <FileText className="h-4 w-4" />
+          <span>My Tickets</span>
+        </button>
       </div>
 
       {/* ── Emergency Call Helpline Banner ───────────────────────────────── */}
@@ -72,7 +119,7 @@ export default function MemberSupportPage() {
             <div className="p-6 bg-green-50 border border-green-200 rounded-2xl text-center space-y-2">
               <CheckCircle className="h-10 w-10 text-green-600 mx-auto" />
               <h3 className="text-sm font-bold text-green-900">Ticket Submitted Successfully!</h3>
-              <p className="text-xs text-green-700">Ticket ID: <strong>#JIN-9842</strong>. Our support team will contact you shortly.</p>
+              <p className="text-xs text-green-700">Ticket ID: <strong>{ticketId}</strong>. Our support team will contact you shortly.</p>
               <button onClick={() => { setSubmitted(false); setSubject(""); setMessage(""); }} className="mt-3 px-4 py-2 bg-green-600 text-white text-xs font-bold rounded-xl">
                 Submit Another Ticket
               </button>
@@ -103,10 +150,11 @@ export default function MemberSupportPage() {
 
               <button
                 type="submit"
-                className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-400 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors"
               >
-                <Send className="h-4 w-4" />
-                <span>Submit Ticket</span>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                <span>{isSubmitting ? "Submitting..." : "Submit Ticket"}</span>
               </button>
             </form>
           )}
@@ -133,6 +181,69 @@ export default function MemberSupportPage() {
         </div>
 
       </div>
+
+      {/* ── My Support Tickets ─────────────────────────────────────────────── */}
+      {/* ── My Support Tickets Modal ─────────────────────────────────────── */}
+      {showMyTicketsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200/80">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-slate-500" />
+                <span>{t("My Support Tickets")}</span>
+              </h2>
+              <button 
+                onClick={() => setShowMyTicketsModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto bg-slate-50">
+              {loadingTickets ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 text-slate-400 animate-spin" />
+                </div>
+              ) : tickets.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                  <p className="text-sm font-medium text-slate-500">You haven't raised any support tickets yet.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {tickets.map((ticket) => (
+                    <div key={ticket.id} className="p-5 bg-white rounded-2xl border border-slate-200/60 shadow-sm hover:border-orange-300 transition-colors cursor-default">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[10px] font-black tracking-wider text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-200">
+                          {ticket.publicId}
+                        </span>
+                        {ticket.status === 'OPEN' && <span className="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full"><Clock className="h-3 w-3" /> OPEN</span>}
+                        {ticket.status === 'IN_PROGRESS' && <span className="flex items-center gap-1 text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-full"><Activity className="h-3 w-3" /> IN PROGRESS</span>}
+                        {ticket.status === 'RESOLVED' && <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full"><CheckSquare className="h-3 w-3" /> RESOLVED</span>}
+                        {ticket.status === 'CLOSED' && <span className="flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded-full"><CheckCircle className="h-3 w-3" /> CLOSED</span>}
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 mb-1 truncate">{ticket.subject}</h3>
+                      <p className="text-xs text-slate-500 line-clamp-2">{ticket.description || "No description provided."}</p>
+                      
+                      {ticket.resolution && (
+                        <div className="mt-4 p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                          <p className="text-[10px] font-bold text-slate-400 mb-1">ADMIN RESPONSE</p>
+                          <p className="text-xs text-slate-700 font-medium">{ticket.resolution}</p>
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                        <span>{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                        <span>{ticket.type}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

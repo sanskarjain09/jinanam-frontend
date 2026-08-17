@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import {
   Building2, Search, MapPin, Navigation, Star, Clock, Users,
   Heart, Phone, Globe, ChevronRight, ShieldCheck, CheckCircle,
-  Share2, Bookmark, Flag, CalendarCheck, Sparkles, MessageSquare, AlertCircle, Home
+  Share2, Bookmark, Flag, CalendarCheck, Sparkles, MessageSquare, AlertCircle, Home, Plus, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -163,12 +163,20 @@ export default function MemberTempleListPage() {
                   <button
                     onClick={() => toggleFollow(tmpl.publicId, { type: "temple", apiId: tmpl.id, name: tmpl.name, image: tmpl.emoji, category: "temple" })}
                     className={cn(
-                      "p-2 rounded-xl text-xs font-bold border transition-colors",
-                      followed ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      "px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex items-center gap-1",
+                      followed ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
                     )}
-                    title={followed ? "Followed" : "Follow Entity"}
+                    title={followed ? "Unfollow" : "Follow"}
                   >
-                    <Bookmark className={cn("h-4 w-4", followed && "fill-amber-500 text-amber-500")} />
+                    {followed ? (
+                      <>
+                        <Check className="h-3 w-3" /> Following
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3 w-3" /> Follow
+                      </>
+                    )}
                   </button>
                 </div>
 

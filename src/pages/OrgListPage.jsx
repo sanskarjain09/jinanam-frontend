@@ -20,6 +20,7 @@ import {
   toOptions,
 } from "@/constants/dropdownOptions";
 import TimePicker, { TimeRangePicker } from "@/components/common/TimePicker";
+import { OrgSelect } from "@/components/common/OrgSelect";
 import MemberLinkSelect from "@/components/common/MemberLinkSelect";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PermissionGate } from "@/components/common/PermissionGate";
@@ -137,6 +138,13 @@ export default function OrgListPage(props) {
     pluralLabel = pluralLabel || "Sthanaks";
     moduleKey = moduleKey || "STHANAKS";
     testId = testId || "sthanak-list-page";
+  } else if (typeKey === "BHOJANSHALA") {
+    endpoint = endpoint || "/bhojanshala";
+    entity = entity || "bhojanshala";
+    label = label || "Bhojanshala";
+    pluralLabel = pluralLabel || "Bhojanshalas";
+    moduleKey = moduleKey || "BHOJANSHALAS";
+    testId = testId || "bhojanshala-list-page";
   } else {
     endpoint = endpoint || "/temples";
     entity = entity || "temple";
@@ -146,7 +154,7 @@ export default function OrgListPage(props) {
     testId = testId || "temple-list-page";
   }
 
-  const { canDo, isSuperAdmin } = useAuth();
+  const { canDo, isSuperAdmin, organizationIds } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [rows, setRows] = useState([]);
@@ -248,7 +256,7 @@ export default function OrgListPage(props) {
     }
   };
 
-  const ORG_TYPE = { temple: "TEMPLE", dharamshala: "DHARAMSHALA", "jain-center": "JAIN_CENTER" };
+  const ORG_TYPE = { temple: "TEMPLE", dharamshala: "DHARAMSHALA", "jain-center": "JAIN_CENTER", bhojanshala: "BHOJANSHALA" };
 
   const create = async () => {
     setCreating(true);
@@ -433,19 +441,26 @@ export default function OrgListPage(props) {
   const columns = [
     {
       key: "logoUrl", header: t("Logo"), width: 70,
-      render: (r) => (
-        <div className="h-10 w-10 rounded-lg bg-orange-50 border border-orange-200/60 overflow-hidden flex items-center justify-center shadow-xs">
-          {r.logoUrl || r.coverImageUrl ? (
-            <img
-              src={r.logoUrl?.startsWith("http") ? r.logoUrl : r.coverImageUrl?.startsWith("http") ? r.coverImageUrl : `${STATIC_URL}${r.logoUrl || r.coverImageUrl}`}
-              alt="" className="h-full w-full object-cover"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-          ) : (
-            <Building2 className="h-5 w-5 text-orange-600/70" />
-          )}
-        </div>
-      ),
+      render: (r) => {
+        const url = r.logoUrl || r.coverImageUrl;
+        let imgSrc = null;
+        if (url) {
+          imgSrc = url.startsWith("http") ? url : `${STATIC_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+        }
+        return (
+          <div className="relative h-10 w-10 rounded-lg bg-orange-50 border border-orange-200/60 overflow-hidden flex items-center justify-center shadow-xs">
+            <Building2 className="h-5 w-5 text-orange-600/70 absolute inset-0 m-auto" />
+            {imgSrc && (
+              <img
+                src={imgSrc}
+                alt="" 
+                className="h-full w-full object-cover relative z-10 bg-white"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "publicId", header: t("ID"), width: 110,
@@ -455,12 +470,18 @@ export default function OrgListPage(props) {
     },
     {
       key: "name", header: t("Name"),
-      render: (r) => (
-        <div>
-          <div className="font-semibold text-slate-800">{r.name || "—"}</div>
-          {r.trustName && <div className="text-xs text-slate-400">{r.trustName}</div>}
-        </div>
-      ),
+      render: (r) => {
+        const isMine = organizationIds?.includes(r.id) || organizationIds?.includes(r.publicId);
+        return (
+          <div>
+            <div className="font-semibold text-slate-800 flex items-center gap-1.5">
+              {r.name || "—"}
+              {isMine && <span className="bg-orange-100 text-orange-700 text-[8.5px] uppercase tracking-wider px-1.5 py-0.5 rounded font-bold border border-orange-200/60 whitespace-nowrap">{t("Managed by you")}</span>}
+            </div>
+            {r.trustName && <div className="text-xs text-slate-400">{r.trustName}</div>}
+          </div>
+        );
+      },
     },
     {
       key: "location", header: t("Location"),
@@ -473,39 +494,62 @@ export default function OrgListPage(props) {
     { key: "templeType", header: t("Type"), render: (r) => <span className="text-xs font-bold text-slate-655 bg-slate-50 border px-2 py-0.5 rounded">{r.templeType || r.type || "—"}</span> },
     {
       key: "status",
-      header: t("Status & Access Control"),
+      header: t("Status"),
+      render: (r) => (
+        <span
+          className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold w-max ${
+            r.status === "ACTIVE"
+              ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+              : "bg-rose-100 text-rose-700 border border-rose-200"
+          }`}
+        >
+          {r.status || "ACTIVE"}
+        </span>
+      ),
+    },
+    ...(isSuperAdmin ? [{
+      key: "accessControl",
+      header: t("Access Control"),
       render: (r) => {
-        const hasAdminAccess = Boolean(
-          r.adminUserId ||
-          (r.userOrganizations && r.userOrganizations.length > 0) ||
-          r.hasAdminAccess ||
-          r.status === "ACTIVE"
-        );
+        const adminUsers = r.userOrganizations?.map(uo => uo.user).filter(Boolean) || [];
         return (
           <div className="flex flex-col gap-0.5">
-            <span
-              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold w-max ${
-                hasAdminAccess
-                  ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                  : "bg-rose-100 text-rose-800 border border-rose-300"
-              }`}
-            >
-              {hasAdminAccess ? "ACTIVE" : "INACTIVE"}
-            </span>
-            <span className="text-[9px] text-slate-400 font-medium leading-tight">
-              {hasAdminAccess ? t("Admin Access Assigned") : t("No Admin Access")}
-            </span>
+            {adminUsers.length > 0 ? (
+              adminUsers.map(user => (
+                <div 
+                  key={user.id} 
+                  onClick={() => navigate(`/admin/members?search=${user.publicId || user.id}`)}
+                  className="cursor-pointer hover:bg-slate-100 hover:border-slate-300 transition-colors text-[10px] text-slate-600 font-medium flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200 w-max"
+                  title={t("Click to view in Members page")}
+                >
+                  <span className="text-slate-400">ID:</span> {user.publicId || user.id.substring(0, 6)}
+                </div>
+              ))
+            ) : (
+              <span className="text-[9.5px] text-slate-400 font-medium italic">
+                {t("No Admin Access")}
+              </span>
+            )}
           </div>
         );
       },
-    },
+    }] : []),
   ];
 
   const filtered = q
     ? rows.filter((r) => JSON.stringify(r).toLowerCase().includes(q.toLowerCase()))
     : rows;
 
+  const sortedAndFiltered = [...filtered].sort((a, b) => {
+    const aIsMine = organizationIds?.includes(a.id) || organizationIds?.includes(a.publicId);
+    const bIsMine = organizationIds?.includes(b.id) || organizationIds?.includes(b.publicId);
+    if (aIsMine && !bIsMine) return -1;
+    if (!aIsMine && bIsMine) return 1;
+    return 0;
+  });
+
   const isDharamshala = entity === "dharamshala";
+  const isBhojanshala = entity === "bhojanshala";
 
   const configTabs = isDharamshala ? [
     { id: "basic", label: t("🏨 Basic Info") },
@@ -520,6 +564,12 @@ export default function OrgListPage(props) {
     { id: "rules", label: t("📋 Rules & Safety") },
     { id: "bank", label: t("💰 Banking Details") },
     { id: "links", label: t("🔗 Social & UX Links") }
+  ] : isBhojanshala ? [
+    { id: "basic", label: t("🥗 Basic Info") },
+    { id: "location", label: t("📍 Location & Maps") },
+    { id: "food", label: t("🥗 Bhojanshala Details") },
+    { id: "contacts", label: t("👥 Contacts") },
+    { id: "bank", label: t("💰 Banking Details") },
   ] : [
     { id: "basic", label: t("🛕 Basic & Trust") },
     { id: "location", label: t("📍 Location & Maps") },
@@ -572,7 +622,16 @@ export default function OrgListPage(props) {
                             {isDharamshala ? t("🏨 Create New Dharamshala") : `🛕 Create New ${label}`}
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : t("Name *"), "name")}</div>
+                            <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : t("Name *"), "name")}</div>
+                            {isBhojanshala && (
+                              <div className="col-span-2">
+                                <OrgSelect
+                                  label={t("Parent Temple / Organization (Optional)")}
+                                  value={form.parentOrganizationId}
+                                  onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
+                                />
+                              </div>
+                            )}
                             {field("Short Name", "shortName")}
                             {field("Established Date", "establishedDate", "date")}
                           </div>
@@ -1191,7 +1250,7 @@ export default function OrgListPage(props) {
                             </div>
                           )}
 
-                          {!isDharamshala && (
+                          {!isDharamshala && !isBhojanshala && (
                             /* Bhojanshala (Food) Unit */
                             <div className="border p-4 rounded-xl bg-white space-y-3">
                               {toggle("Bhojanshala (Food) Available", "hasBhojanshala")}
@@ -1310,11 +1369,11 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "food" && (
+                      {(isDharamshala || isBhojanshala) && tab === "food" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🥗 Bhojanalay / Food Facility")}</h3>
-                          {toggle("Bhojanalay Available Inside?", "hasBhojanshala")}
-                          {form.hasBhojanshala && (
+                          {!isBhojanshala && toggle("Bhojanalay Available Inside?", "hasBhojanshala")}
+                          {(isBhojanshala || form.hasBhojanshala) && (
                             <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                                 {/* Breakfast */}
@@ -1799,7 +1858,7 @@ export default function OrgListPage(props) {
 
       <DataTable
         columns={columns}
-        rows={filtered}
+        rows={sortedAndFiltered}
         loading={loading}
         testId={`${testId}-table`}
         onRowClick={(r) => {

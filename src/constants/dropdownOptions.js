@@ -286,7 +286,7 @@ export const CRITICALITY_OPTIONS = [
 
 // ─── Org / Temple ────────────────────────────────────────────
 
-export const ORG_TYPES = ["Temple", "Dharamshala", "Jain Centre", "Upashraya", "Pathshala", "Other"];
+export const ORG_TYPES = ["Temple", "Dharamshala", "Jain Centre", "Upashraya", "Bhojanshala", "Pathshala", "Other"];
 export const ORG_TYPE_OPTIONS = toOptions(ORG_TYPES);
 
 export const ORG_STATUSES = ["ACTIVE", "INACTIVE", "PENDING_APPROVAL"];

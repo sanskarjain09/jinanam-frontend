@@ -137,6 +137,17 @@ export const COUNTRY_CODES = [
   { value: "+263", label: "🇿🇼 Zimbabwe (+263)" },
 ];
 
+const MAX_LENGTHS = {
+  "+91": 10, // India
+  "+1": 10,  // USA/Canada
+  "+44": 10, // UK
+  "+61": 9,  // Australia
+  "+65": 8,  // Singapore
+  "+971": 9, // UAE
+  "+254": 9, // Kenya
+  "+27": 9,  // South Africa
+};
+
 /**
  * PhoneInput — Reusable Mobile Input with Country Code Selector (+XX)
  */
@@ -149,7 +160,23 @@ export default function PhoneInput({
   disabled = false,
   className = "",
   id,
+  required = false,
 }) {
+  const currentMaxLength = MAX_LENGTHS[countryCode] || 15;
+
+  const handleInputChange = (e) => {
+    // Only allow digits in the national number part
+    const digitsOnly = e.target.value.replace(/\D/g, "");
+    if (digitsOnly.length <= currentMaxLength) {
+      // Create a synthetic event to pass to onChange
+      const syntheticEvent = {
+        ...e,
+        target: { ...e.target, value: digitsOnly },
+      };
+      onChange?.(syntheticEvent);
+    }
+  };
+
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <div className="w-36 shrink-0">
@@ -165,9 +192,11 @@ export default function PhoneInput({
         id={id}
         type="tel"
         value={value}
-        onChange={onChange}
+        onChange={handleInputChange}
         placeholder={placeholder}
         disabled={disabled}
+        maxLength={currentMaxLength}
+        required={required}
         className="flex-1 font-mono font-medium"
       />
     </div>

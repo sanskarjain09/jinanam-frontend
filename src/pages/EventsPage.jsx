@@ -76,8 +76,8 @@ export default function EventsPage() {
   const { t } = useLanguage();
   const { canDo, user, isSuperAdmin } = useAuth();
   const { orgs } = useOrgs();
-  const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const [selectedOrg, setSelectedOrg] = useState(isSuperAdmin ? "ALL" : "");
+  const orgId = selectedOrg === "ALL" ? "ALL" : (selectedOrg || user?.organizationIds?.[0]);
 
   // States
   const [rows, setRows] = useState([]);
@@ -139,6 +139,11 @@ export default function EventsPage() {
   const [externalLinks, setExternalLinks] = useState("");
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [waitingListCapacity, setWaitingListCapacity] = useState(100);
+
+  const pretty = (status) =>
+    String(status || "")
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   const [allowFamilyRsvp, setAllowFamilyRsvp] = useState(true);
   const [familyMemberIds, setFamilyMemberIds] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
@@ -154,10 +159,16 @@ export default function EventsPage() {
   const [ticketQrCode, setTicketQrCode] = useState("");
   const [scanning, setScanning] = useState(false);
 
+  // Edit/Draft State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editEventId, setEditEventId] = useState(null);
+  const [submitAction, setSubmitAction] = useState("PUBLISH");
+
   // === TICKETS TAB STATES ===
   const [ticketsRows, setTicketsRows] = useState([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
   const [ticketsScanOpen, setTicketsScanOpen] = useState(false);
+  const [rsvpScanOpen, setRsvpScanOpen] = useState(false);
   const [detailTicket, setDetailTicket] = useState(null);
   const [ticketsReload, setTicketsReload] = useState(0);
 
@@ -175,8 +186,15 @@ export default function EventsPage() {
     if (!orgId) { setLoading(false); return; }
     setLoading(true);
     try {
-      const listRes = await api.get(`/events/org/${orgId}`).catch(() => ({ data: { data: [] } }));
-      const statsRes = await api.get(`/events/dashboard/org/${orgId}`).catch(() => ({ data: { data: null } }));
+      const listRes = await (orgId === "ALL" 
+        ? api.get(`/events`) 
+        : api.get(`/events/org/${orgId}`)
+      ).catch(() => ({ data: { data: [] } }));
+      
+      const statsRes = await (orgId === "ALL"
+        ? api.get(`/events/dashboard/platform`).catch(() => ({ data: { data: null } }))
+        : api.get(`/events/dashboard/org/${orgId}`).catch(() => ({ data: { data: null } }))
+      );
 
       const items = listRes.data?.data?.items || listRes.data?.data || [];
       const stats = statsRes.data?.data || null;
@@ -223,6 +241,27 @@ export default function EventsPage() {
       const { data } = await api.post("/tickets/scan", { qrToken: qrText });
       toast.success(`Checked in: ${data?.data?.publicId || "ticket"}`);
       setTicketsReload((k) => k + 1);
+    } catch (e) {
+      toast.error(extractErrorMessage(e));
+    }
+  };
+
+  const handleRsvpScan = async (qrText) => {
+    setRsvpScanOpen(false);
+    try {
+      if (qrText.startsWith("EVENT_RSVP:")) {
+        const [type, eventId, rsvpId] = qrText.split(":");
+        if (type !== "EVENT_RSVP" || !eventId || !rsvpId) throw new Error("Invalid RSVP QR Code");
+        await api.post(`/events/${eventId}/rsvps/${rsvpId}/checkin`);
+      } else {
+        await api.post(`/events/rsvps/${qrText}/checkin`);
+      }
+      toast.success(t("RSVP Checked In successfully!"));
+      setReloadKey((k) => k + 1);
+      // If we are currently reviewing this event's RSVPs, reload them
+      if (detailEvent && qrText.includes(detailEvent.id || detailEvent.publicId || detailEvent.uid)) {
+        openEventDetails(detailEvent);
+      }
     } catch (e) {
       toast.error(extractErrorMessage(e));
     }
@@ -384,8 +423,19 @@ export default function EventsPage() {
         }
       };
 
-      await api.post("/events", payload);
-      toast.success(t("Event created successfully! Target audience visibility rules published."));
+      if (isEditing) {
+        await api.patch(`/events/${editEventId}`, payload);
+        if (submitAction === "PUBLISH") {
+          await api.post(`/events/${editEventId}/transition`, { status: "PUBLISHED" });
+        }
+        toast.success(t(submitAction === "PUBLISH" ? "Event updated and published!" : "Event updated successfully!"));
+      } else {
+        const createRes = await api.post("/events", payload);
+        if (createRes.data && createRes.data.id && submitAction === "PUBLISH") {
+          await api.post(`/events/${createRes.data.id}/transition`, { status: "PUBLISHED" });
+        }
+        toast.success(t(submitAction === "PUBLISH" ? "Event created successfully! Target audience visibility rules published." : "Event draft saved!"));
+      }
       setCreateOpen(false);
       setReloadKey(k => k + 1);
       resetWizard();
@@ -396,7 +446,43 @@ export default function EventsPage() {
     }
   };
 
+  const openEditEvent = (ev) => {
+    setIsEditing(true);
+    setEditEventId(ev.id);
+    setTitle(ev.title || "");
+    setCategory(ev.category?.name || "Religious");
+    setIsPaid(ev.isPaid || false);
+    setBannerUrl(ev.bannerUrl !== "attached_banner_placeholder.png" ? (ev.bannerUrl || "") : "");
+    setStartAt(ev.startAt ? new Date(ev.startAt).toISOString().slice(0, 16) : "");
+    setEndAt(ev.endAt ? new Date(ev.endAt).toISOString().slice(0, 16) : "");
+    setVenue(ev.venue || "");
+    setDesc(ev.description || "");
+    setRsvpCapacity(ev.rsvpCapacity || 200);
+    setWaitingListEnabled(ev.waitingListEnabled !== false);
+    setWaitingListCapacity(ev.waitingListCapacity || 100);
+    setAllowFamilyRsvp(ev.allowFamilyRsvp !== false);
+    setSponsorsList(ev.sponsors || []);
+    setLinkedMonkIds(ev.linkedMonkIds || []);
+    setContactsList(ev.contactPersonIds ? ev.contactPersonIds.map(name => ({ name, mobile: "" })) : []);
+    setExternalLinks(ev.externalLinks ? ev.externalLinks.join(", ") : "");
+    setAdditionalNotes(ev.additionalNotes || "");
+    setGeoCountry(ev.visibilityConfig?.geo?.country || "Entire India");
+    setGeoState(ev.visibilityConfig?.geo?.state || "");
+    setGeoCity(ev.visibilityConfig?.geo?.city || "");
+    setGeoArea(ev.visibilityConfig?.geo?.area || "");
+    setGeoRadius(ev.visibilityConfig?.geo?.gpsRadiusKm || 10);
+    setTargetSect(ev.visibilityConfig?.sect || "All Jain Members");
+    setTargetSubSect(ev.visibilityConfig?.subSect || "");
+    setTargetGaccha(ev.visibilityConfig?.gaccha || "");
+    setAttachmentUrl(ev.attachments?.[0]?.url || "");
+    setCreateOpen(true);
+    setWizardStep(1);
+  };
+
   const resetWizard = () => {
+    setIsEditing(false);
+    setEditEventId(null);
+    setSubmitAction("PUBLISH");
     setWizardStep(1);
     setTitle("");
     setCategory("Religious");
@@ -429,6 +515,17 @@ export default function EventsPage() {
     } catch {
       setRsvpsList([]);
       setFeedbackList([]);
+    }
+  };
+
+  const handlePublishDraft = async (eventId) => {
+    try {
+      await api.post(`/events/${eventId}/transition`, { status: "PUBLISHED" });
+      toast.success(t("Event published successfully!"));
+      setDetailEvent(null);
+      setReloadKey(k => k + 1);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
     }
   };
 
@@ -532,6 +629,11 @@ export default function EventsPage() {
           <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openEventDetails(r)}>
             {t("Review")}
           </Button>
+          {r.status === "DRAFT" && (
+            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => openEditEvent(r)}>
+              {t("Edit")}
+            </Button>
+          )}
           {r.status === "COMPLETED" && (
             <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => { setDetailEvent(r); setGalleryOpen(true); }}>
               <ImageIcon className="h-3.5 w-3.5" /> {t("Media")}
@@ -610,7 +712,13 @@ export default function EventsPage() {
 
       {isSuperAdmin && (
         <div className="max-w-xs">
-          <OrgSelect value={orgId} onChange={setSelectedOrg} label={t("events.activeLocation", "Active Location Facility")} testId="events-org-select" />
+          <OrgSelect 
+            value={selectedOrg} 
+            onChange={setSelectedOrg} 
+            options={isSuperAdmin ? [{ id: "ALL", name: "All Organizations" }, ...orgs] : orgs}
+            label={t("events.activeLocation", "Active Location Facility")} 
+            testId="events-org-select" 
+          />
         </div>
       )}
 
@@ -663,11 +771,18 @@ export default function EventsPage() {
                 <h3 className="font-bold text-sm text-slate-800">{t("events.operationalRegistry", "Operational Events Registry")}</h3>
                 <p className="text-[11px] text-slate-400">{t("events.operationalRegistrySub", "Onboard community yatras, Pravachans, and monitor daily check-ins.")}</p>
               </div>
-              <div className="relative max-w-xs">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("action.search", "Search event title, venue...")} className="pl-8 text-xs h-8" />
+              <div className="flex items-center gap-2">
+                <Button onClick={() => setRsvpScanOpen(true)} className="bg-orange-600 hover:bg-orange-700 text-white font-bold" data-testid="rsvp-scan-button">
+                  <ScanLine className="h-4 w-4 mr-2" /> {t("Scan RSVP")}
+                </Button>
+                <div className="relative max-w-xs">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("action.search", "Search event title, venue...")} className="pl-8 text-xs h-8" />
+                </div>
               </div>
             </div>
+
+            {rsvpScanOpen && <QrScanner onScan={handleRsvpScan} onClose={() => setRsvpScanOpen(false)} />}
 
             <DataTable
               columns={columns}
@@ -918,9 +1033,9 @@ export default function EventsPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto bg-white rounded-2xl text-xs">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-slate-850 font-heading font-black">
-              <Plus className="h-5 w-5 text-orange-650" /> {t("Onboard Event Wizard")}
-            </DialogTitle>
+            <DialogTitle className="flex items-center gap-2 font-bold text-slate-800">
+            <Plus className="h-5 w-5 text-orange-600" /> {isEditing ? t("Edit Event Wizard") : t("Onboard Event Wizard")}
+          </DialogTitle>
           </DialogHeader>
 
           {/* Stepper Wizard Indicator */}
@@ -1197,16 +1312,21 @@ export default function EventsPage() {
               </div>
             )}
 
-            <DialogFooter className="pt-3 border-t shrink-0">
-              <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>{t("Cancel Onboarding")}</Button>
+            <DialogFooter className="pt-3 border-t shrink-0 flex items-center justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setCreateOpen(false)}>{t("Cancel")}</Button>
               {wizardStep < 5 ? (
                 <Button type="button" onClick={() => setWizardStep(wizardStep + 1)} className="bg-slate-800 hover:bg-slate-900 text-white font-bold h-9">
                   {t("Continue Form (")}{wizardStep}/5)
                 </Button>
               ) : (
-                <Button type="submit" disabled={saving || (isPaid && !isSuperAdmin)} className="bg-orange-600 hover:bg-orange-700 text-white font-bold h-9">
-                  {saving ? t("Publishing Event...") : t("Confirm & Publish Event")}
-                </Button>
+                <>
+                  <Button type="submit" onClick={() => setSubmitAction("DRAFT")} disabled={saving || (isPaid && !isSuperAdmin)} variant="outline" className="h-9">
+                    {saving && submitAction === "DRAFT" ? t("Saving...") : t("Save as Draft")}
+                  </Button>
+                  <Button type="submit" onClick={() => setSubmitAction("PUBLISH")} disabled={saving || (isPaid && !isSuperAdmin)} className="bg-orange-600 hover:bg-orange-700 text-white font-bold h-9">
+                    {saving && submitAction === "PUBLISH" ? t("Publishing...") : (isEditing ? t("Update & Publish Event") : t("Confirm & Publish Event"))}
+                  </Button>
+                </>
               )}
             </DialogFooter>
           </form>
@@ -1263,12 +1383,24 @@ export default function EventsPage() {
                         <div className="p-4 text-center text-slate-400">{t("No RSVPs confirmed for this event yet.")}</div>
                       ) : (
                         rsvpsList.map((r, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-2 rounded border bg-slate-50/50">
-                            <div>
-                              <div className="font-bold text-slate-800">{r.member?.fullName}</div>
-                              <div className="text-[9px] text-slate-400 mt-0.5">{t("ID:")} {r.member?.publicId} {t("| Date:")} {formatDate(r.createdAt)}</div>
+                          <div key={idx} className="flex justify-between items-center bg-slate-50 p-2.5 rounded border border-slate-100">
+                            <div className="flex-1 min-w-0 pr-3">
+                              <div className="flex items-center gap-2">
+                                <div className="font-bold text-slate-800 text-sm truncate">{r.member?.fullName}</div>
+                                <Badge variant={r.status === 'CONFIRMED' ? 'success' : 'secondary'} className="text-[9px] h-4 py-0 px-1">
+                                  {r.status}
+                                </Badge>
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+                                {r.member?.user?.email || r.member?.user?.mobile || t("No contact info")}
+                              </div>
+                              <div className="text-[10px] text-slate-400 mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5">
+                                <span>{t("ID:")} <span className="font-medium text-slate-600">{r.member?.publicId}</span></span>
+                                <span>{t("| Date:")} {formatDate(r.createdAt)}</span>
+                                <span>{t("| Guests:")} {r.attendeeCount}</span>
+                              </div>
                             </div>
-                            <Badge variant={r.status === "CONFIRMED" ? "success" : "warning"}>{r.status}</Badge>
+                            <Badge variant={r.status === "CHECKED_IN" ? "success" : r.status === "CONFIRMED" ? "secondary" : "warning"}>{t(pretty(r.status))}</Badge>
                           </div>
                         ))
                       )}
@@ -1300,6 +1432,15 @@ export default function EventsPage() {
               </div>
 
               <DialogFooter className="pt-2 border-t">
+                {detailEvent.status === "DRAFT" && (
+                  <Button
+                    type="button"
+                    className="bg-orange-600 hover:bg-orange-700 text-white font-bold h-9 mr-auto"
+                    onClick={() => handlePublishDraft(detailEvent.id)}
+                  >
+                    {t("Publish Event")}
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={() => setDetailEvent(null)}>{t("Close")}</Button>
               </DialogFooter>
             </div>

@@ -10,7 +10,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useVisibilityEngine } from "@/contexts/VisibilityEngineContext";
 import { cn } from "@/lib/utils";
 import FamilyMembersCard from "@/components/member/FamilyMembersCard";
-import { bookingsApi, donationsApi, eventsApi } from "@/lib/memberApi";
+import { bookingsApi, donationsApi, eventsApi, memberProfileApi } from "@/lib/memberApi";
 
 function StatBadge({ label, value, icon: Icon, color }) {
   return (
@@ -88,19 +88,25 @@ export default function MemberProfilePage() {
   // are the same real, already-verified endpoints MyBookingsPage, My
   // Donations and the Events tab use — this just counts what they return.
   const [stats, setStats] = useState({ events: null, donations: null, bookings: null });
+  const [profile, setProfile] = useState(null);
+
   useEffect(() => {
     let cancelled = false;
     Promise.all([
       eventsApi.myEvents().catch(() => []),
       donationsApi.mine().catch(() => ({ items: [] })),
       bookingsApi.mine().catch(() => []),
-    ]).then(([events, donations, bookings]) => {
+      memberProfileApi.getMyProfile().catch(() => null)
+    ]).then(([events, donations, bookings, myProfile]) => {
       if (cancelled) return;
       setStats({
         events: events.length,
         donations: donations.items.length,
         bookings: bookings.length,
       });
+      if (myProfile) {
+        setProfile(myProfile);
+      }
     });
     return () => { cancelled = true; };
   }, []);
@@ -140,6 +146,13 @@ export default function MemberProfilePage() {
 
           <div className="flex items-center gap-3">
             <Link
+              to="/member/profile/edit"
+              className="px-5 py-3 rounded-2xl bg-white/20 text-white font-bold text-xs shadow-md hover:bg-white/30 backdrop-blur transition-colors flex items-center gap-2"
+            >
+              <Edit3 className="w-4 h-4" />
+              {t("Edit Profile")}
+            </Link>
+            <Link
               to="/member/digital-id"
               className="px-5 py-3 rounded-2xl bg-white text-orange-600 font-bold text-xs shadow-md hover:bg-orange-50 transition-colors flex items-center gap-2"
             >
@@ -160,18 +173,18 @@ export default function MemberProfilePage() {
           <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
             <h2 className="text-base font-bold text-slate-900 mb-4">{t("Personal Information")}</h2>
             <SectionRow icon={User} label={t("Full Name")} value={displayName} />
-            <SectionRow icon={Phone} label={t("Mobile Number")} value={user?.mobile} iconBg="bg-green-100 text-green-600" />
-            <SectionRow icon={Mail} label={t("Email Address")} value={user?.email} iconBg="bg-sky-100 text-sky-600" />
+            <SectionRow icon={Phone} label={t("Mobile Number")} value={(profile || user)?.mobile} iconBg="bg-green-100 text-green-600" />
+            <SectionRow icon={Mail} label={t("Email Address")} value={(profile || user)?.email} iconBg="bg-sky-100 text-sky-600" />
             <LanguagePicker />
-            <SectionRow icon={MapPin} label={t("City / State")} value={[user?.city, user?.state].filter(Boolean).join(", ")} iconBg="bg-amber-100 text-amber-600" />
+            <SectionRow icon={MapPin} label={t("City / State")} value={[profile?.currentAddress?.city || user?.city, profile?.currentAddress?.state || user?.state].filter(Boolean).join(", ")} iconBg="bg-amber-100 text-amber-600" />
           </div>
 
           {/* Community Details */}
           <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
             <h2 className="text-base font-bold text-slate-900 mb-4">{t("Community & Sect")}</h2>
-            <SectionRow icon={Info} label={t("Sect")} value={user?.sect} iconBg="bg-orange-100 text-orange-600" />
-            <SectionRow icon={Users} label={t("Sub-Sect")} value={user?.subCommunity} iconBg="bg-amber-100 text-amber-600" />
-            <SectionRow icon={Star} label={t("Gaccha")} value={user?.gaccha} iconBg="bg-yellow-100 text-yellow-600" />
+            <SectionRow icon={Info} label={t("Sect")} value={profile?.sect || user?.sect} iconBg="bg-orange-100 text-orange-600" />
+            <SectionRow icon={Users} label={t("Sub-Sect")} value={profile?.subCommunity?.name || user?.subCommunity} iconBg="bg-amber-100 text-amber-600" />
+            <SectionRow icon={Star} label={t("Gaccha")} value={profile?.gaccha?.name || user?.gaccha} iconBg="bg-yellow-100 text-yellow-600" />
           </div>
 
           {/* §4.2.7 Family Member Addition */}

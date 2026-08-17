@@ -24,6 +24,7 @@ const MODULE_UI = {
   TEMPLES:        { icon: Landmark,      tone: "orange", route: "/admin/temples" },
   DHARAMSHALAS:   { icon: Hotel,         tone: "teal",   route: "/admin/dharamshalas" },
   JAIN_CENTERS:   { icon: Building2,     tone: "purple", route: "/admin/jain-centers" },
+  BHOJANSHALAS:   { icon: Sigma,         tone: "pink",   route: "/admin/coming-soon?module=Bhojanshala" },
   STHANAKS:       { icon: Building2,     tone: "blue",   route: "/admin/stanaks" },
   COMMUNITY_PAGES:{ icon: Globe,         tone: "pink",   route: "/admin/community-pages" },
   MEMBERS:        { icon: Users,         tone: "blue",   route: "/admin/members" },
@@ -48,7 +49,7 @@ const MODULE_UI = {
   NOTIFICATIONS:  { icon: Bell,          tone: "purple", route: "/admin/notifications" },
   COMMUNICATION:  { icon: BookOpen,      tone: "blue",   route: "/admin/communication" },
   REPORTS:        { icon: BarChart3,     tone: "green",  route: "/admin/reports" },
-  SUPPORT:        { icon: LifeBuoy,      tone: "orange", route: "/admin/support-tickets" },
+  SUPPORT_TICKETS:{ icon: LifeBuoy,      tone: "orange", route: "/admin/support-tickets" },
   SETTINGS:       { icon: ShieldCheck,   tone: "orange", route: "/admin/settings" },
 };
 

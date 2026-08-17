@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,16 @@ import { useMemberAuth } from "@/contexts/MemberAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { PhoneField } from "@/components/common/PhoneInput";
+
+function normalizeMobile(raw) {
+  const s = String(raw || "").replace(/[^\d+]/g, "");
+  if (!s) return "";
+  if (s.startsWith("+")) return `+${s.slice(1).replace(/\+/g, "")}`;
+  if (/^[6-9]\d{9}$/.test(s)) return `+91${s}`;
+  if (/^91[6-9]\d{9}$/.test(s)) return `+${s}`;
+  if (/^0[6-9]\d{9}$/.test(s)) return `+91${s.slice(1)}`;
+  return `+${s}`;
+}
 
 /**
  * 75+ Murtipujak Gacchas Master List (§2)
@@ -73,7 +83,13 @@ export default function MemberRegisterPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { requestOtp, verifyOtp } = useMemberAuth();
+  const { requestOtp, verifyOtp, isAuthenticated } = useMemberAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/member/home", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const [step, setStep] = useState(0);
 
@@ -101,25 +117,55 @@ export default function MemberRegisterPage() {
   const [country, setCountry] = useState("India");
 
   // Non-Jain Identity Verification (§3)
-  const [govIdType1, setGovIdType1] = useState("Aadhaar Card");
+  const [govIdType1, setGovIdType1] = useState("Voter ID");
   const [govIdNum1, setGovIdNum1] = useState("");
-  const [govIdType2, setGovIdType2] = useState("PAN Card");
+  const [govIdType2, setGovIdType2] = useState("Driving Licence");
   const [govIdNum2, setGovIdNum2] = useState("");
   const [selectedInterests, setSelectedInterests] = useState(["Room Bookings", "Bhojanshala"]);
 
+  // Master Data Lists
+  const [communityList, setCommunityList] = useState([]);
+  const [subCommunityList, setSubCommunityList] = useState([]);
+  const [gacchaList, setGacchaList] = useState([]);
+
+  // Common Identity & Personal
+  const [pan, setPan] = useState("");
+  const [aadhaar, setAadhaar] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState("Single");
+  const [nationality, setNationality] = useState("Indian");
+
   // Jain Community Details (§2)
   const [sect, setSect] = useState("Shwetambar");
-  const [subCommunity, setSubCommunity] = useState("Murtipujak (Deravasi / Mandirmargi)");
-  const [gaccha, setGaccha] = useState("Tapa Gaccha");
+  const [communityId, setCommunityId] = useState("");
+  const [subCommunityId, setSubCommunityId] = useState("");
+  const [gacchaId, setGacchaId] = useState("");
   const [motherTongue, setMotherTongue] = useState("Gujarati");
-  const [tithiCalendar, setTithiCalendar] = useState("Gujarati");
+  const [tithiCalendarTypeId, setTithiCalendarTypeId] = useState("");
 
   // Address
+  const [addressLine, setAddressLine] = useState("");
   const [city, setCity] = useState("Mumbai");
   const [state, setState] = useState("Maharashtra");
   const [area, setArea] = useState("Thane West");
+  const [pincode, setPincode] = useState("400601");
 
   // Auto-calculated variables (§1 & §10)
+  const handlePincodeChange = async (e) => {
+    const code = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
+    setPincode(code);
+    if (code.length === 6 && country === "India") {
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${code}`);
+        const data = await res.json();
+        if (data && data[0] && data[0].Status === "Success" && data[0].PostOffice && data[0].PostOffice.length > 0) {
+          const po = data[0].PostOffice[0];
+          setCity(po.District || po.Region || city);
+          setState(po.State || state);
+        }
+      } catch (err) {}
+    }
+  };
+
   const fullName = [firstName, middleName, surname].filter(Boolean).join(" ");
   const calculateAge = (dobString) => {
     if (!dobString) return 0;
@@ -141,15 +187,65 @@ export default function MemberRegisterPage() {
   const [consentPromotional, setConsentPromotional] = useState(true);
   const [consentGuardian, setConsentGuardian] = useState(false);
 
-  // §4.21.8 — calendar options come from master data; the fallback list above
-  // keeps registration working if the lookup fails.
+  // Auto-fetch City and State based on Pincode
   useEffect(() => {
-    api.get("/calendar/types")
-      .then((r) => {
-        const list = r.data?.data?.items || r.data?.data || [];
-        if (Array.isArray(list) && list.length) setCalendarTypes(list);
-      })
-      .catch(() => {});
+    if (pincode && pincode.length === 6) {
+      fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === "Success" && data[0].PostOffice && data[0].PostOffice.length > 0) {
+            const postOffice = data[0].PostOffice[0];
+            if (postOffice.District) setCity(postOffice.District);
+            if (postOffice.State) setState(postOffice.State);
+          }
+        })
+        .catch(err => console.error("Pincode fetch error:", err));
+    }
+  }, [pincode]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [calRes, commRes, subCommRes, gacchaRes] = await Promise.allSettled([
+          api.get("/master-data/tithi-calendar-types"),
+          api.get("/master-data/communities"),
+          api.get("/master-data/sub-communities"),
+          api.get("/master-data/gacchas")
+        ]);
+
+        if (calRes.status === "fulfilled") {
+          const list = calRes.value.data?.data?.items || calRes.value.data?.data || [];
+          if (list.length) {
+            setCalendarTypes(list);
+            setTithiCalendarTypeId(list[0].id);
+          }
+        }
+        if (commRes.status === "fulfilled") {
+          const list = commRes.value.data?.data?.items || commRes.value.data?.data || [];
+          if (list.length) {
+            setCommunityList(list);
+            setCommunityId(list[0].id);
+          }
+        }
+        if (subCommRes.status === "fulfilled") {
+          const list = subCommRes.value.data?.data?.items || subCommRes.value.data?.data || [];
+          if (list.length) {
+            setSubCommunityList(list);
+            setSubCommunityId(list[0].id);
+          }
+        }
+        if (gacchaRes.status === "fulfilled") {
+          const list = gacchaRes.value.data?.data?.items || gacchaRes.value.data?.data || [];
+          if (list.length) {
+            setGacchaList(list);
+            setGacchaId(list[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Master data fetch failed", err);
+      }
+    };
+    fetchData();
   }, []);
 
   // Success Modal State (§3 Unique ID Display: JFJM108 vs JFNJM108)
@@ -162,10 +258,16 @@ export default function MemberRegisterPage() {
   };
 
   const sendOtp = async () => {
-    if (!mobile.trim()) { toast.error(t("Mobile Number is required.")); return; }
+    const normMobile = normalizeMobile(mobile);
+    if (!normMobile) { toast.error(t("Mobile Number is required.")); return; }
     setBusy(true);
     try {
-      await requestOtp(mobile.trim(), "REGISTER");
+      const res = await requestOtp(normMobile, "REGISTER");
+      if (res?.redirectToLogin) {
+        toast.info(t("This mobile number is already registered. Please login."));
+        navigate("/member/login");
+        return;
+      }
       setOtpSent(true);
       toast.success(t("MSG91 OTP sent to (+91)."));
     } catch (err) { toast.error(extractErrorMessage(err)); }
@@ -174,10 +276,12 @@ export default function MemberRegisterPage() {
 
   const onVerify = async (e) => {
     e.preventDefault();
+    const normMobile = normalizeMobile(mobile);
     setBusy(true);
     try {
-      const res = await verifyOtp({ mobile: mobile.trim(), otp, purpose: "REGISTER" });
-      setRegistrationToken(res?.registrationToken || res?.registration_token || null);
+      const res = await verifyOtp({ mobile: normMobile, otp, purpose: "REGISTER" });
+      const token = res?.registrationToken || res?.registration_token || null;
+      setRegistrationToken(token);
       toast.success(t("Mobile number verified successfully."));
       setStep(1);
     } catch (err) { toast.error(extractErrorMessage(err)); }
@@ -186,7 +290,20 @@ export default function MemberRegisterPage() {
 
   const onSubmit = async (e) => {
     e.preventDefault();
+    
+    // Frontend Validations
     if (!firstName.trim()) { toast.error(t("First Name is required.")); return; }
+    if (!surname.trim()) { toast.error(t("Surname is required.")); return; }
+    if (!dob) { toast.error(t("Date of Birth is required.")); return; }
+    if (!pan.trim()) { toast.error(t("PAN Number is required.")); return; }
+    if (!aadhaar.trim()) { toast.error(t("Aadhaar Number is required.")); return; }
+    if (!addressLine.trim()) { toast.error(t("Address is required.")); return; }
+    
+    if (memberType === "JAIN") {
+      if (!communityId) { toast.error(t("Community is required.")); return; }
+      if (!tithiCalendarTypeId) { toast.error(t("Calendar Type is required.")); return; }
+    }
+    
     if (!consentTerms || !consentPrivacy || !consentServices) {
       toast.error(t("Mandatory Terms & Consents must be accepted.")); return;
     }
@@ -196,6 +313,22 @@ export default function MemberRegisterPage() {
 
     setBusy(true);
     try {
+      let formattedDob = undefined;
+      if (dob) {
+        formattedDob = new Date(dob).toISOString();
+      }
+
+      // Map to addressSchema expected by backend (line1, district, country, etc.)
+      const addressObj = {
+        line1: addressLine,
+        city: city,
+        district: city, // Fallback to city as district
+        state: state,
+        country: country,
+        area: area || city, // Ensure area has a value
+        pincode: pincode
+      };
+
       const payload = {
         registrationToken,
         firstName: firstName.trim(),
@@ -203,29 +336,32 @@ export default function MemberRegisterPage() {
         surname: surname.trim(),
         fullName,
         gender,
-        dob,
+        dob: formattedDob,
         age,
         isSeniorCitizen,
+        nationality,
+        maritalStatus,
+        pan: pan.trim() || undefined,
+        aadhaar: aadhaar.replace(/\D/g, '') || undefined,
         country,
         currency: defaultCurrency,
         mobile: mobile.trim(),
         memberType,
         // Non-Jain Identity Details (§3)
-        govDocuments: memberType === "NON_JAIN" ? [
-          { type: govIdType1, number: govIdNum1 },
-          { type: govIdType2, number: govIdNum2 }
-        ] : [],
+        govtDocuments: memberType === "NON_JAIN" ? [
+          { docType: govIdType1, docNumber: govIdNum1 },
+          { docType: govIdType2, docNumber: govIdNum2 }
+        ].filter(doc => doc.docNumber) : [],
         interests: memberType === "NON_JAIN" ? selectedInterests : [],
         // Jain Details (§2)
         sect: memberType === "JAIN" ? sect : null,
-        subCommunity: memberType === "JAIN" ? subCommunity : null,
-        gaccha: (memberType === "JAIN" && subCommunity.includes("Murtipujak")) ? gaccha : null,
+        communityId: communityId || undefined,
         motherTongue,
-        tithiCalendar,
-        whatsapp: whatsappSameAsMobile ? mobile : whatsapp,
-        city,
-        state,
-        area,
+        tithiCalendarTypeId: tithiCalendarTypeId || undefined,
+        whatsapp: whatsappSameAsMobile ? normalizeMobile(mobile) : normalizeMobile(whatsapp),
+        currentAddress: addressObj,
+        permanentAddress: addressObj,
+        sameAsPermanent: true,
         consentTerms,
         consentPrivacy,
         consentServices,
@@ -285,9 +421,9 @@ export default function MemberRegisterPage() {
 
               <div>
                 <Label className="text-xs font-bold text-slate-700">{t("Mobile Number *")}</Label>
-                <Input
+                <PhoneField
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
+                  onChange={setMobile}
                   placeholder="+91 99999 00000"
                   className="mt-1 bg-slate-50 text-sm font-bold"
                   disabled={otpSent}
@@ -403,8 +539,8 @@ export default function MemberRegisterPage() {
                 </div>
               )}
 
-              {/* DOB, Gender & Country */}
-              <div className="grid grid-cols-3 gap-2">
+              {/* DOB, Gender, Country & Nationality */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div>
                   <Label className="text-xs font-bold">{t("Date of Birth")}</Label>
                   <Input type="date" value={dob} onChange={(e) => setDob(e.target.value)} className="mt-1 text-xs" />
@@ -424,11 +560,62 @@ export default function MemberRegisterPage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <Label className="text-xs font-bold">{t("Nationality")}</Label>
+                  <select value={nationality} onChange={(e) => setNationality(e.target.value)} className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white">
+                    <option>Indian</option>
+                    <option>NRI</option>
+                    <option>Other</option>
+                  </select>
+                </div>
               </div>
 
-              {/* §4.2.6 requires a WhatsApp number, and §4.21.8 requires the member
-                  to pick a calendar during profile creation — that choice drives the
-                  Tithi shown on the dashboard and the daily notification. */}
+              {/* PAN, Aadhaar, Marital Status */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs font-bold">{t("PAN Number *")}</Label>
+                  <Input placeholder="ABCDE1234F" value={pan} onChange={(e) => setPan(e.target.value.toUpperCase())} className="mt-1 text-xs uppercase" />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold">{t("Aadhaar Number *")}</Label>
+                  <Input placeholder="12-digit" maxLength={12} value={aadhaar} onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, ''))} className="mt-1 text-xs" />
+                </div>
+                <div>
+                  <Label className="text-xs font-bold">{t("Marital Status")}</Label>
+                  <select value={maritalStatus} onChange={(e) => setMaritalStatus(e.target.value)} className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white">
+                    <option>Single</option>
+                    <option>Married</option>
+                    <option>Divorced</option>
+                    <option>Widowed</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Address details */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                 <div className="col-span-2 md:col-span-4">
+                  <Label className="text-xs font-bold">{t("Address Line")}</Label>
+                  <Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} placeholder="Apt, Street" className="mt-1 text-xs" />
+                 </div>
+                 <div>
+                   <Label className="text-xs font-bold">{t("Pincode")}</Label>
+                   <Input value={pincode} onChange={(e) => setPincode(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} className="mt-1 text-xs" />
+                 </div>
+                 <div>
+                   <Label className="text-xs font-bold">{t("City")}</Label>
+                   <Input value={city} onChange={(e) => setCity(e.target.value)} className="mt-1 text-xs" />
+                 </div>
+                 <div>
+                   <Label className="text-xs font-bold">{t("State")}</Label>
+                   <Input value={state} onChange={(e) => setState(e.target.value)} className="mt-1 text-xs" />
+                 </div>
+                 <div>
+                   <Label className="text-xs font-bold">{t("Area")}</Label>
+                   <Input value={area} onChange={(e) => setArea(e.target.value)} className="mt-1 text-xs" />
+                 </div>
+              </div>
+
+              {/* WhatsApp and Calendar */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <Label className="text-xs font-bold">{t("WhatsApp Number")}</Label>
@@ -453,12 +640,12 @@ export default function MemberRegisterPage() {
                 <div>
                   <Label className="text-xs font-bold">{t("Preferred Calendar *")}</Label>
                   <select
-                    value={tithiCalendar}
-                    onChange={(e) => setTithiCalendar(e.target.value)}
+                    value={tithiCalendarTypeId}
+                    onChange={(e) => setTithiCalendarTypeId(e.target.value)}
                     className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white"
                   >
                     {calendarTypes.map((c) => (
-                      <option key={c.id || c.name} value={c.name}>{c.name}</option>
+                      <option key={c.id || c.name} value={c.id || c.name}>{c.name}</option>
                     ))}
                   </select>
                   <p className="text-[10px] text-slate-400 mt-1">
@@ -529,25 +716,12 @@ export default function MemberRegisterPage() {
                       </select>
                     </div>
                     <div>
-                      <Label className="text-xs">{t("Sub-Community")}</Label>
-                      <select value={subCommunity} onChange={(e) => setSubCommunity(e.target.value)} className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white">
-                        <option>Murtipujak (Deravasi / Mandirmargi)</option>
-                        <option>Sthanakvasi</option>
-                        <option>Terapanth</option>
+                      <Label className="text-xs">{t("Community")}</Label>
+                      <select value={communityId} onChange={(e) => setCommunityId(e.target.value)} className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white">
+                        {communityList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                       </select>
                     </div>
                   </div>
-
-                  {subCommunity.includes("Murtipujak") && (
-                    <div>
-                      <Label className="text-xs font-bold">{t("Gaccha (75+ Options)")}</Label>
-                      <select value={gaccha} onChange={(e) => setGaccha(e.target.value)} className="w-full mt-1 p-2 rounded-xl border text-xs font-bold bg-white">
-                        {MURTIPUJAK_GACCHAS.map((g) => (
-                          <option key={g}>{g}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                 </div>
               )}
 

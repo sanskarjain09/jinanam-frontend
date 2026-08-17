@@ -10,6 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { PartyPopper, MapPin, Calendar, Loader2, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 import { eventsApi } from "@/lib/memberApi";
 import { extractErrorMessage } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -133,86 +134,98 @@ export default function MemberEventsPage() {
         )}
 
         {!loading &&
-          rows.map((ev) => {
-            const rsvped = String(ev.rsvp_status || "").toUpperCase();
-            const isPaid = !!ev.is_paid;
-            const soldOut = ev.seats_left === 0;
+          rows.map((row) => {
+            const ev = row.event || row;
+            const rsvpStatus = row.event ? row.status : ev.rsvpStatus;
+            const rsvped = String(rsvpStatus || "").toUpperCase();
+            const isPaid = !!ev.isPaid;
+            const soldOut = ev.seatsLeft === 0;
+            const bannerUrl = ev.bannerUrl;
+            const categoryName = ev.category?.name || ev.category;
+            const orgName = ev.organization?.name || ev.organizationName;
+            const eventId = ev.id || ev.publicId || ev.uid;
+
             return (
-              <Card key={ev.uid || ev.id} className="overflow-hidden rounded-xl" data-testid={`event-${ev.uid || ev.id}`}>
-                {ev.banner_url && (
-                  <img src={ev.banner_url} alt={ev.title} className="h-32 w-full object-cover" />
-                )}
-                <div className="p-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {ev.category && (
-                      <Badge variant="outline" className="text-[10px]">{t(ev.category)}</Badge>
-                    )}
-                    <Badge className={`text-[10px] border-0 ${isPaid ? "bg-purple-100 text-purple-700" : "bg-emerald-100 text-emerald-700"}`}>
-                      {isPaid ? t("Paid Event") : t("Free Event")}
-                    </Badge>
-                    {rsvped && (
-                      <Badge className="text-[10px] bg-blue-100 text-blue-700 border-0">
-                        {t(rsvped === "WAITING_LIST" ? "Waiting List" : "RSVP Confirmed")}
+              <Link key={eventId} to={`/member/events/${eventId}`} className="block">
+                <Card className="overflow-hidden rounded-xl hover:shadow-md transition-shadow" data-testid={`event-${eventId}`}>
+                  <img 
+                    src={bannerUrl && bannerUrl && bannerUrl !== 'attached_banner_placeholder.png' ? bannerUrl : "https://placehold.co/600x400/f3f4f6/9ca3af?text=Event"} 
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/f3f4f6/9ca3af?text=Event" }}
+                    alt={ev.title} 
+                    className="h-32 w-full object-cover" 
+                  />
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {categoryName && (
+                        <Badge variant="outline" className="text-[10px]">{t(categoryName)}</Badge>
+                      )}
+                      <Badge className={`text-[10px] border-0 ${isPaid ? "bg-purple-100 text-purple-700" : "bg-emerald-100 text-emerald-700"}`}>
+                        {isPaid ? t("Paid Event") : t("Free Event")}
                       </Badge>
-                    )}
-                  </div>
-
-                  <h2 className="font-heading font-bold text-sm text-slate-900 mt-2">{ev.title}</h2>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{ev.organization_name}</p>
-
-                  <div className="mt-2 space-y-1 text-[11px] text-slate-600">
-                    {ev.starts_at && (
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3 w-3 text-slate-400" />
-                        {new Date(ev.starts_at).toLocaleString()}
-                      </div>
-                    )}
-                    {(ev.city || ev.venue) && (
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="h-3 w-3 text-slate-400" />
-                        {[ev.venue, ev.city].filter(Boolean).join(", ")}
-                        {ev.distance_km != null && ` · ${ev.distance_km} km`}
-                      </div>
-                    )}
-                    {isPaid && ev.seats_left != null && (
-                      <div className="flex items-center gap-1.5">
-                        <Users className="h-3 w-3 text-slate-400" />
-                        {t("{0} seats left", [ev.seats_left])}
-                      </div>
-                    )}
-                  </div>
-
-                  {scope !== "past" && (
-                    <div className="mt-3 flex gap-2">
-                      {!isPaid && !rsvped && (
-                        <Button
-                          size="sm"
-                          className="flex-1 font-bold"
-                          onClick={() => setRsvpEvent(ev)}
-                          data-testid={`event-rsvp-${ev.uid || ev.id}`}
-                        >
-                          {t("RSVP")}
-                        </Button>
-                      )}
-                      {!isPaid && rsvped && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                          onClick={() => cancelRsvp(ev)}
-                        >
-                          {t("Cancel RSVP")}
-                        </Button>
-                      )}
-                      {isPaid && (
-                        <Button size="sm" className="flex-1 font-bold" disabled={soldOut}>
-                          {soldOut ? t("Sold Out") : t("Book Ticket")}
-                        </Button>
+                      {rsvped && rsvped !== "UNDEFINED" && rsvped !== "NULL" && rsvped !== "" && (
+                        <Badge className="text-[10px] bg-blue-100 text-blue-700 border-0">
+                          {t(rsvped === "WAITING_LIST" ? "Waiting List" : "RSVP Confirmed")}
+                        </Badge>
                       )}
                     </div>
-                  )}
-                </div>
-              </Card>
+
+                    <h2 className="font-heading font-bold text-sm text-slate-900 mt-2">{ev.title}</h2>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{orgName}</p>
+
+                    <div className="mt-2 space-y-1 text-[11px] text-slate-600">
+                      {ev.startAt && (
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3 w-3 text-slate-400" />
+                          {new Date(ev.startAt).toLocaleString()}
+                        </div>
+                      )}
+                      {(ev.city || ev.venue) && (
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-3 w-3 text-slate-400" />
+                          {[ev.venue, ev.city].filter(Boolean).join(", ")}
+                          {ev.distanceKm != null && ` · ${ev.distanceKm} km`}
+                        </div>
+                      )}
+                      {isPaid && ev.seatsLeft != null && (
+                        <div className="flex items-center gap-1.5">
+                          <Users className="h-3 w-3 text-slate-400" />
+                          {t("{0} seats left", [ev.seatsLeft])}
+                        </div>
+                      )}
+                    </div>
+
+                    {scope !== "past" && (
+                      <div className="mt-3 flex gap-2" onClick={(e) => e.preventDefault()}>
+                        {!isPaid && !rsvped && (
+                          <Button
+                            size="sm"
+                            className="flex-1 font-bold"
+                            onClick={(e) => { e.preventDefault(); setRsvpEvent(ev); }}
+                            data-testid={`event-rsvp-${eventId}`}
+                          >
+                            {t("RSVP")}
+                          </Button>
+                        )}
+                        {!isPaid && rsvped && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={(e) => { e.preventDefault(); cancelRsvp(ev); }}
+                          >
+                            {t("Cancel RSVP")}
+                          </Button>
+                        )}
+                        {isPaid && (
+                          <Button size="sm" className="flex-1 font-bold" disabled={soldOut}>
+                            {soldOut ? t("Sold Out") : t("Book Ticket")}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </Link>
             );
           })}
       </div>

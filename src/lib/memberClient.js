@@ -68,6 +68,9 @@ export function clearMemberSession() {
   localStorage.removeItem(MEMBER_KEYS.access);
   localStorage.removeItem(MEMBER_KEYS.refresh);
   localStorage.removeItem(MEMBER_KEYS.user);
+  localStorage.removeItem("jinanam_followed_entities");
+  localStorage.removeItem("jinanam_followed_meta");
+  localStorage.removeItem("jinanam_user_community_prefs");
 }
 
 memberClient.interceptors.request.use((config) => {

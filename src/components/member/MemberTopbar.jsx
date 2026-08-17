@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Menu, Search, Bell, MessageSquare, Wallet, Globe, LogOut, User, QrCode
+  Menu, Search, Bell, Bookmark, Wallet, Globe, LogOut, User, QrCode
 } from "lucide-react";
 import { useMemberAuth } from "@/contexts/MemberAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -57,13 +57,13 @@ export default function MemberTopbar({ onToggleSidebar }) {
         {/* Language Switcher */}
         <LanguageSwitcher />
 
-        {/* Messages Icon */}
+        {/* Bookmarks Icon */}
         <button
-          onClick={() => navigate("/member/notifications")}
+          onClick={() => navigate("/member/bookmarks")}
           className="relative p-2.5 rounded-xl text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors"
-          title={t("Messages")}
+          title={t("Bookmarks")}
         >
-          <MessageSquare className="h-4.5 w-4.5" />
+          <Bookmark className="h-4.5 w-4.5" />
         </button>
 
         {/* Notifications Bell */}

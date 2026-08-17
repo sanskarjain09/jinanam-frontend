@@ -8,6 +8,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneField } from "@/components/common/PhoneInput";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Camera, Pencil, Eye, Phone, Mail, Droplets,
@@ -640,7 +641,7 @@ function EditPanel({ member, onSave, onCancel }) {
               <div>
                 <Label className="text-xs font-semibold text-slate-600 font-mono-num">{t("Mobile Number *")}</Label>
                 <div className="flex gap-2 mt-1">
-                  <Input value={form.mobile} onChange={(e) => setForm({ ...form, mobile: e.target.value })} placeholder={t("+91XXXXXXXXXX")} className="bg-white flex-1" />
+                  <PhoneField value={form.mobile} onChange={(v) => setForm({ ...form, mobile: v })} placeholder={t("+91XXXXXXXXXX")} className="bg-white flex-1" />
                   <Button size="sm" variant={mobileVerified ? "outline" : "default"} type="button" onClick={() => verifyField("mobile")}>
                     {mobileVerified ? t("✓ Verified") : t("Verify Mobile")}
                   </Button>
@@ -915,7 +916,7 @@ function EditPanel({ member, onSave, onCancel }) {
                 </div>
                 <div className="col-span-2">
                   <Label className="text-xs font-semibold text-slate-600">{t("Emergency Phone")}</Label>
-                  <Input value={form.emergencyMobile} onChange={(e) => setForm({ ...form, emergencyMobile: e.target.value })} placeholder={t("+91XXXXXXXXXX")} className="bg-white mt-1" />
+                  <PhoneField value={form.emergencyMobile} onChange={(v) => setForm({ ...form, emergencyMobile: v })} placeholder={t("+91XXXXXXXXXX")} className="bg-white mt-1" />
                 </div>
               </div>
             </div>
@@ -1013,11 +1014,11 @@ function EditPanel({ member, onSave, onCancel }) {
                         />
                       </div>
                       <div className="col-span-3">
-                        <Input value={m.mobile} onChange={(e) => {
-                          const list = [...form.familyMembers];
-                          list[idx].mobile = e.target.value;
-                          setForm({ ...form, familyMembers: list });
-                        }} placeholder={t("Mobile Number")} className="h-8 text-xs font-mono" />
+                        <PhoneField value={m.mobile} onChange={(v) => {
+                          const newList = [...form.familyMembers];
+                          newList[idx].mobile = v;
+                          setForm({ ...form, familyMembers: newList });
+                        }} placeholder={t("Mobile")} className="h-8 bg-white" />
                       </div>
                       <div className="col-span-1 text-right">
                         <button type="button" onClick={() => {

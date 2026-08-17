@@ -9,7 +9,7 @@
  * All responses are assumed to follow the platform envelope { data: ... }.
  * `unwrap` tolerates both `{data:{...}}` and a bare payload.
  */
-import { memberClient as api } from "@/lib/memberClient";
+import { memberClient as api, getMemberDeviceId } from "@/lib/memberClient";
 
 const unwrap = (res) => {
   const body = res?.data;
@@ -25,6 +25,15 @@ const list = (value) => (Array.isArray(value) ? value : value?.items || []);
  * client renders whatever check-identity returns. The +91 heuristic below is
  * only a fallback for when the endpoint is unavailable.
  * ---------------------------------------------------------------------- */
+export const memberProfileApi = {
+  async getMyProfile() {
+    return unwrap(await api.get("/members/me"));
+  },
+  async updateMyProfile(payload) {
+    return unwrap(await api.patch("/members/me", payload));
+  }
+};
+
 export const memberAuthApi = {
   /**
    * @returns {{ exists:boolean, status?:string, allowed_methods:string[] }}
@@ -55,20 +64,18 @@ export const memberAuthApi = {
    * Registration is category-specific on the API (`/members/register/jain` vs
    * `/members/register/non-jain`); there is no `/auth/register`.
    */
-  async register({ registrationToken, firstName, surname, mobile, memberType, communityId }) {
+  async register(payload) {
     const path =
-      String(memberType).toUpperCase() === "NON_JAIN"
+      String(payload.memberType).toUpperCase() === "NON_JAIN"
         ? "/members/register/non-jain"
         : "/members/register/jain";
-    return unwrap(
-      await api.post(path, {
-        registrationToken,
-        firstName,
-        surname,
-        mobile,
-        communityId,
-      })
-    );
+    const finalPayload = {
+      ...payload,
+      deviceId: getMemberDeviceId(),
+      deviceType: "WEB",
+      os: navigator.platform || "web",
+    };
+    return unwrap(await api.post(path, finalPayload));
   },
 };
 

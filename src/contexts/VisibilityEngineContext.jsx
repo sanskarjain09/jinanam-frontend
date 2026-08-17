@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { distanceToEntity } from "@/lib/geo";
 import { memberClient } from "@/lib/memberClient";
+import { useMemberAuth } from "@/contexts/MemberAuthContext";
 
 /**
  * Real follow/unfollow endpoints, by entity type.
@@ -135,8 +136,24 @@ export function prioritizeContentList(items, userPreferences, followedIds = [], 
   if (!Array.isArray(items)) return [];
 
   return [...items].sort((a, b) => {
+    // 1. Unseen content takes top priority over seen content
+    const seenA = (a.initialHasSeen ?? a.hasSeen) ? 1 : 0;
+    const seenB = (b.initialHasSeen ?? b.hasSeen) ? 1 : 0;
+    if (seenA !== seenB) {
+      return seenA - seenB; // 0 (unseen) comes before 1 (seen)
+    }
+
+    // 2. Fall back to existing priority (Followed, Location, etc.)
     const priorityA = calculateContentPriority(a, userPreferences, followedIds, followedMeta);
     const priorityB = calculateContentPriority(b, userPreferences, followedIds, followedMeta);
+    
+    // 3. If priorities match, sort by date (newest first)
+    if (priorityA === priorityB) {
+      const dateA = new Date(a.createdAt || a.timestamp || 0).getTime();
+      const dateB = new Date(b.createdAt || b.timestamp || 0).getTime();
+      return dateB - dateA;
+    }
+    
     return priorityA - priorityB;
   });
 }
@@ -145,6 +162,8 @@ export function prioritizeContentList(items, userPreferences, followedIds = [], 
 const VisibilityEngineContext = createContext(null);
 
 export function VisibilityEngineProvider({ children }) {
+  const { user } = useMemberAuth();
+
   // Default User Preferences & Location
   const [userPreferences, setUserPreferences] = useState(() => {
     const saved = localStorage.getItem("jinanam_user_community_prefs");
@@ -203,6 +222,38 @@ export function VisibilityEngineProvider({ children }) {
     localStorage.setItem("jinanam_followed_meta", JSON.stringify(followedMeta));
   }, [followedMeta]);
 
+  // Clear state when user logs out or switches accounts
+  useEffect(() => {
+    if (!user) {
+      setFollowedIds([]);
+      setFollowedMeta({});
+      setUserPreferences({
+        sect: "Shwetambar",
+        subCommunity: "Murtipujak",
+        tradition: "Achalgaccha",
+        city: "Mumbai",
+        area: "Thane West",
+        state: "Maharashtra",
+        country: "India",
+      });
+      setTravelLocation(null);
+    } else {
+      // User is logged in, fetch their actual follows from backend
+      memberClient.get("/members/me/follows")
+        .then(({ data }) => {
+          if (data && data.followedIds) {
+            setFollowedIds(data.followedIds);
+          }
+          if (data && data.followedMeta) {
+            setFollowedMeta(data.followedMeta);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load user follows:", err);
+        });
+    }
+  }, [user]);
+
   const dropMeta = (entityId) => {
     setFollowedMeta((prev) => {
       if (!(entityId in prev)) return prev;
@@ -250,8 +301,14 @@ export function VisibilityEngineProvider({ children }) {
         await memberClient.post(`${endpoint.prefix}/${apiId}/unfollow`);
         setFollowedIds((prev) => prev.filter((id) => id !== entityId));
         dropMeta(entityId);
-      } catch {
-        toast.error("Couldn't unfollow — please try again.");
+      } catch (err) {
+        // Workaround: Backend might throw 500 (P2025) if already unfollowed in DB but present in local storage
+        if (err.response?.status === 500 || err.response?.status === 400) {
+          setFollowedIds((prev) => prev.filter((id) => id !== entityId));
+          dropMeta(entityId);
+        } else {
+          toast.error("Couldn't unfollow — please try again.");
+        }
       }
       return;
     }
@@ -260,8 +317,14 @@ export function VisibilityEngineProvider({ children }) {
       await memberClient.post(`${endpoint.prefix}/${apiId}/follow`);
       setFollowedIds((prev) => [...prev, entityId]);
       setFollowedMeta((prev) => ({ ...prev, [entityId]: meta }));
-    } catch {
-      toast.error("Couldn't follow — please try again.");
+    } catch (err) {
+      // Workaround: Backend throws 500 (P2002) if already followed in DB but missing in local storage
+      if (err.response?.status === 500 || err.response?.status === 400) {
+        setFollowedIds((prev) => [...prev, entityId]);
+        setFollowedMeta((prev) => ({ ...prev, [entityId]: meta }));
+      } else {
+        toast.error("Couldn't follow — please try again.");
+      }
     }
   };
 

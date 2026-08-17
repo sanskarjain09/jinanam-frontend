@@ -167,6 +167,9 @@ export function MemberAuthProvider({ children }) {
           purpose,
           ...device(),
         });
+        if (data?.data?.registrationToken) {
+          return data.data;
+        }
         return acceptSession(data?.data);
       } finally {
         setLoading(false);

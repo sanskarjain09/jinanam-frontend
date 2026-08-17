@@ -9,6 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { extractErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { PhoneField } from "@/components/common/PhoneInput";
 
 /**
  * Users are stored against an exact E.164 string, so anything a person types
@@ -334,16 +335,12 @@ export default function MemberLoginPage() {
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
                         Mobile Number
                       </label>
-                      <div className="relative">
-                        <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                          type="text"
-                          value={identifier}
-                          onChange={(e) => setIdentifier(e.target.value)}
-                          placeholder="e.g. +91 90000 00001"
-                          className="w-full pl-10 pr-4 py-3 text-xs font-medium text-slate-800 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      </div>
+                      <PhoneField
+                        value={identifier}
+                        onChange={setIdentifier}
+                        placeholder="+91 90000 00001"
+                        className="bg-slate-50/50"
+                      />
                     </div>
 
                     {/* Password Field */}
@@ -417,17 +414,13 @@ export default function MemberLoginPage() {
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">
                         Mobile Number
                       </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                        <input
-                          type="tel"
-                          value={otpMobile}
-                          onChange={(e) => setOtpMobile(e.target.value)}
-                          placeholder="+91 9999900000"
-                          disabled={otpSent}
-                          className="w-full pl-10 pr-4 py-3 text-xs font-medium text-slate-800 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-60"
-                        />
-                      </div>
+                      <PhoneField
+                        value={otpMobile}
+                        onChange={setOtpMobile}
+                        placeholder="+91 99999 00000"
+                        disabled={otpSent}
+                        className="bg-slate-50/50"
+                      />
                     </div>
 
                     {otpSent && (

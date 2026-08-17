@@ -35,10 +35,10 @@ export default function MemberLayout() {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC]">
+    <div className="h-screen flex bg-[#F8FAFC] overflow-hidden">
       
-      {/* Desktop Left Sidebar (Sticky, Collapsible like Admin) */}
-      <div className="hidden md:block h-screen sticky top-0 transition-all duration-300 z-40">
+      {/* Desktop Left Sidebar (Fixed) */}
+      <div className="hidden md:block h-full transition-all duration-300 z-40 shrink-0">
         <MemberSidebar collapsed={sidebarCollapsed} />
       </div>
 
@@ -50,12 +50,14 @@ export default function MemberLayout() {
       </Sheet>
 
       {/* Right Content Area: Topbar + Main Canvas */}
-      <div className="flex-1 min-w-0 flex flex-col">
-        <MemberTopbar onToggleSidebar={handleToggleSidebar} />
+      <div className="flex-1 min-w-0 flex flex-col h-full relative">
+        <div className="sticky top-0 z-30 shrink-0">
+          <MemberTopbar onToggleSidebar={handleToggleSidebar} />
+        </div>
         
         <main
           // pb-24 on mobile keeps the last card clear of the fixed bottom nav.
-          className="flex-1 p-4 sm:p-6 md:p-8 pb-24 md:pb-8 animate-fade-up"
+          className="flex-1 overflow-y-auto flex flex-col min-h-0 p-4 sm:p-6 md:p-8 pb-24 md:pb-8 animate-fade-up"
           data-testid="member-main"
         >
           {/* Pages reach GPS status/request via useOutletContext(), so the

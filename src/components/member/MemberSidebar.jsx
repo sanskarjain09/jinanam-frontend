@@ -53,7 +53,7 @@ const MENU_GROUPS = [
     children: [
       { to: "/member/explore", label: "Universal Directory" },
       { to: "/member/temples", label: "Temples & Derasars" },
-      { to: "/member/explore?cat=jaincenter", label: "Jain Centres" },
+      { to: "/member/explore?cat=jaincentre", label: "Jain Centres" },
       { to: "/member/ms", label: "Maharaj Saheb (MS)" },
       { to: "/member/explore?cat=dharamshala", label: "Dharamshalas" },
       { to: "/member/explore?cat=bhojanshala", label: "Bhojanshalas" },

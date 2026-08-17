@@ -21,6 +21,7 @@ export default function SupportTicketsPage() {
   const { user, isSuperAdmin } = useAuth();
   const [openCreate, setOpenCreate] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [filterStatus, setFilterStatus] = useState("ALL");
   
   // Selected ticket for details modal
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -89,6 +90,26 @@ export default function SupportTicketsPage() {
     }
   ];
 
+  const customFilterFn = (ticket) => {
+    if (filterStatus !== "ALL" && ticket.status !== filterStatus) return false;
+    return true;
+  };
+
+  const extraFilters = (
+    <Select value={filterStatus} onValueChange={setFilterStatus}>
+      <SelectTrigger className="w-[150px] bg-white h-9">
+        <SelectValue placeholder={t("Filter by Status")} />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="ALL">{t("All Statuses")}</SelectItem>
+        <SelectItem value="OPEN">{t("Open")}</SelectItem>
+        <SelectItem value="IN_PROGRESS">{t("In Progress")}</SelectItem>
+        <SelectItem value="RESOLVED">{t("Resolved")}</SelectItem>
+        <SelectItem value="CLOSED">{t("Closed")}</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <>
       <GenericListPage
@@ -98,6 +119,8 @@ export default function SupportTicketsPage() {
         endpoint="/support-tickets"
         columns={columns}
         testId="support-tickets-page"
+        extraFilters={extraFilters}
+        customFilterFn={customFilterFn}
         extraActions={
           canRaise && (
             <Button onClick={() => setOpenCreate(true)} data-testid="tickets-create-btn">

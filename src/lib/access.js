@@ -82,6 +82,9 @@ export const PLATFORM_MODULES = [
   { key: "MONKS", label: "MS Profiles & Chaturmas", category: "People" },
   { key: "STAFF", label: "Staff Management & Attendance", category: "People" },
   { key: "TEMPLES", label: "Temple Management", category: "Organizations" },
+  { key: "BHOJANSHALAS", label: "Bhojanshala Management", category: "Organizations" },
+  { key: "PATHSHALAS", label: "Pathshala Management", category: "Organizations" },
+  { key: "GOSHALAS", label: "Goshala Management", category: "Organizations" },
   { key: "DHARAMSHALAS", label: "Dharamshala & Rooms", category: "Organizations" },
   { key: "JAIN_CENTERS", label: "Jain Centre Management", category: "Organizations" },
   { key: "STHANAKS", label: "Sthanak Management", category: "Organizations" },
@@ -104,7 +107,7 @@ export const PLATFORM_MODULES = [
   { key: "VISITORS", label: "Visitor Entry & Exit", category: "Operations" },
   { key: "TRACKING", label: "MS Live Tracking", category: "Operations" },
   { key: "REPORTS", label: "Reports & Analytics", category: "Reports" },
-  { key: "SUPPORT", label: "Support & Feedback", category: "Support" },
+  { key: "SUPPORT_TICKETS", label: "Support & Feedback", category: "Support" },
   { key: "SETTINGS", label: "Organization Settings", category: "Settings" },
 ];
 
@@ -164,6 +167,15 @@ export const ROUTE_TO_MODULE = {
   "/temples": "TEMPLES",
   "/temple-management": "TEMPLES",
 
+  "/bhojanshalas": "BHOJANSHALAS",
+  "/bhojanshala-management": "BHOJANSHALAS",
+
+  "/pathshalas": "PATHSHALAS",
+  "/pathshala-management": "PATHSHALAS",
+
+  "/goshalas": "GOSHALAS",
+  "/goshala-management": "GOSHALAS",
+
   "/dharamshalas": "DHARAMSHALAS",
   "/dharamshala-management": "DHARAMSHALAS",
   "/dharamshala/management": "DHARAMSHALAS",
@@ -209,13 +221,14 @@ export const ROUTE_TO_MODULE = {
   "/routes": "TRACKING",
   "/journey-logs": "TRACKING",
   "/reports": "REPORTS",
-  "/support-tickets": "SUPPORT",
-  "/feedback": "SUPPORT",
-  "/incorrect-reports": "SUPPORT",
+  "/support-tickets": "SUPPORT_TICKETS",
+  "/feedback": "SUPPORT_TICKETS",
+  "/incorrect-reports": "SUPPORT_TICKETS",
   "/settings": "SETTINGS",
   "/audit-logs": "SETTINGS",
   "/master-data": "SETTINGS",
   "/admins": "SETTINGS",
+  "/admin/module-controller": "SETTINGS",
 };
 
 /** Resolve a route (with or without a query string) to its gating module. */
@@ -363,7 +376,7 @@ export function buildCapabilities({ role, modules, permissions, overrides } = {}
     : fromPermissions;
 
   // Implicitly grant EVENTS, ANNOUNCEMENTS, and VOLUNTEERS to any admin who has an organization module
-  const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALA", "COMMUNITY_PAGES"];
+  const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALAS", "COMMUNITY_PAGES"];
   const hasOrgModule = orgModules.some((mod) => grantedSet[mod] !== undefined);
   if (hasOrgModule) {
     if (grantedSet.EVENTS === undefined) grantedSet.EVENTS = null;

@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { extractErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { PhoneField } from "@/components/common/PhoneInput";
 
 export default function LoginPage() {
   const { t } = useLanguage();
@@ -198,14 +199,12 @@ export default function LoginPage() {
                     <Label htmlFor="mobile-otp" className="text-xs font-medium">
                       {t("Indian Mobile Number (+91)")}
                     </Label>
-                    <div className="relative mt-1">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
+                    <div className="mt-1">
+                      <PhoneField
                         id="mobile-otp"
                         value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        placeholder={t("+91XXXXXXXXXX")}
-                        className="pl-9"
+                        onChange={setMobile}
+                        placeholder={t("90000 00001")}
                         disabled={otpSent}
                         required
                         data-testid="login-otp-mobile-input"
@@ -338,14 +337,12 @@ export default function LoginPage() {
                     <Label htmlFor="mobile-pw" className="text-xs font-medium">
                       {t("Mobile Number or Email")}
                     </Label>
-                    <div className="relative mt-1">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
+                    <div className="mt-1">
+                      <PhoneField
                         id="mobile-pw"
                         value={mobile}
-                        onChange={(e) => setMobile(e.target.value)}
-                        placeholder={t("+91XXXXXXXXXX or email@domain.com")}
-                        className="pl-9"
+                        onChange={setMobile}
+                        placeholder={t("90000 00001")}
                         required
                         data-testid="login-mobile-input"
                       />

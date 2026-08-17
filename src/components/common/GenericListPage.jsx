@@ -23,6 +23,8 @@ export default function GenericListPage({
   testId,
   searchable = true,
   transformResponse,
+  extraFilters,
+  customFilterFn,
 }) {
   const { t } = useLanguage();
   const [rows, setRows] = useState([]);
@@ -63,11 +65,15 @@ export default function GenericListPage({
     if (error) toast.error(error);
   }, [error]);
 
-  const filtered = q
-    ? rows.filter((r) =>
-        JSON.stringify(r).toLowerCase().includes(q.toLowerCase())
-      )
-    : rows;
+  let filtered = rows;
+  if (q) {
+    filtered = filtered.filter((r) =>
+      JSON.stringify(r).toLowerCase().includes(q.toLowerCase())
+    );
+  }
+  if (customFilterFn) {
+    filtered = filtered.filter(customFilterFn);
+  }
 
   return (
     <div data-testid={testId}>
@@ -76,18 +82,25 @@ export default function GenericListPage({
         subtitle={subtitle}
         actions={extraActions}
       />
-      {searchable && (
-        <div className="mb-4 max-w-sm">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={t("action.search", "Search...")}
-              className="pl-9 bg-white"
-              data-testid={`${testId}-filter-input`}
-            />
-          </div>
+      {(searchable || extraFilters) && (
+        <div className="mb-4 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          {searchable && (
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={t("action.search", "Search...")}
+                className="pl-9 bg-white"
+                data-testid={`${testId}-filter-input`}
+              />
+            </div>
+          )}
+          {extraFilters && (
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              {extraFilters}
+            </div>
+          )}
         </div>
       )}
       <DataTable

@@ -5,13 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { CalendarCheck, ChevronRight } from "lucide-react";
-import { bookingsApi, formatMinor } from "@/lib/memberApi";
+import { CalendarCheck, ChevronRight, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { bookingsApi, eventsApi, formatMinor } from "@/lib/memberApi";
 import { useMemberSocket } from "@/hooks/useMemberSocket";
 import { extractErrorMessage } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
-
+import { memberClient } from "@/lib/memberClient";
+import { QRCodeSVG } from "qrcode.react";
 /**
  * My Bookings — §B16.7.
  * "All bookings across the entire platform appear in one place. Members never
@@ -60,6 +62,8 @@ export default function MyBookingsPage() {
   const [category, setCategory] = useState("");
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedBhojanshalaPass, setSelectedBhojanshalaPass] = useState(null);
+  const [selectedEventRsvp, setSelectedEventRsvp] = useState(null);
 
   /*
    * Booking status is the thing a member refreshes for: submitted → approved →
@@ -85,20 +89,103 @@ export default function MyBookingsPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    bookingsApi
-      .mine({ group, ...(category ? { category } : {}) })
-      .then((data) => { if (!cancelled) setRows(data); })
+
+    const fetchBookings = bookingsApi.mine({ group, ...(category ? { category } : {}) });
+
+    const fetchBhojanshala = (category === "" || category === "Bhojanshala")
+      ? memberClient.get('/bhojanshala/my-passes')
+          .then(res => res.data?.data || [])
+          .catch(err => {
+            console.error("Error fetching Bhojanshala passes:", err);
+            return [];
+          })
+      : Promise.resolve([]);
+
+    const fetchEvents = (category === "" || category === "Event RSVP")
+      ? eventsApi.browse({ scope: 'my-rsvp' })
+          .catch(err => {
+            console.error("Error fetching events:", err);
+            return [];
+          })
+      : Promise.resolve([]);
+
+    Promise.all([fetchBookings, fetchBhojanshala, fetchEvents])
+      .then(([bookingsData, passesData, eventsData]) => {
+        if (cancelled) return;
+
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        
+        const filteredPasses = passesData.filter(pass => {
+          const pDate = new Date(pass.date);
+          pDate.setHours(0,0,0,0);
+          const isPastStatus = ['CANCELLED', 'SCANNED', 'EXPIRED'].includes(pass.status);
+
+          if (group === 'past') return isPastStatus || pDate < today;
+          if (group === 'active') return !isPastStatus && pDate.getTime() === today.getTime();
+          if (group === 'upcoming') return !isPastStatus && pDate >= today;
+          return false;
+        });
+
+        const mappedPasses = filteredPasses.map(p => ({
+          id: p.publicId || p.id,
+          uid: p.publicId || p.id,
+          _isBhojanshala: true,
+          item_name: `Bhojanshala Pass - ${p.mealType}`,
+          status: p.status,
+          organization_name: p.organization?.name,
+          from_date: p.date,
+          amount_minor: Number(p.totalAmount || 0) * 100,
+          currency: 'INR',
+          category: 'Bhojanshala',
+          _originalPass: p
+        }));
+
+        const filteredEvents = eventsData.filter(rsvp => {
+          const eDate = new Date(rsvp.event?.start_at || rsvp.event?.startAt || rsvp.createdAt);
+          eDate.setHours(0,0,0,0);
+          const isPastStatus = ['CANCELLED', 'CHECKED_IN'].includes(rsvp.status);
+
+          if (group === 'past') return isPastStatus || eDate < today;
+          if (group === 'active') return !isPastStatus && eDate.getTime() === today.getTime();
+          if (group === 'upcoming') return !isPastStatus && eDate >= today;
+          return false;
+        });
+
+        const mappedEvents = filteredEvents.map(r => ({
+          id: r.id,
+          uid: r.id,
+          _isEventRsvp: true,
+          item_name: `Event RSVP - ${r.event?.title}`,
+          status: r.status,
+          organization_name: r.event?.organization?.name || r.event?.organization_name,
+          from_date: r.event?.start_at || r.event?.startAt,
+          category: 'Event RSVP',
+          _originalRsvp: r
+        }));
+
+        const combined = [...bookingsData, ...mappedPasses, ...mappedEvents];
+        
+        combined.sort((a, b) => {
+          const dateA = new Date(a.from_date || a.booking_date || 0);
+          const dateB = new Date(b.from_date || b.booking_date || 0);
+          return dateB - dateA;
+        });
+
+        setRows(combined);
+      })
       .catch((e) => {
         if (cancelled) return;
         setRows([]);
         toast.error(extractErrorMessage(e));
       })
       .finally(() => { if (!cancelled) setLoading(false); });
+
     return () => { cancelled = true; };
   }, [group, category]);
 
   const categoryOptions = useMemo(
-    () => [{ value: "", label: t("All Categories") }, ...CATEGORIES.map((c) => ({ value: c, label: t(c) }))],
+    () => [{ value: "", label: t("All Categories") }, ...CATEGORIES.map((c) => ({ value: c, label: t(c) })), { value: "Event RSVP", label: t("Event RSVP") }],
     [t]
   );
 
@@ -109,7 +196,6 @@ export default function MyBookingsPage() {
         {t("Every booking across the platform in one place — stays, halls, pooja, tickets and tours.")}
       </p>
 
-      {/* Group tabs */}
       <div className="mt-4 grid grid-cols-3 gap-2">
         {GROUPS.map((g) => (
           <button
@@ -157,8 +243,9 @@ export default function MyBookingsPage() {
         )}
 
         {!loading &&
-          rows.map((b) => (
-            <Link key={b.uid || b.id} to={`/member/bookings/${b.uid || b.id}`} className="block">
+          rows.map((b) => {
+            const isBhojanshala = b._isBhojanshala;
+            const cardContent = (
               <Card
                 className="p-4 rounded-xl hover:border-orange-300 transition-colors"
                 data-testid={`booking-card-${b.uid || b.id}`}
@@ -199,9 +286,138 @@ export default function MyBookingsPage() {
                   <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 mt-1" />
                 </div>
               </Card>
-            </Link>
-          ))}
+            );
+
+            const isEventRsvp = b._isEventRsvp;
+            if (isBhojanshala) {
+              return (
+                <div 
+                  key={b.uid || b.id} 
+                  className="block cursor-pointer"
+                  onClick={() => setSelectedBhojanshalaPass(b._originalPass)}
+                >
+                  {cardContent}
+                </div>
+              );
+            }
+
+            if (isEventRsvp) {
+              return (
+                <div 
+                  key={b.uid || b.id} 
+                  className="block cursor-pointer"
+                  onClick={() => setSelectedEventRsvp(b._originalRsvp)}
+                >
+                  {cardContent}
+                </div>
+              );
+            }
+
+            return (
+              <Link key={b.uid || b.id} to={`/member/bookings/${b.uid || b.id}`} className="block">
+                {cardContent}
+              </Link>
+            );
+          })}
       </div>
+
+      <Dialog open={!!selectedBhojanshalaPass} onOpenChange={(open) => !open && setSelectedBhojanshalaPass(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Bhojanshala Pass Details")}</DialogTitle>
+          </DialogHeader>
+          {selectedBhojanshalaPass && (
+            <div className="space-y-4 pt-4">
+               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                 <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-bold text-slate-800">{selectedBhojanshalaPass.organization?.name}</h3>
+                      <div className="flex items-center text-xs text-slate-500 mt-1 gap-2">
+                        <span className="flex items-center gap-1"><CalendarCheck className="w-3 h-3"/> {new Date(selectedBhojanshalaPass.date).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {selectedBhojanshalaPass.mealType}</span>
+                      </div>
+                    </div>
+                    {selectedBhojanshalaPass.status === 'PENDING' && <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>}
+                    {selectedBhojanshalaPass.status === 'BOOKED' && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Active</Badge>}
+                    {selectedBhojanshalaPass.status === 'SCANNED' && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Used</Badge>}
+                    {['EXPIRED', 'CANCELLED'].includes(selectedBhojanshalaPass.status) && <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">{selectedBhojanshalaPass.status}</Badge>}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 rounded-lg p-3 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-500">Guests</p>
+                      <p className="font-semibold text-slate-800">{selectedBhojanshalaPass.numberOfPersons}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-500">Total Amount</p>
+                      <p className="font-semibold text-slate-800">₹{selectedBhojanshalaPass.totalAmount}</p>
+                    </div>
+                  </div>
+
+                  {selectedBhojanshalaPass.status !== 'PENDING' && (
+                    <div className="mt-4 flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-lg bg-white">
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">Booking ID</p>
+                      <p className="text-2xl font-mono font-bold tracking-widest text-slate-800">{selectedBhojanshalaPass.publicId}</p>
+                    </div>
+                  )}
+                  {selectedBhojanshalaPass.status === 'PENDING' && (
+                     <div className="mt-4 flex items-center justify-center p-3 border border-slate-100 rounded-lg bg-orange-50/50">
+                       <p className="text-xs text-orange-600 text-center">Your pass is awaiting admin approval. Booking ID will be generated upon confirmation.</p>
+                     </div>
+                  )}
+                </div>
+               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!selectedEventRsvp} onOpenChange={(open) => !open && setSelectedEventRsvp(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Event RSVP Details")}</DialogTitle>
+          </DialogHeader>
+          {selectedEventRsvp && (
+            <div className="space-y-4 pt-4">
+               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                 <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h3 className="font-bold text-slate-800">{selectedEventRsvp.event?.title}</h3>
+                      <div className="flex items-center text-xs text-slate-500 mt-1 gap-2">
+                        <span className="flex items-center gap-1">
+                          <CalendarCheck className="w-3 h-3"/> 
+                          {new Date(selectedEventRsvp.event?.start_at || selectedEventRsvp.event?.startAt).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                    {selectedEventRsvp.status === 'CONFIRMED' && <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Confirmed</Badge>}
+                    {selectedEventRsvp.status === 'CHECKED_IN' && <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Checked In</Badge>}
+                    {['CANCELLED'].includes(selectedEventRsvp.status) && <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 bg-slate-50 rounded-lg p-3 text-sm">
+                    <div>
+                      <p className="text-xs text-slate-500">Attendees</p>
+                      <p className="font-semibold text-slate-800">{selectedEventRsvp.attendeeCount}</p>
+                    </div>
+                  </div>
+
+                  {['CONFIRMED', 'CHECKED_IN'].includes(selectedEventRsvp.status) && (
+                    <div className="mt-4 flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-200 rounded-lg bg-white">
+                      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-3 font-semibold">Entry QR Code</p>
+                      <div className="bg-white p-2 border rounded-xl shadow-sm">
+                        <QRCodeSVG value={`EVENT_RSVP:${selectedEventRsvp.event?.id || selectedEventRsvp.event?.uid}:${selectedEventRsvp.id}`} size={160} level="M" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

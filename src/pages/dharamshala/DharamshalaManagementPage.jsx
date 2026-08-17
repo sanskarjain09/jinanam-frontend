@@ -151,6 +151,21 @@ export default function DharamshalaManagementPage() {
     }
   };
 
+  const handleTogglePublish = async () => {
+    if (!organization) return;
+    setSaving(true);
+    try {
+      const payload = { dharamshalaPublished: !organization.dharamshalaPublished };
+      await api.patch(`/temples/${orgId}`, payload);
+      toast.success(payload.dharamshalaPublished ? "Dharamshala published successfully!" : "Dharamshala unpublished.");
+      setOrganization({ ...organization, dharamshalaPublished: payload.dharamshalaPublished });
+    } catch (e) {
+      toast.error(extractErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const COMMON_AMENITIES = [
     "Parking", "Lift", "WiFi", "Hot Water", "AC", "Cooler", 
     "Geyser", "Wheelchair Accessible", "Security Guard", "CCTV",
@@ -222,6 +237,18 @@ export default function DharamshalaManagementPage() {
             label={t("Select Dharamshala")}
             className="w-full md:w-64"
           />
+        )}
+        {organization && (
+          <div className="flex items-center gap-2 bg-white px-4 py-2 border border-slate-200 rounded-lg shadow-sm">
+            <span className="text-sm font-medium text-slate-700">Published</span>
+            <button
+              onClick={handleTogglePublish}
+              disabled={saving}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${organization.dharamshalaPublished ? 'bg-green-500' : 'bg-slate-300'}`}
+            >
+              <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${organization.dharamshalaPublished ? 'translate-x-4' : 'translate-x-1'}`} />
+            </button>
+          </div>
         )}
       </div>
 
