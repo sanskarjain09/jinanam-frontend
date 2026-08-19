@@ -214,6 +214,8 @@ function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel
  * ------------------------------------------------------------------ */
 function CreateFamilyGroupDialog({ open, onClose, onCreated, setAnchorPublicId }) {
   const { t } = useLanguage();
+  const { user, isSuperAdmin } = useAuth();
+  const orgId = user?.organizationIds?.[0];
   const [groupName, setGroupName] = useState("");
   const [memberIds, setMemberIds] = useState([]);
   const [memberDetails, setMemberDetails] = useState({}); // publicId → { fullName, mobile }
