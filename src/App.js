@@ -291,6 +291,7 @@ export default function App() {
                 <Route path="volunteer-assignment" element={<VolunteersPage />} />
                 <Route path="volunteer-attendance" element={<VolunteersPage />} />
                 <Route path="volunteer-reports" element={<VolunteersPage />} />
+                <Route path="visitors" element={<VisitorsPage />} />
                 <Route path="ms-profiles" element={<MonksPage />} />
                 <Route path="ms/:id" element={<MonkDetailPage />} />
                 <Route path="guru-hierarchy" element={<MonksPage />} />

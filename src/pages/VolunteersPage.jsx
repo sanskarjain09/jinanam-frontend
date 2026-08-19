@@ -137,6 +137,7 @@ export default function VolunteersPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [form, setForm] = useState(EMPTY_OPP);
   const [saving, setSaving] = useState(false);
+  const [editingOppId, setEditingOppId] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -179,6 +180,26 @@ export default function VolunteersPage() {
     }));
   };
 
+  const openEdit = (opp) => {
+    setEditingOppId(opp.id);
+    setForm({
+      organisationName: opp.organization?.name || "",
+      eventName: opp.role || "",
+      description: opp.details?.split("\n\n")[0] || opp.details || "", 
+      roles: opp.roleRequirements?.length > 0 
+          ? opp.roleRequirements.map(r => ({ title: r.title, count: String(r.requiredCount) }))
+          : [{ title: "", count: "" }],
+      date: opp.date ? opp.date.split("T")[0] : "",
+      startTime: opp.startTime || "",
+      endTime: opp.endTime || "",
+      locationType: opp.locationType || "inside_temple",
+      locationAddress: opp.locationAddress || "",
+      instructions: opp.instructions || "",
+      contactPersonId: opp.contactPersonId || "",
+    });
+    setOpenCreate(true);
+  };
+
   const handleSave = async () => {
     if (!form.eventName.trim()) { toast.error(t("Event name is required.")); return; }
     if (form.roles.some((r) => !r.title.trim())) { toast.error(t("All role titles must be filled in.")); return; }
@@ -200,7 +221,14 @@ export default function VolunteersPage() {
 
       const totalSlots = form.roles.reduce((acc, r) => acc + (parseInt(r.count) || 0), 0);
 
-      await api.post("/volunteers/opportunities", {
+      const validRoles = form.roles
+        .filter((r) => r.title.trim())
+        .map((r) => ({
+          title: r.title.trim(),
+          count: parseInt(r.count, 10) || 1,
+        }));
+
+      const payload = {
         role: form.eventName.trim(),
         details,
         shiftTime: shiftLabel,
@@ -210,10 +238,19 @@ export default function VolunteersPage() {
         locationAddress: form.locationType === "ground" ? form.locationAddress : undefined,
         contactPersonId: form.contactPersonId || undefined,
         organizationId: orgId,
-      });
+        roles: validRoles.length > 0 ? validRoles : undefined,
+      };
 
-      toast.success(t("Opportunity created successfully!"));
+      if (editingOppId) {
+        await api.patch(`/volunteers/opportunities/${editingOppId}`, payload);
+        toast.success(t("Opportunity updated successfully!"));
+      } else {
+        await api.post("/volunteers/opportunities", payload);
+        toast.success(t("Opportunity created successfully!"));
+      }
+
       setOpenCreate(false);
+      setEditingOppId(null);
       setForm(EMPTY_OPP);
       setReloadKey((k) => k + 1);
     } catch (err) {
@@ -236,7 +273,7 @@ export default function VolunteersPage() {
         actions={
           <Button
             className="bg-emerald-600 hover:bg-emerald-700 font-bold"
-            onClick={() => { setForm(EMPTY_OPP); setOpenCreate(true); }}
+            onClick={() => { setEditingOppId(null); setForm(EMPTY_OPP); setOpenCreate(true); }}
             data-testid="volunteers-add-btn"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -267,6 +304,61 @@ export default function VolunteersPage() {
         <StatCard label={t("volunteers.totalVolunteers", "Total Volunteers")} value={total || opportunities.length} delta={t("volunteers.allSignups", "All signups")} icon={Users} tone="blue" />
       </div>
 
+      {/* Opportunities List */}
+      <Card className="mb-4 p-5 rounded-xl border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-heading text-base font-semibold">{t("volunteers.opportunityList", "Active Opportunities")}</h2>
+        </div>
+        {loading ? (
+          <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
+        ) : opportunities.length === 0 ? (
+          <EmptyState title={t("No opportunities yet")} description={t("Create your first volunteer opportunity.")} icon={Briefcase} className="border-0 py-6" />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-wider text-muted-foreground border-b border-border">
+                  <th className="text-left font-semibold py-2">{t("Event Name")}</th>
+                  <th className="text-left font-semibold">{t("Date")}</th>
+                  <th className="text-left font-semibold">{t("Location")}</th>
+                  <th className="text-center font-semibold">{t("Required")}</th>
+                  <th className="text-center font-semibold">{t("Approved")}</th>
+                  <th className="text-right font-semibold">{t("Actions")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {opportunities.map((opp) => (
+                  <tr key={opp.id} className="border-b border-border/60 last:border-0 hover:bg-slate-50/50">
+                    <td className="py-3 font-medium">{opp.role || "—"}</td>
+                    <td className="text-xs text-muted-foreground">
+                      {opp.date ? new Date(opp.date).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="text-xs text-muted-foreground">{opp.locationType === "ground" ? opp.locationAddress : "Inside Temple"}</td>
+                    <td className="text-center font-mono-num">{opp.totalRequired ?? "—"}</td>
+                    <td className="text-center font-mono-num">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${opp.participatedCount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                        {opp.participatedCount || 0}
+                      </span>
+                    </td>
+                    <td className="text-right">
+                      <PermissionGate action="EDIT">
+                        <button
+                          onClick={() => openEdit(opp)}
+                          className="p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 rounded-md transition-colors"
+                          title={t("Edit Opportunity")}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                      </PermissionGate>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+
       {/* Main table */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
         <Card className="xl:col-span-2 p-5 rounded-xl border-border">
@@ -278,7 +370,7 @@ export default function VolunteersPage() {
           </div>
           {loading ? (
             <div className="space-y-2">{[1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-14 w-full" />)}</div>
-          ) : apps.length === 0 && opportunities.length === 0 ? (
+          ) : apps.length === 0 ? (
             <EmptyState title={t("volunteers.noVolunteersYet", "No volunteers yet")} description={t("volunteers.addFirstVolunteer", "Add your first volunteer to start coordinating seva activities.")} icon={Users} className="border-0" />
           ) : (
             <div className="overflow-x-auto">
@@ -294,7 +386,7 @@ export default function VolunteersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(apps.length ? apps : opportunities).slice(0, 8).map((v, i) => {
+                  {apps.slice(0, 8).map((v, i) => {
                     const name = v.member?.fullName || (v.member?.firstName ? `${v.member.firstName} ${v.member.surname || ""}` : v.applicantName || v.role || v.title || "—");
                     const status = (v.status || "ACTIVE").toUpperCase();
                     return (
@@ -360,11 +452,14 @@ export default function VolunteersPage() {
         </Card>
       </div>
 
-      {/* ─── Create Opportunity Dialog ─────────────────────────────────── */}
-      <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+      {/* ─── Create/Edit Opportunity Dialog ─────────────────────────────────── */}
+      <Dialog open={openCreate} onOpenChange={(o) => {
+        setOpenCreate(o);
+        if (!o) { setEditingOppId(null); setForm(EMPTY_OPP); }
+      }}>
         <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("Create Volunteer Opportunity")}</DialogTitle>
+            <DialogTitle>{editingOppId ? t("Edit Volunteer Opportunity") : t("Create Volunteer Opportunity")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">

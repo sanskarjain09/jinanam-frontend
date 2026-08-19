@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Plus, MapPin, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,19 +19,30 @@ export default function RoutesPage() {
   const [saving, setSaving] = useState(false);
   const [monks, setMonks] = useState([]);
   const [rows, setRows] = useState([]);
-  const [form, setForm] = useState({ name: "", startLoc: "", endLoc: "", distance: "", stopsCount: "", monkId: "", journeyDate: "" });
+  const [orgs, setOrgs] = useState([]);
+  const [form, setForm] = useState({ id: null, name: "", monkId: "", journeyDate: "", stops: [] });
 
   const loadRoutesAndMonks = async () => {
     setLoading(true);
     try {
-      const [routesRes, monksRes] = await Promise.all([
+      const [routesRes, monksRes, templesRes, jainCentersRes, dharamshalasRes] = await Promise.all([
         api.get("/tracking/routes"),
-        api.get("/monks")
+        api.get("/monks"),
+        api.get("/temples").catch(() => ({ data: { data: [] } })),
+        api.get("/jain-centers").catch(() => ({ data: { data: [] } })),
+        api.get("/dharamshalas").catch(() => ({ data: { data: [] } }))
       ]);
-      setRows(routesRes.data.data || []);
-      setMonks(monksRes.data.data || []);
+      setRows(routesRes.data?.data || []);
+      setMonks(monksRes.data?.data || []);
+
+      const allOrgs = [
+        ...(templesRes.data?.data || []),
+        ...(jainCentersRes.data?.data || []),
+        ...(dharamshalasRes.data?.data || [])
+      ].map(o => ({ value: o.id, label: `${o.name} (${o.publicId})` }));
+      setOrgs(allOrgs);
     } catch (e) {
-      toast.error(t("Failed to load routes and monks."));
+      toast.error(t("Failed to load data."));
     } finally {
       setLoading(false);
     }
@@ -42,13 +53,41 @@ export default function RoutesPage() {
   }, []);
 
   const openAdd = () => {
-    setForm({ name: "", startLoc: "", endLoc: "", distance: "", stopsCount: "", monkId: "", journeyDate: "" });
+    setForm({
+      id: null,
+      name: "",
+      monkId: "",
+      journeyDate: "",
+      stops: [
+        { templeId: "", templeName: "" },
+        { templeId: "", templeName: "" }
+      ]
+    });
     setOpen(true);
   };
 
-  const addRoute = async () => {
-    if (!form.name || !form.startLoc || !form.endLoc || !form.monkId || !form.journeyDate) {
-      toast.error(t("Please fill in Route Name, Start/End Locations, Monk, and Vihar Start Date."));
+  const openEdit = (r) => {
+    setForm({
+      id: r.id,
+      name: r.name,
+      monkId: r.monkId,
+      journeyDate: r.journeyDate ? r.journeyDate.slice(0, 10) : "",
+      stops: r.stops && r.stops.length > 0 ? r.stops.map(s => ({ templeId: s.templeId || "", templeName: s.templeName || "" })) : [
+        { templeId: "", templeName: "" },
+        { templeId: "", templeName: "" }
+      ]
+    });
+    setOpen(true);
+  };
+
+  const saveRoute = async () => {
+    if (!form.name || !form.monkId || !form.journeyDate) {
+      toast.error(t("Please fill in Route Name, Monk, and Vihar Start Date."));
+      return;
+    }
+    const validStops = form.stops.filter(s => s.templeName.trim());
+    if (validStops.length < 2) {
+      toast.error(t("Please provide at least 2 stops."));
       return;
     }
 
@@ -56,23 +95,50 @@ export default function RoutesPage() {
       name: form.name,
       monkId: form.monkId,
       journeyDate: new Date(form.journeyDate).toISOString(),
-      stops: [
-        { order: 0, templeName: form.startLoc, expectedArrival: undefined, status: "PENDING" },
-        { order: 1, templeName: form.endLoc, expectedArrival: undefined, status: "PENDING" }
-      ]
+      stops: validStops.map((s, idx) => ({
+        order: idx,
+        templeName: s.templeName,
+        templeId: s.templeId || undefined,
+        status: "PENDING"
+      }))
     };
 
     setSaving(true);
     try {
-      await api.post("/tracking/routes", payload);
-      toast.success(t("New Vihar route created successfully."));
+      if (form.id) {
+        await api.patch(`/tracking/routes/${form.id}`, payload);
+        toast.success(t("Vihar route updated successfully."));
+      } else {
+        await api.post("/tracking/routes", payload);
+        toast.success(t("New Vihar route created successfully."));
+      }
       setOpen(false);
       loadRoutesAndMonks();
     } catch (e) {
-      toast.error(e?.response?.data?.message || "Failed to save route.");
+      toast.error(e?.response?.data?.message || t("Failed to save route."));
     } finally {
       setSaving(false);
     }
+  };
+
+  const updateStop = (index, field, val) => {
+    const newStops = [...form.stops];
+    newStops[index][field] = val;
+    if (field === 'templeId') {
+      const org = orgs.find(o => o.value === val);
+      if (org) newStops[index].templeName = org.label.split(' (')[0];
+    }
+    setForm({ ...form, stops: newStops });
+  };
+
+  const addStop = () => {
+    setForm({ ...form, stops: [...form.stops, { templeId: "", templeName: "" }] });
+  };
+
+  const removeStop = (index) => {
+    const newStops = [...form.stops];
+    newStops.splice(index, 1);
+    setForm({ ...form, stops: newStops });
   };
 
   const columns = [
@@ -89,7 +155,10 @@ export default function RoutesPage() {
       );
     }},
     { key: "journeyDate", header: t("Vihar Date"), render: (r) => <span className="text-sm font-mono">{r.journeyDate ? r.journeyDate.slice(0, 10) : "—"}</span> },
-    { key: "stops", header: t("Defined Rest Stops"), render: (r) => <Badge className="bg-orange-500 text-white">{(r.stops || []).length} {t("Stops")}</Badge> }
+    { key: "stops", header: t("Defined Rest Stops"), render: (r) => <Badge className="bg-orange-500 text-white">{(r.stops || []).length} {t("Stops")}</Badge> },
+    { key: "actions", header: "", align: "right", render: (r) => (
+        <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Edit className="h-4 w-4 text-slate-500" /></Button>
+    ) }
   ];
 
   return (
@@ -110,11 +179,11 @@ export default function RoutesPage() {
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{t("Add Vihar Route")}</DialogTitle>
+            <DialogTitle>{form.id ? t("Edit Vihar Route") : t("Add Vihar Route")}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 pt-2">
+          <div className="space-y-4 pt-2">
             <div>
               <Label className="text-xs">{t("Monk / Sadhvi *")}</Label>
               <SearchableSelect
@@ -124,18 +193,48 @@ export default function RoutesPage() {
                 placeholder={t("Select a monk")}
                 searchPlaceholder={t("Search monks…")}
                 className="mt-1"
+                disabled={!!form.id}
               />
             </div>
-            <div><Label className="text-xs">{t("Route Name *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("e.g. Mumbai-Pune Highway Route")} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-xs">{t("Start Location *")}</Label><Input value={form.startLoc} onChange={(e) => setForm({ ...form, startLoc: e.target.value })} placeholder={t("Mumbai")} /></div>
-              <div><Label className="text-xs">{t("End Location *")}</Label><Input value={form.endLoc} onChange={(e) => setForm({ ...form, endLoc: e.target.value })} placeholder={t("Pune")} /></div>
+            <div><Label className="text-xs">{t("Route Name *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("e.g. Mumbai-Pune Highway Route")} className="mt-1" /></div>
+            
+            <div className="border border-slate-200 rounded-md p-3 space-y-3 bg-slate-50/50">
+              <Label className="text-sm font-semibold">{t("Route Stops")}</Label>
+              <p className="text-xs text-slate-500">{t("Define the sequence of locations (A to B to C). Link to organizations for automatic feed updates.")}</p>
+              
+              {form.stops.map((stop, idx) => (
+                <div key={idx} className="flex gap-2 items-start bg-white p-2 border border-slate-100 rounded shadow-sm">
+                  <div className="flex-1 space-y-2">
+                    <SearchableSelect
+                      value={stop.templeId}
+                      onValueChange={(val) => updateStop(idx, 'templeId', val)}
+                      options={orgs}
+                      placeholder={t("Link to Organization (Optional)")}
+                      searchPlaceholder={t("Search temples/centers…")}
+                    />
+                    <Input 
+                      value={stop.templeName} 
+                      onChange={(e) => updateStop(idx, 'templeName', e.target.value)} 
+                      placeholder={t("Location / Stop Name *")}
+                    />
+                  </div>
+                  {form.stops.length > 2 && (
+                    <Button variant="ghost" size="icon" onClick={() => removeStop(idx)} className="mt-1 text-red-500 hover:text-red-600 hover:bg-red-50">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addStop} className="w-full border-dashed bg-white">
+                <Plus className="h-4 w-4 mr-2" /> {t("Add Another Stop")}
+              </Button>
             </div>
-            <div><Label className="text-xs">{t("Vihar Date *")}</Label><Input type="date" value={form.journeyDate} onChange={(e) => setForm({ ...form, journeyDate: e.target.value })} /></div>
+
+            <div><Label className="text-xs">{t("Vihar Date *")}</Label><Input type="date" value={form.journeyDate} onChange={(e) => setForm({ ...form, journeyDate: e.target.value })} className="mt-1" /></div>
           </div>
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setOpen(false)}>{t("Cancel")}</Button>
-            <Button onClick={addRoute} disabled={saving}>{saving ? t("Saving...") : t("Save Route")}</Button>
+            <Button onClick={saveRoute} disabled={saving}>{saving ? t("Saving...") : t("Save Route")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

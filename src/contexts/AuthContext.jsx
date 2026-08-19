@@ -16,6 +16,7 @@ const ACCESS_KEY = "jinanam_access_token";
 const REFRESH_KEY = "jinanam_refresh_token";
 const USER_KEY = "jinanam_user";
 const DEVICE_KEY = "jinanam_device_id";
+const ACTIVE_ORG_KEY = "jinanam_active_org_id";
 
 function getDeviceId() {
   let id = localStorage.getItem(DEVICE_KEY);
@@ -38,6 +39,18 @@ export function AuthProvider({ children }) {
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(!!localStorage.getItem(ACCESS_KEY));
+  const [activeOrganizationId, setActiveOrganizationIdState] = useState(() => {
+    return localStorage.getItem(ACTIVE_ORG_KEY) || null;
+  });
+
+  const setActiveOrganizationId = useCallback((id) => {
+    setActiveOrganizationIdState(id);
+    if (id) {
+      localStorage.setItem(ACTIVE_ORG_KEY, id);
+    } else {
+      localStorage.removeItem(ACTIVE_ORG_KEY);
+    }
+  }, []);
 
   const persist = (u, access, refresh) => {
     setUser(u);
@@ -53,9 +66,11 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(ACCESS_KEY);
     localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(ACTIVE_ORG_KEY);
     setUser(null);
     setPermissions({});
     setModules([]);
+    setActiveOrganizationIdState(null);
   }, []);
 
   useEffect(() => {
@@ -333,6 +348,20 @@ export function AuthProvider({ children }) {
     return Array.from(new Set(raw.filter(Boolean)));
   }, [user]);
 
+  const organizations = useMemo(() => {
+    if (!user?.userOrganizations) return [];
+    return user.userOrganizations
+      .map(uo => uo.organization)
+      .filter(Boolean)
+      .filter((org, index, self) => index === self.findIndex((o) => o.id === org.id));
+  }, [user]);
+
+  useEffect(() => {
+    if (!activeOrganizationId && organizations.length > 0) {
+      setActiveOrganizationId(organizations[0].id);
+    }
+  }, [activeOrganizationId, organizations, setActiveOrganizationId]);
+
   /** Monk admins are global by design and are not pinned to organisations. */
   const isGlobalScope = isSuperAdmin || role === "MONK_ADMIN";
 
@@ -380,6 +409,9 @@ export function AuthProvider({ children }) {
         delegatableModules,
         canOnboard,
         organizationIds,
+        organizations,
+        activeOrganizationId,
+        setActiveOrganizationId,
         isGlobalScope,
         hasNoOrgScope,
         canManageOrg,

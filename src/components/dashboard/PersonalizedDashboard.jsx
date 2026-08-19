@@ -113,9 +113,17 @@ function FactTile({ icon: Icon, label, value, tone }) {
 export default function PersonalizedDashboard({ orgs = [], loading = false }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { user, allowedModules, canDo, hasNoOrgScope } = useAuth();
+  const { user, allowedModules, canDo, hasNoOrgScope, activeOrganizationId } = useAuth();
 
-  const primary = orgs[0] || null;
+  const primary = useMemo(() => {
+    if (orgs.length === 0) return null;
+    if (activeOrganizationId) {
+      const found = orgs.find(o => o.id === activeOrganizationId);
+      if (found) return found;
+    }
+    return orgs[0];
+  }, [orgs, activeOrganizationId]);
+
   const facts = useMemo(() => orgFacts(primary), [primary]);
   const profile = useMemo(() => completeness(primary), [primary]);
 

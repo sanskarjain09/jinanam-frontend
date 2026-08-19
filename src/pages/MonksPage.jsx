@@ -179,7 +179,7 @@ function MonkIdCardVisual({ monk }) {
             <div className="font-black text-white text-base leading-tight">{monk?.dikshaName || "—"}</div>
             <div className="text-[10px] text-white/70 mt-0.5 font-semibold tracking-wide">
               {monk?.gender === "SADHVI" ? t("🌸 Sadhvi") : t("🧘 Sadhu")}
-              {monk?.gaccha?.name && ` · ${monk.gaccha.name}`}
+              {monk?.subSect?.name && ` · ${monk.subSect.name}`}
             </div>
           </div>
         </div>
@@ -996,17 +996,6 @@ function RegisterMonkDialog({ onCreated }) {
                           </select>
                         </div>
                       </div>
-
-                      {form.sect === "Shwetambar" && form.subSect === "Murtipujak" && (
-                        <div>
-                          <Label className="text-xs font-semibold">{t("Gaccha")}</Label>
-                          <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                            value={form.gacchaName} onChange={(e) => setForm({ ...form, gacchaName: e.target.value })}>
-                            <option value="">{t("Select Gaccha...")}</option>
-                            {MURTIPUJAK_GACCHAS.map(g => <option key={g} value={g}>{t(g)}</option>)}
-                          </select>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -1699,7 +1688,6 @@ function MonkBulkImportDialog({ onImported }) {
               ["dob",                "DD/MM/YYYY"],
               ["dobPlace",           "Place of birth"],
               ["community",          "e.g. Digambar"],
-              ["gaccha",             "Tradition/Gaccha name"],
               ["currentTemple",      "Temple name"],
               ["bio",                "Short biography"],
             ].map(([col, desc]) => (

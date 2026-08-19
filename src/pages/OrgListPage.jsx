@@ -660,12 +660,6 @@ export default function OrgListPage(props) {
 
                           {form.sect === "Shwetambar" && form.subSect === "Murtipujak" && (
                             <div>
-                              <Label className="text-xs">{t("Gaccha")}</Label>
-                              <select className="w-full mt-1 h-9 rounded-md border border-slate-205 bg-white px-3 text-sm focus:outline-none"
-                                value={form.gacchaName || ""} onChange={(e) => setForm({ ...form, gacchaName: e.target.value })}>
-                                <option value="">{t("Select Gaccha...")}</option>
-                                {MURTIPUJAK_GACCHAS.map(g => <option key={g} value={g}>{t(g)}</option>)}
-                              </select>
                             </div>
                           )}
 

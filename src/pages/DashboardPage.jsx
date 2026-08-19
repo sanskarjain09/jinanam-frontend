@@ -205,7 +205,7 @@ const ORG_TYPES = [
 export default function DashboardPage() {
   const {
     user, isSuperAdmin, canDo, allowedModules,
-    organizationIds, hasNoOrgScope, isGlobalScope,
+    organizationIds, activeOrganizationId, hasNoOrgScope, isGlobalScope,
   } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -234,7 +234,13 @@ export default function DashboardPage() {
     { icon: BarChart3,      labelKey: "dashboard.viewReports",      label: "View Reports",     tone: "purple", to: "/reports",       module: "REPORTS" },
   ].filter((q) => shows(q.module));
   const [orgs, setOrgs] = useState([]);
-  const [orgId, setOrgId] = useState(user?.organizationIds?.[0] || "");
+  const [orgId, setOrgId] = useState(isSuperAdmin ? "" : activeOrganizationId || "");
+
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setOrgId(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
   const [selectedType, setSelectedType] = useState("TEMPLE");
   const [selectedAdminId, setSelectedAdminId] = useState("");
   const [data, setData] = useState(null);

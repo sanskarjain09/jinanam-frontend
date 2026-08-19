@@ -155,7 +155,7 @@ function MonkIdCardVisual({ monk }) {
           <div className="text-center mt-3">
             <div className="font-bold text-white text-sm leading-tight line-clamp-1">{monk?.dikshaName || "—"}</div>
             <div className="text-[9px] text-white/80 mt-0.5 font-semibold">
-              {monk?.gender === "SADHVI" ? t("🌸 Sadhvi") : t("🧘 Sadhu")} {monk?.gacchaName && `· ${monk.gacchaName}`}
+              {monk?.gender === "SADHVI" ? t("🌸 Sadhvi") : t("🧘 Sadhu")} {monk?.subSect?.name && `· ${monk.subSect.name}`}
             </div>
           </div>
         </div>
@@ -590,7 +590,7 @@ export default function MonkDetailPage() {
               {monk.shortName && <span>{t("🌟 Popular:")} {monk.shortName}</span>}
               <span>{t("🔢 ID:")} <strong>{monk.publicId}</strong></span>
               <span>{t("🪷 Sect:")} {monk.sect || "Shwetambar"}</span>
-              {monk.gacchaName && <span>{t("📍 Gaccha:")} {monk.gacchaName}</span>}
+              {monk.subSect?.name && <span>{t("📍 Sub-Sect:")} {monk.subSect.name}</span>}
             </div>
 
             <div className="flex items-center gap-4 flex-wrap pt-2">
@@ -720,7 +720,7 @@ export default function MonkDetailPage() {
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Community:")}</span><strong className="text-slate-800">{monk.sect || "Shwetambar"}</strong></div>
                       <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Sub-Sect / Tradition:")}</span><strong className="text-slate-800">{monk.subSect || "—"}</strong></div>
-                      {monk.gacchaName && <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Gaccha:")}</span><strong className="text-slate-800">{monk.gacchaName}</strong></div>}
+
                     </div>
                   </div>
                 </div>
@@ -1218,17 +1218,6 @@ export default function MonkDetailPage() {
                           </select>
                         </div>
                       </div>
-
-                      {editForm.sect === "Shwetambar" && editForm.subSect === "Murtipujak" && (
-                        <div>
-                          <Label className="text-xs font-semibold">{t("Gaccha")}</Label>
-                          <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                            value={editForm.gacchaName} onChange={(e) => setEditForm({ ...editForm, gacchaName: e.target.value })}>
-                            <option value="">{t("Select Gaccha...")}</option>
-                            {MURTIPUJAK_GACCHAS.map(g => <option key={g} value={g}>{t(g)}</option>)}
-                          </select>
-                        </div>
-                      )}
                     </div>
                   )}
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSocket } from "@/hooks/useSocket";
-import { Search, Bell, LogOut, User as UserIcon, Menu, ChevronDown } from "lucide-react";
+import { Search, Bell, LogOut, User as UserIcon, Menu, ChevronDown, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -21,7 +21,7 @@ import { ROLE_LABELS } from "@/constants/modules";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 
 export default function Topbar({ onToggleSidebar }) {
-  const { user, logout, isSuperAdmin, canDo } = useAuth();
+  const { user, logout, isSuperAdmin, canDo, organizations, activeOrganizationId, setActiveOrganizationId } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const showSearchFilters = pathname === "/admin/temples";
@@ -147,6 +147,37 @@ export default function Topbar({ onToggleSidebar }) {
             </span>
             <span className="text-foreground">{activeAdmins} {t("Active Admin")}{activeAdmins > 1 ? 's' : ''}</span>
           </div>
+        )}
+
+        {organizations && organizations.length > 1 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-border bg-slate-50 hover:bg-slate-100 transition-colors"
+                title={t("topbar.switchOrganization", "Switch Organization")}
+              >
+                <Building2 className="h-4 w-4 text-slate-500" />
+                <span className="hidden lg:block text-xs font-semibold max-w-[150px] truncate text-slate-700">
+                  {organizations.find(o => o.id === activeOrganizationId)?.name || "Select Org"}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 max-h-96 overflow-y-auto">
+              <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("topbar.myOrganizations", "My Organizations")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {organizations.map(org => (
+                <DropdownMenuItem
+                  key={org.id}
+                  onClick={() => setActiveOrganizationId(org.id)}
+                  className={`flex flex-col items-start gap-0.5 cursor-pointer ${activeOrganizationId === org.id ? "bg-orange-50/50" : ""}`}
+                >
+                  <span className={`font-semibold text-xs truncate w-full ${activeOrganizationId === org.id ? "text-orange-700" : ""}`}>{org.name}</span>
+                  <span className="text-[9px] text-muted-foreground uppercase">{org.type}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
 
         <LanguageSwitcher />

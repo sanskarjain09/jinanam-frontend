@@ -317,6 +317,11 @@ const ROUTE_TO_MODULE_MAP = ROUTE_TO_MODULE;
 function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}, parentModule = null) {
   if (!node) return false;
 
+  // Hide all "Coming Soon" features per user request
+  if ((node.route && node.route.includes("/coming-soon")) || node.featureFlag) {
+    return false;
+  }
+
   // 1. Role-based check — applies to everyone including Super Admin
   if (node.roles && node.roles.length > 0) {
     const userRole = isSuperAdmin ? "SUPER_ADMIN" : (user?.primaryRoleKey || user?.role);
@@ -815,7 +820,7 @@ function NestedNav({ collapsed, onNavigate, isSuperAdmin, user, authModules, exp
 // ─── Main Sidebar ─────────────────────────────────────────────────────────────
 export default function Sidebar({ onNavigate, collapsed = false }) {
   const { t } = useLanguage();
-  const { isSuperAdmin, user, modules: authModules } = useAuth();
+  const { isSuperAdmin, user, modules: authModules, activeOrganizationId } = useAuth();
 
   const [expandedState, setExpandedState] = useState(() => loadExpanded());
   const [orgFacilities, setOrgFacilities] = useState({ hasBhojanshala: false, hasDharamshala: false, hasPathshala: false, activeModules: new Set() });
@@ -830,20 +835,32 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
             if (!isMounted) return;
             const temples = res.data?.data?.items || res.data?.data || [];
             const hasBhojanshala = temples.some(t => {
-              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              const tid = t._id || t.id;
+              const matchesOrg = activeOrganizationId 
+                ? tid === activeOrganizationId 
+                : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
               return matchesOrg && (t.type === "BHOJANSHALA" || t.hasBhojanshala === true);
             });
             const hasDharamshala = temples.some(t => {
-              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              const tid = t._id || t.id;
+              const matchesOrg = activeOrganizationId 
+                ? tid === activeOrganizationId 
+                : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
               return matchesOrg && (t.type === "DHARAMSHALA" || t.hasDharamshala === true);
             });
             const hasPathshala = temples.some(t => {
-              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              const tid = t._id || t.id;
+              const matchesOrg = activeOrganizationId 
+                ? tid === activeOrganizationId 
+                : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
               return matchesOrg && t.hasPathshala === true;
             });
             const activeModulesSet = new Set();
             temples.forEach(t => {
-              const matchesOrg = isSuperAdmin ? true : (user.organizationIds?.includes(t._id) || user.organizationIds?.includes(t.id));
+              const tid = t._id || t.id;
+              const matchesOrg = activeOrganizationId 
+                ? tid === activeOrganizationId 
+                : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
               if (matchesOrg && Array.isArray(t.activeModules)) {
                 t.activeModules.forEach(m => activeModulesSet.add(m));
               }
@@ -865,7 +882,7 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
       isMounted = false;
       window.removeEventListener("jinanam_temples_mutated", fetchTemples);
     };
-  }, [isSuperAdmin, user]);
+  }, [isSuperAdmin, user, activeOrganizationId]);
 
   const handleToggle = useCallback((id) => {
     setExpandedState((prev) => {

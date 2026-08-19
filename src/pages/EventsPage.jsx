@@ -1248,22 +1248,7 @@ export default function EventsPage() {
                       </div>
                     )}
 
-                    {targetSubSect === "Murtipujak" && (
-                      <div>
-                        <Label className="text-[10px] uppercase font-bold text-slate-400">{t("Gaccha Hierarchy")}</Label>
-                        <SearchableSelect
-                          value={targetGaccha}
-                          onValueChange={setTargetGaccha}
-                          options={[
-                            { value: "", label: t("Select Gaccha") },
-                            ...MURTIPUJAK_GACCHAS.map(v => ({ value: v, label: v }))
-                          ]}
-                          placeholder={t("Select Gaccha")}
-                          searchPlaceholder={t("Search Gaccha…")}
-                          className="mt-1"
-                        />
-                      </div>
-                    )}
+
                   </div>
                 </div>
               </div>
