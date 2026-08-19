@@ -158,7 +158,7 @@ export const NESTED_NAV = [
     children: [
       { id: "ms-profiles", label: "MS Profiles", route: "/admin/ms-profiles" },
       { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: true },
-      { id: "ms-groups", label: "MS Groups", route: "/admin/coming-soon?module=MS Groups", featureFlag: true },
+      { id: "ms-groups", label: "MS Groups", route: "/admin/ms-groups" },
       { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: true },
       { id: "ms-route", label: "Current Route", route: "/admin/routes" },
       { id: "ms-planning", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: true },

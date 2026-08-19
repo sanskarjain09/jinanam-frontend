@@ -9,6 +9,7 @@ import MemberProtectedRoute from "@/components/member/MemberProtectedRoute";
 import { MemberAuthProvider } from "@/contexts/MemberAuthContext";
 import AdminLayout from "@/components/layout/AdminLayout";
 import LoginPage from "@/pages/LoginPage";
+import MSGroupsPage from "./pages/MSGroupsPage";
 import LandingPage from "@/pages/LandingPage";
 
 // Naye pages yahan import kiye hain
@@ -45,6 +46,7 @@ const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
 const CountersPage = lazy(() => import("@/pages/CountersPage"));
 const TrackingPage = lazy(() => import("@/pages/TrackingPage"));
 const RoutesPage = lazy(() => import("@/pages/RoutesPage"));
+const JourneyLogsPage = lazy(() => import("@/pages/JourneyLogsPage"));
 const DevicesPage = lazy(() => import("@/pages/DevicesPage"));
 const AlertsPage = lazy(() => import("@/pages/AlertsPage"));
 const AnnouncementsPage = lazy(() => import("@/pages/AnnouncementsPage"));
@@ -295,12 +297,13 @@ export default function App() {
                 <Route path="ms-profiles" element={<MonksPage />} />
                 <Route path="ms/:id" element={<MonkDetailPage />} />
                 <Route path="guru-hierarchy" element={<MonksPage />} />
-                <Route path="ms-groups" element={<MonksPage />} />
+                <Route path="ms-groups" element={<MSGroupsPage />} />
                 <Route path="ms-associations" element={<MonksPage />} />
                 <Route path="routes" element={<RoutesPage />} />
                 <Route path="current-route" element={<TrackingPage />} />
                 <Route path="route-planning" element={<TrackingPage />} />
                 <Route path="journey-history" element={<TrackingPage />} />
+                <Route path="journey-logs" element={<JourneyLogsPage />} />
                 <Route path="chaturmas" element={<MonksPage />} />
                 <Route path="tapasya" element={<MonksPage />} />
                 <Route path="timeline" element={<MonksPage />} />
