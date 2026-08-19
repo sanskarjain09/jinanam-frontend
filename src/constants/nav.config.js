@@ -73,8 +73,8 @@ export const FLAT_NAV = [
   { id: "flat-temples", label: "Temple", icon: Landmark, route: "/admin/temples" },
   { id: "flat-jain-centers", label: "Jain Centre", icon: Building2, route: "/admin/jain-centers" },
   { id: "flat-dharamshalas", label: "Dharamshala", icon: Hotel, route: "/admin/dharamshalas" },
-  { id: "flat-bhojanshala", label: "Bhojanshala", icon: Sigma, route: "/admin/coming-soon?module=Bhojanshala", featureFlag: true },
-  { id: "flat-stanaks", label: "Sthanaks", icon: HomeIcon, route: "/admin/stanaks" },
+  { id: "flat-bhojanshala", label: "Bhojanshala", icon: Sigma, route: "/admin/coming-soon?module=Bhojanshala", featureFlag: false },
+  { id: "flat-stanaks", label: "Sthanaks", icon: HomeIcon, route: "/admin/sthanaks" },
   { id: "flat-community-pages", label: "Community Pages", icon: Globe, route: "/admin/community-pages" },
 
   { id: "sep-people", isSeparator: true, label: "People" },
@@ -93,12 +93,12 @@ export const FLAT_NAV = [
   { id: "flat-polls", label: "Polls", icon: BarChart3, route: "/admin/polls" },
   { id: "flat-notifications", label: "Notifications", icon: Bell, route: "/admin/notifications" },
   { id: "flat-tours", label: "Tours", icon: Route, route: "/admin/tours" },
-  { id: "flat-99-management", label: "99 Management", icon: GitBranch, route: "/admin/coming-soon?module=99 Management", featureFlag: true },
-  { id: "flat-varshitap", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: true },
+  { id: "flat-99-management", label: "99 Management", icon: GitBranch, route: "/admin/coming-soon?module=99 Management", featureFlag: false },
+  { id: "flat-varshitap", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: false },
 
   { id: "sep-bookings", isSeparator: true, label: "Bookings" },
-  { id: "flat-booking-setup", label: "Booking Setup", icon: CalendarCheck, route: "/admin/coming-soon?module=Booking Setup", featureFlag: true },
-  { id: "flat-booking-categories", label: "Categories", icon: ClipboardList, route: "/admin/coming-soon?module=Booking Categories", featureFlag: true },
+  { id: "flat-booking-setup", label: "Booking Setup", icon: CalendarCheck, route: "/admin/coming-soon?module=Booking Setup", featureFlag: false },
+  { id: "flat-booking-categories", label: "Categories", icon: ClipboardList, route: "/admin/coming-soon?module=Booking Categories", featureFlag: false },
   { id: "flat-booking-requests", label: "Requests", icon: CalendarCheck, route: "/admin/bookings?tab=admin_bookings" },
   { id: "flat-booking-reservations", label: "Reservations", icon: CalendarCheck, route: "/admin/bookings?tab=reservations" },
   { id: "flat-booking-calendar", label: "Calendar", icon: Calendar, route: "/admin/booking-calendar" },
@@ -109,12 +109,12 @@ export const FLAT_NAV = [
   { id: "flat-routes", label: "Routes", icon: GitBranch, route: "/admin/routes" },
   { id: "flat-journey-logs", label: "Journey Logs", icon: BookOpen, route: "/admin/journey-logs" },
   { id: "flat-live-map", label: "Live Map", icon: MapIcon, route: "/admin/live-map" },
-  { id: "flat-attendance", label: "Attendance", icon: CheckSquare, route: "/admin/staff?tab=attendance", featureFlag: true },
+  { id: "flat-attendance", label: "Attendance", icon: CheckSquare, route: "/admin/staff?tab=attendance", featureFlag: false },
 
   { id: "sep-finance", isSeparator: true, label: "Finance" },
   { id: "flat-donations", label: "Donations", icon: HeartHandshake, route: "/admin/donations" },
   { id: "flat-receipts", label: "Receipts", icon: Receipt, route: "/admin/receipts" },
-  { id: "flat-sponsors", label: "Sponsors", icon: Wallet, route: "/admin/coming-soon?module=Sponsors", featureFlag: true },
+  { id: "flat-sponsors", label: "Sponsors", icon: Wallet, route: "/admin/coming-soon?module=Sponsors", featureFlag: false },
   { id: "flat-offers", label: "Offers", icon: Tag, route: "/admin/offers" },
   { id: "flat-ads", label: "Advertisements", icon: Megaphone, route: "/ads" },
 
@@ -157,16 +157,16 @@ export const NESTED_NAV = [
     icon: HandHeart,
     children: [
       { id: "ms-profiles", label: "MS Profiles", route: "/admin/ms-profiles" },
-      { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: true },
+      { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: false },
       { id: "ms-groups", label: "MS Groups", route: "/admin/ms-groups" },
-      { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: true },
+      { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: false },
       { id: "ms-route", label: "Current Route", route: "/admin/routes" },
-      { id: "ms-planning", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: true },
+      { id: "ms-planning", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: false },
       { id: "ms-journey", label: "Journey History", route: "/admin/journey-logs" },
       { id: "ms-chaturmas", label: "Chaturmas", route: "/admin/chaturmas" },
-      { id: "ms-tapasya", label: "Tapasya", route: "/admin/coming-soon?module=Tapasya", featureFlag: true },
-      { id: "ms-timeline", label: "Timeline", route: "/admin/coming-soon?module=Timeline", featureFlag: true },
-      { id: "ms-followers", label: "Followers", route: "/admin/coming-soon?module=Followers", featureFlag: true }
+      { id: "ms-tapasya", label: "Tapasya", route: "/admin/coming-soon?module=Tapasya", featureFlag: false },
+      { id: "ms-timeline", label: "Timeline", route: "/admin/coming-soon?module=Timeline", featureFlag: false },
+      { id: "ms-followers", label: "Followers", route: "/admin/coming-soon?module=Followers", featureFlag: false }
     ]
   },
   {
@@ -177,7 +177,7 @@ export const NESTED_NAV = [
     children: [
       { id: "st-mgt", label: "Staff Management", route: "/admin/staff" },
       { id: "st-reg", label: "Staff Registration", route: "/admin/staff?action=register" },
-      { id: "st-qr", label: "Staff QR Cards", route: "/admin/coming-soon?module=Staff QR Cards", featureFlag: true },
+      { id: "st-qr", label: "Staff QR Cards", route: "/admin/coming-soon?module=Staff QR Cards", featureFlag: false },
       { id: "st-att", label: "Attendance", route: "/admin/staff?tab=attendance" },
       { id: "st-leave", label: "Leave Management", route: "/admin/staff?tab=leaves" },
       { id: "st-docs", label: "Documents", route: "/admin/staff?tab=documents" },
@@ -189,7 +189,7 @@ export const NESTED_NAV = [
     module: "STAFF",
     label: "Committee",
     icon: UsersRound,
-    featureFlag: true,
+    featureFlag: false,
     children: [
       { id: "com-members", label: "Committee Members", route: "/admin/coming-soon?module=Committee Members" },
       { id: "com-desig", label: "Designations", route: "/admin/coming-soon?module=Committee Designations" },
@@ -204,15 +204,15 @@ export const NESTED_NAV = [
     icon: Landmark,
     children: [
       { id: "t-mgt", label: "Temple Management", route: "/admin/temples" },
-      { id: "t-info", label: "Temple Information", route: "/admin/coming-soon?module=Temple Information", featureFlag: true },
-      { id: "t-fac", label: "Facilities", route: "/admin/coming-soon?module=Temple Facilities", featureFlag: true },
+      { id: "t-info", label: "Temple Information", route: "/admin/coming-soon?module=Temple Information", featureFlag: false },
+      { id: "t-fac", label: "Facilities", route: "/admin/coming-soon?module=Temple Facilities", featureFlag: false },
       { id: "t-gal", label: "Gallery", route: "/admin/gallery" },
-      { id: "t-com", label: "Committee", route: "/admin/coming-soon?module=Temple Committee", featureFlag: true },
-      { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: true },
-      { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: true },
-      { id: "t-dhaja", label: "Dhaja", route: "/admin/coming-soon?module=Temple Dhaja", featureFlag: true },
+      { id: "t-com", label: "Committee", route: "/admin/coming-soon?module=Temple Committee", featureFlag: false },
+      { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: false },
+      { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: false },
+      { id: "t-dhaja", label: "Dhaja", route: "/admin/coming-soon?module=Temple Dhaja", featureFlag: false },
       { id: "t-chat", label: "Chaturmas", route: "/admin/chaturmas" },
-      { id: "t-social", label: "Social Links", route: "/admin/coming-soon?module=Temple Social Links", featureFlag: true }
+      { id: "t-social", label: "Social Links", route: "/admin/coming-soon?module=Temple Social Links", featureFlag: false }
     ]
   },
   {
@@ -222,13 +222,13 @@ export const NESTED_NAV = [
     icon: Building2,
     children: [
       { id: "jc-mgt", label: "Jain Centre Management", route: "/admin/jain-centers" },
-      { id: "jc-info", label: "Centre Information", route: "/admin/coming-soon?module=Centre Information", featureFlag: true },
-      { id: "jc-fac", label: "Facilities", route: "/admin/coming-soon?module=Jain Centre Facilities", featureFlag: true },
+      { id: "jc-info", label: "Centre Information", route: "/admin/coming-soon?module=Centre Information", featureFlag: false },
+      { id: "jc-fac", label: "Facilities", route: "/admin/coming-soon?module=Jain Centre Facilities", featureFlag: false },
       { id: "jc-gal", label: "Gallery", route: "/admin/gallery" },
-      { id: "jc-com", label: "Committee", route: "/admin/coming-soon?module=Jain Centre Committee", featureFlag: true },
-      { id: "jc-not", label: "Notices", route: "/admin/coming-soon?module=Jain Centre Notices", featureFlag: true },
-      { id: "jc-rev", label: "Reviews", route: "/admin/coming-soon?module=Jain Centre Reviews", featureFlag: true },
-      { id: "jc-social", label: "Social Links", route: "/admin/coming-soon?module=Jain Centre Social Links", featureFlag: true }
+      { id: "jc-com", label: "Committee", route: "/admin/coming-soon?module=Jain Centre Committee", featureFlag: false },
+      { id: "jc-not", label: "Notices", route: "/admin/coming-soon?module=Jain Centre Notices", featureFlag: false },
+      { id: "jc-rev", label: "Reviews", route: "/admin/coming-soon?module=Jain Centre Reviews", featureFlag: false },
+      { id: "jc-social", label: "Social Links", route: "/admin/coming-soon?module=Jain Centre Social Links", featureFlag: false }
     ]
   },
   {
@@ -301,7 +301,7 @@ export const NESTED_NAV = [
     label: "Sthanaks",
     icon: HomeIcon,
     children: [
-      { id: "st-stanak-mgt", label: "Sthanak Management", route: "/admin/stanaks" }
+      { id: "st-stanak-mgt", label: "Sthanak Management", route: "/admin/sthanaks" }
     ]
   },
   {
@@ -311,12 +311,12 @@ export const NESTED_NAV = [
     icon: Globe,
     children: [
       { id: "cp-my", label: "My Page", route: "/admin/community-pages" },
-      { id: "cp-info", label: "Page Information", route: "/admin/coming-soon?module=Community Page Information", featureFlag: true },
+      { id: "cp-info", label: "Page Information", route: "/admin/coming-soon?module=Community Page Information", featureFlag: false },
       { id: "cp-gal", label: "Gallery", route: "/admin/gallery" },
-      { id: "cp-fol", label: "Followers", route: "/admin/coming-soon?module=Community Page Followers", featureFlag: true },
-      { id: "cp-rev", label: "Reviews", route: "/admin/coming-soon?module=Community Page Reviews", featureFlag: true },
-      { id: "cp-social", label: "Social Links", route: "/admin/coming-soon?module=Community Page Social Links", featureFlag: true },
-      { id: "cp-seo", label: "SEO & Sharing", route: "/admin/coming-soon?module=Community Page SEO", featureFlag: true }
+      { id: "cp-fol", label: "Followers", route: "/admin/coming-soon?module=Community Page Followers", featureFlag: false },
+      { id: "cp-rev", label: "Reviews", route: "/admin/coming-soon?module=Community Page Reviews", featureFlag: false },
+      { id: "cp-social", label: "Social Links", route: "/admin/coming-soon?module=Community Page Social Links", featureFlag: false },
+      { id: "cp-seo", label: "SEO & Sharing", route: "/admin/coming-soon?module=Community Page SEO", featureFlag: false }
     ]
   },
   {
@@ -339,17 +339,17 @@ export const NESTED_NAV = [
     label: "Events",
     icon: PartyPopper,
     children: [
-      { id: "ev-cat", label: "Event Categories", route: "/admin/coming-soon?module=Event Categories", featureFlag: true },
+      { id: "ev-cat", label: "Event Categories", route: "/admin/coming-soon?module=Event Categories", featureFlag: false },
       { id: "ev-mgt", label: "Event Management", route: "/admin/events" },
-      { id: "ev-sched", label: "Event Schedule", route: "/admin/coming-soon?module=Event Schedule", featureFlag: true },
-      { id: "ev-reg", label: "Registrations", route: "/admin/coming-soon?module=Event Registrations", featureFlag: true },
-      { id: "ev-att", label: "Attendees", route: "/admin/coming-soon?module=Event Attendees", featureFlag: true },
+      { id: "ev-sched", label: "Event Schedule", route: "/admin/coming-soon?module=Event Schedule", featureFlag: false },
+      { id: "ev-reg", label: "Registrations", route: "/admin/coming-soon?module=Event Registrations", featureFlag: false },
+      { id: "ev-att", label: "Attendees", route: "/admin/coming-soon?module=Event Attendees", featureFlag: false },
       { id: "ev-seat", label: "Seating Layout", route: "/admin/seating-layout" },
       { id: "ev-tcat", label: "Ticket Categories", route: "/admin/ticket-categories" },
-      { id: "ev-pr", label: "Pricing", route: "/admin/coming-soon?module=Event Ticket Pricing", featureFlag: true },
-      { id: "ev-coup", label: "Coupons", route: "/admin/coming-soon?module=Event Coupons", featureFlag: true },
-      { id: "ev-qr", label: "QR Check-in", route: "/admin/coming-soon?module=Event QR Check-in", featureFlag: true },
-      { id: "ev-qrep", label: "Check-in Reports", route: "/admin/coming-soon?module=Check-in Reports", featureFlag: true },
+      { id: "ev-pr", label: "Pricing", route: "/admin/coming-soon?module=Event Ticket Pricing", featureFlag: false },
+      { id: "ev-coup", label: "Coupons", route: "/admin/coming-soon?module=Event Coupons", featureFlag: false },
+      { id: "ev-qr", label: "QR Check-in", route: "/admin/coming-soon?module=Event QR Check-in", featureFlag: false },
+      { id: "ev-qrep", label: "Check-in Reports", route: "/admin/coming-soon?module=Check-in Reports", featureFlag: false },
       { id: "ev-an", label: "Event Analytics", route: "/admin/event-analytics" }
     ]
   },
@@ -368,10 +368,10 @@ export const NESTED_NAV = [
     icon: ScrollText,
     children: [
       { id: "ne-mgt", label: "News Management", route: "/admin/news" },
-      { id: "ne-cat", label: "Categories", route: "/admin/coming-soon?module=News Categories", featureFlag: true },
-      { id: "ne-feat", label: "Featured News", route: "/admin/coming-soon?module=Featured News", featureFlag: true },
-      { id: "ne-sched", label: "Scheduled News", route: "/admin/coming-soon?module=Scheduled News", featureFlag: true },
-      { id: "ne-arch", label: "Archived News", route: "/admin/coming-soon?module=Archived News", featureFlag: true }
+      { id: "ne-cat", label: "Categories", route: "/admin/coming-soon?module=News Categories", featureFlag: false },
+      { id: "ne-feat", label: "Featured News", route: "/admin/coming-soon?module=Featured News", featureFlag: false },
+      { id: "ne-sched", label: "Scheduled News", route: "/admin/coming-soon?module=Scheduled News", featureFlag: false },
+      { id: "ne-arch", label: "Archived News", route: "/admin/coming-soon?module=Archived News", featureFlag: false }
     ]
   },
   {
@@ -381,8 +381,8 @@ export const NESTED_NAV = [
     icon: Megaphone,
     children: [
       { id: "an-mgt", label: "Announcement Management", route: "/admin/announcements" },
-      { id: "an-pri", label: "Priority Announcements", route: "/admin/coming-soon?module=Priority Announcements", featureFlag: true },
-      { id: "an-sched", label: "Scheduled Announcements", route: "/admin/coming-soon?module=Scheduled Announcements", featureFlag: true }
+      { id: "an-pri", label: "Priority Announcements", route: "/admin/coming-soon?module=Priority Announcements", featureFlag: false },
+      { id: "an-sched", label: "Scheduled Announcements", route: "/admin/coming-soon?module=Scheduled Announcements", featureFlag: false }
     ]
   },
   {
@@ -392,8 +392,8 @@ export const NESTED_NAV = [
     icon: BarChart3,
     children: [
       { id: "po-mgt", label: "Poll Management", route: "/admin/polls" },
-      { id: "po-resp", label: "Responses", route: "/admin/coming-soon?module=Poll Responses", featureFlag: true },
-      { id: "po-res", label: "Poll Results", route: "/admin/coming-soon?module=Poll Results", featureFlag: true }
+      { id: "po-resp", label: "Responses", route: "/admin/coming-soon?module=Poll Responses", featureFlag: false },
+      { id: "po-res", label: "Poll Results", route: "/admin/coming-soon?module=Poll Results", featureFlag: false }
     ]
   },
   {
@@ -403,9 +403,9 @@ export const NESTED_NAV = [
     icon: Route,
     children: [
       { id: "to-mgt", label: "Tour Management", route: "/admin/tours" },
-      { id: "to-sched", label: "Tour Schedule", route: "/admin/coming-soon?module=Tour Schedule", featureFlag: true },
-      { id: "to-reg", label: "Registrations", route: "/admin/coming-soon?module=Tour Registrations", featureFlag: true },
-      { id: "to-part", label: "Participants", route: "/admin/coming-soon?module=Tour Participants", featureFlag: true }
+      { id: "to-sched", label: "Tour Schedule", route: "/admin/coming-soon?module=Tour Schedule", featureFlag: false },
+      { id: "to-reg", label: "Registrations", route: "/admin/coming-soon?module=Tour Registrations", featureFlag: false },
+      { id: "to-part", label: "Participants", route: "/admin/coming-soon?module=Tour Participants", featureFlag: false }
     ]
   },
   {
@@ -413,7 +413,7 @@ export const NESTED_NAV = [
     module: "TOURS",
     label: "99 Management",
     icon: GitBranch,
-    featureFlag: true,
+    featureFlag: false,
     children: [
       { id: "99-cat", label: "99 Categories", route: "/admin/coming-soon?module=99 Categories" },
       { id: "99-mgt", label: "99 Management", route: "/admin/coming-soon?module=99 Management" },
@@ -428,8 +428,8 @@ export const NESTED_NAV = [
     icon: Sigma,
     children: [
       { id: "sc-cat", label: "Counter Categories", route: "/admin/counters" },
-      { id: "sc-stats", label: "Member Statistics", route: "/admin/coming-soon?module=Member Counter Stats", featureFlag: true },
-      { id: "sc-global", label: "Global Statistics", route: "/admin/coming-soon?module=Global Counter Stats", featureFlag: true }
+      { id: "sc-stats", label: "Member Statistics", route: "/admin/coming-soon?module=Member Counter Stats", featureFlag: false },
+      { id: "sc-global", label: "Global Statistics", route: "/admin/coming-soon?module=Global Counter Stats", featureFlag: false }
     ]
   },
   {
@@ -439,8 +439,8 @@ export const NESTED_NAV = [
     icon: Calendar,
     children: [
       { id: "tc-mgt", label: "Calendar Management", route: "/admin/calendar" },
-      { id: "tc-types", label: "Calendar Types", route: "/admin/coming-soon?module=Calendar Types", featureFlag: true },
-      { id: "tc-tithi", label: "Tithi Management", route: "/admin/coming-soon?module=Tithi Management", featureFlag: true }
+      { id: "tc-types", label: "Calendar Types", route: "/admin/coming-soon?module=Calendar Types", featureFlag: false },
+      { id: "tc-tithi", label: "Tithi Management", route: "/admin/coming-soon?module=Tithi Management", featureFlag: false }
     ]
   },
   {
@@ -449,16 +449,16 @@ export const NESTED_NAV = [
     label: "Notifications",
     icon: Bell,
     children: [
-      { id: "nt-push", label: "Push Notifications", route: "/admin/coming-soon?module=Push Notifications", featureFlag: true },
-      { id: "nt-wa", label: "WhatsApp", route: "/admin/coming-soon?module=WhatsApp Notifications", featureFlag: true },
-      { id: "nt-sms", label: "SMS", route: "/admin/coming-soon?module=SMS Notifications", featureFlag: true },
-      { id: "nt-email", label: "Email", route: "/admin/coming-soon?module=Email Notifications", featureFlag: true },
+      { id: "nt-push", label: "Push Notifications", route: "/admin/coming-soon?module=Push Notifications", featureFlag: false },
+      { id: "nt-wa", label: "WhatsApp", route: "/admin/coming-soon?module=WhatsApp Notifications", featureFlag: false },
+      { id: "nt-sms", label: "SMS", route: "/admin/coming-soon?module=SMS Notifications", featureFlag: false },
+      { id: "nt-email", label: "Email", route: "/admin/coming-soon?module=Email Notifications", featureFlag: false },
       { id: "nt-hist", label: "Notification History", route: "/admin/notifications" }
     ]
   },
   {
     id: "folder-varshitap",
-    module: "TOURS", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: true
+    module: "TOURS", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: false
   },
   {
     id: "group-bookings",
@@ -471,9 +471,9 @@ export const NESTED_NAV = [
         label: "Booking Categories",
         icon: ClipboardList,
         children: [
-          { id: "bc-mgt", label: "Category Management", route: "/admin/coming-soon?module=Category Management", featureFlag: true },
-          { id: "bc-rules", label: "Booking Rules", route: "/admin/coming-soon?module=Booking Rules", featureFlag: true },
-          { id: "bc-app", label: "Required Approvals", route: "/admin/coming-soon?module=Required Approvals", featureFlag: true }
+          { id: "bc-mgt", label: "Category Management", route: "/admin/coming-soon?module=Category Management", featureFlag: false },
+          { id: "bc-rules", label: "Booking Rules", route: "/admin/coming-soon?module=Booking Rules", featureFlag: false },
+          { id: "bc-app", label: "Required Approvals", route: "/admin/coming-soon?module=Required Approvals", featureFlag: false }
         ]
       },
       {
@@ -482,12 +482,12 @@ export const NESTED_NAV = [
         label: "Booking Resources",
         icon: Landmark,
         children: [
-          { id: "br-rooms", label: "Rooms", route: "/admin/coming-soon?module=Booking Rooms", featureFlag: true },
-          { id: "br-halls", label: "Halls", route: "/admin/coming-soon?module=Halls", featureFlag: true },
-          { id: "br-bhoj", label: "Bhojanshala", route: "/admin/coming-soon?module=Bhojanshala Resources", featureFlag: true },
-          { id: "br-pooja", label: "Pooja Booking", route: "/admin/coming-soon?module=Pooja Booking Resources", featureFlag: true },
-          { id: "br-path", label: "Pathshala", route: "/admin/coming-soon?module=Pathshala Resources", featureFlag: true },
-          { id: "br-other", label: "Other Resources", route: "/admin/coming-soon?module=Other Booking Resources", featureFlag: true }
+          { id: "br-rooms", label: "Rooms", route: "/admin/coming-soon?module=Booking Rooms", featureFlag: false },
+          { id: "br-halls", label: "Halls", route: "/admin/coming-soon?module=Halls", featureFlag: false },
+          { id: "br-bhoj", label: "Bhojanshala", route: "/admin/coming-soon?module=Bhojanshala Resources", featureFlag: false },
+          { id: "br-pooja", label: "Pooja Booking", route: "/admin/coming-soon?module=Pooja Booking Resources", featureFlag: false },
+          { id: "br-path", label: "Pathshala", route: "/admin/coming-soon?module=Pathshala Resources", featureFlag: false },
+          { id: "br-other", label: "Other Resources", route: "/admin/coming-soon?module=Other Booking Resources", featureFlag: false }
         ]
       },
       {
@@ -498,11 +498,11 @@ export const NESTED_NAV = [
         children: [
           { id: "bm-req", label: "Booking Requests", route: "/admin/bookings?tab=admin_bookings" },
           { id: "bm-res", label: "Reservations", route: "/admin/bookings?tab=reservations" },
-          { id: "bm-walkin", label: "Walk-in Bookings", route: "/admin/coming-soon?module=Walk-in Bookings", featureFlag: true },
-          { id: "bm-group", label: "Group Bookings", route: "/admin/coming-soon?module=Group Bookings", featureFlag: true },
-          { id: "bm-wait", label: "Waiting List", route: "/admin/coming-soon?module=Booking Waiting List", featureFlag: true },
-          { id: "bm-ext", label: "Booking Extensions", route: "/admin/coming-soon?module=Booking Extensions", featureFlag: true },
-          { id: "bm-cancel", label: "Cancellations", route: "/admin/coming-soon?module=Cancellations", featureFlag: true }
+          { id: "bm-walkin", label: "Walk-in Bookings", route: "/admin/coming-soon?module=Walk-in Bookings", featureFlag: false },
+          { id: "bm-group", label: "Group Bookings", route: "/admin/coming-soon?module=Group Bookings", featureFlag: false },
+          { id: "bm-wait", label: "Waiting List", route: "/admin/coming-soon?module=Booking Waiting List", featureFlag: false },
+          { id: "bm-ext", label: "Booking Extensions", route: "/admin/coming-soon?module=Booking Extensions", featureFlag: false },
+          { id: "bm-cancel", label: "Cancellations", route: "/admin/coming-soon?module=Cancellations", featureFlag: false }
         ]
       },
       {
@@ -511,11 +511,11 @@ export const NESTED_NAV = [
         label: "Pricing & Availability",
         icon: Wallet,
         children: [
-          { id: "bp-price", label: "Pricing", route: "/admin/coming-soon?module=Pricing Setup", featureFlag: true },
-          { id: "bp-seas", label: "Seasonal Pricing", route: "/admin/coming-soon?module=Seasonal Pricing", featureFlag: true },
-          { id: "bp-avail", label: "Availability", route: "/admin/coming-soon?module=Availability Setup", featureFlag: true },
-          { id: "bp-black", label: "Blackout Dates", route: "/admin/coming-soon?module=Blackout Dates", featureFlag: true },
-          { id: "bp-limits", label: "Booking Limits", route: "/admin/coming-soon?module=Booking Limits", featureFlag: true }
+          { id: "bp-price", label: "Pricing", route: "/admin/coming-soon?module=Pricing Setup", featureFlag: false },
+          { id: "bp-seas", label: "Seasonal Pricing", route: "/admin/coming-soon?module=Seasonal Pricing", featureFlag: false },
+          { id: "bp-avail", label: "Availability", route: "/admin/coming-soon?module=Availability Setup", featureFlag: false },
+          { id: "bp-black", label: "Blackout Dates", route: "/admin/coming-soon?module=Blackout Dates", featureFlag: false },
+          { id: "bp-limits", label: "Booking Limits", route: "/admin/coming-soon?module=Booking Limits", featureFlag: false }
         ]
       },
       {
@@ -534,10 +534,10 @@ export const NESTED_NAV = [
         label: "Check-In / Check-Out",
         icon: ScanLine,
         children: [
-          { id: "bck-in", label: "Check-In", route: "/admin/coming-soon?module=Check-In", featureFlag: true },
-          { id: "bck-out", label: "Check-Out", route: "/admin/coming-soon?module=Check-Out", featureFlag: true },
-          { id: "bck-occ", label: "Current Occupancy", route: "/admin/coming-soon?module=Current Occupancy", featureFlag: true },
-          { id: "bck-over", label: "Overstay Management", route: "/admin/coming-soon?module=Overstay Management", featureFlag: true }
+          { id: "bck-in", label: "Check-In", route: "/admin/coming-soon?module=Check-In", featureFlag: false },
+          { id: "bck-out", label: "Check-Out", route: "/admin/coming-soon?module=Check-Out", featureFlag: false },
+          { id: "bck-occ", label: "Current Occupancy", route: "/admin/coming-soon?module=Current Occupancy", featureFlag: false },
+          { id: "bck-over", label: "Overstay Management", route: "/admin/coming-soon?module=Overstay Management", featureFlag: false }
         ]
       },
       {
@@ -546,10 +546,10 @@ export const NESTED_NAV = [
         label: "Reports",
         icon: TrendingUp,
         children: [
-          { id: "brp-book", label: "Booking", route: "/admin/reports?tab=bookings", featureFlag: true },
-          { id: "brp-occ", label: "Occupancy", route: "/admin/coming-soon?module=Occupancy Reports", featureFlag: true },
-          { id: "brp-cancel", label: "Cancellation", route: "/admin/coming-soon?module=Cancellation Reports", featureFlag: true },
-          { id: "brp-rev", label: "Revenue", route: "/admin/coming-soon?module=Revenue Reports", featureFlag: true }
+          { id: "brp-book", label: "Booking", route: "/admin/reports?tab=bookings", featureFlag: false },
+          { id: "brp-occ", label: "Occupancy", route: "/admin/coming-soon?module=Occupancy Reports", featureFlag: false },
+          { id: "brp-cancel", label: "Cancellation", route: "/admin/coming-soon?module=Cancellation Reports", featureFlag: false },
+          { id: "brp-rev", label: "Revenue", route: "/admin/coming-soon?module=Revenue Reports", featureFlag: false }
         ]
       }
     ]
@@ -566,14 +566,14 @@ export const NESTED_NAV = [
         label: "Donations",
         icon: HeartHandshake,
         children: [
-          { id: "dn-cat", label: "Donation Categories", route: "/admin/coming-soon?module=Donation Categories", featureFlag: true },
-          { id: "dn-camp", label: "Donation Campaigns", route: "/admin/coming-soon?module=Donation Campaigns", featureFlag: true },
+          { id: "dn-cat", label: "Donation Categories", route: "/admin/coming-soon?module=Donation Categories", featureFlag: false },
+          { id: "dn-camp", label: "Donation Campaigns", route: "/admin/coming-soon?module=Donation Campaigns", featureFlag: false },
           { id: "dn-mgt", label: "Donation Management", route: "/admin/donations" },
-          { id: "dn-verify", label: "Pending Verification", route: "/admin/coming-soon?module=Pending Verification", featureFlag: true },
-          { id: "dn-online", label: "Online Donations", route: "/admin/donations?type=online", featureFlag: true },
-          { id: "dn-offline", label: "Offline Donations", route: "/admin/donations?type=offline", featureFlag: true },
+          { id: "dn-verify", label: "Pending Verification", route: "/admin/coming-soon?module=Pending Verification", featureFlag: false },
+          { id: "dn-online", label: "Online Donations", route: "/admin/donations?type=online", featureFlag: false },
+          { id: "dn-offline", label: "Offline Donations", route: "/admin/donations?type=offline", featureFlag: false },
           { id: "dn-receipt", label: "Donation Receipts", route: "/admin/receipts" },
-          { id: "dn-80g", label: "80G Receipts", route: "/admin/coming-soon?module=80G Receipts", featureFlag: true },
+          { id: "dn-80g", label: "80G Receipts", route: "/admin/coming-soon?module=80G Receipts", featureFlag: false },
           { id: "dn-rep", label: "Donation Reports", route: "/admin/reports/donations" }
         ]
       },
@@ -583,11 +583,11 @@ export const NESTED_NAV = [
         label: "Bank & Payment",
         icon: Wallet,
         children: [
-          { id: "bp-bank", label: "Bank Accounts", route: "/admin/coming-soon?module=Bank Accounts", featureFlag: true },
-          { id: "bp-upi", label: "UPI QR Codes", route: "/admin/coming-soon?module=UPI QR Codes", featureFlag: true },
-          { id: "bp-gw", label: "Payment Gateway", route: "/admin/coming-soon?module=Payment Gateway", featureFlag: true },
-          { id: "bp-tx", label: "Payment Transactions", route: "/admin/coming-soon?module=Payment Transactions", featureFlag: true },
-          { id: "bp-recon", label: "Payment Reconciliation", route: "/admin/coming-soon?module=Payment Reconciliation", featureFlag: true }
+          { id: "bp-bank", label: "Bank Accounts", route: "/admin/coming-soon?module=Bank Accounts", featureFlag: false },
+          { id: "bp-upi", label: "UPI QR Codes", route: "/admin/coming-soon?module=UPI QR Codes", featureFlag: false },
+          { id: "bp-gw", label: "Payment Gateway", route: "/admin/coming-soon?module=Payment Gateway", featureFlag: false },
+          { id: "bp-tx", label: "Payment Transactions", route: "/admin/coming-soon?module=Payment Transactions", featureFlag: false },
+          { id: "bp-recon", label: "Payment Reconciliation", route: "/admin/coming-soon?module=Payment Reconciliation", featureFlag: false }
         ]
       },
       {
@@ -595,7 +595,7 @@ export const NESTED_NAV = [
         module: "SPONSORS",
         label: "Sponsors",
         icon: Wallet,
-        featureFlag: true,
+        featureFlag: false,
         children: [
           { id: "sp-mgt", label: "Sponsor Management", route: "/admin/coming-soon?module=Sponsor Management" },
           { id: "sp-cat", label: "Sponsor Categories", route: "/admin/coming-soon?module=Sponsor Categories" },
@@ -611,10 +611,10 @@ export const NESTED_NAV = [
         icon: Megaphone,
         children: [
           { id: "ad-mgt", label: "Advertisement Management", route: "/ads" },
-          { id: "ad-cat", label: "Advertisement Categories", route: "/admin/coming-soon?module=Ad Categories", featureFlag: true },
+          { id: "ad-cat", label: "Advertisement Categories", route: "/admin/coming-soon?module=Ad Categories", featureFlag: false },
           { id: "ad-banner", label: "Banner Management", route: "/admin/banners" },
-          { id: "ad-sched", label: "Campaign Schedule", route: "/admin/coming-soon?module=Campaign Schedule", featureFlag: true },
-          { id: "ad-rep", label: "Advertisement Reports", route: "/admin/coming-soon?module=Ad Reports", featureFlag: true }
+          { id: "ad-sched", label: "Campaign Schedule", route: "/admin/coming-soon?module=Campaign Schedule", featureFlag: false },
+          { id: "ad-rep", label: "Advertisement Reports", route: "/admin/coming-soon?module=Ad Reports", featureFlag: false }
         ]
       },
       {
@@ -623,12 +623,12 @@ export const NESTED_NAV = [
         label: "Offers & Benefits",
         icon: Tag,
         children: [
-          { id: "of-cat", label: "Offer Categories", route: "/admin/coming-soon?module=Offer Categories", featureFlag: true },
+          { id: "of-cat", label: "Offer Categories", route: "/admin/coming-soon?module=Offer Categories", featureFlag: false },
           { id: "of-mgt", label: "Offer Management", route: "/admin/offers" },
-          { id: "of-coup", label: "Coupons", route: "/admin/coming-soon?module=Offer Coupons", featureFlag: true },
-          { id: "of-partner", label: "Partner Businesses", route: "/admin/coming-soon?module=Partner Businesses", featureFlag: true },
-          { id: "of-rep", label: "Offer Reports", route: "/admin/coming-soon?module=Offer Reports", featureFlag: true },
-          { id: "of-an", label: "Offer Analytics", route: "/admin/coming-soon?module=Offer Analytics", featureFlag: true }
+          { id: "of-coup", label: "Coupons", route: "/admin/coming-soon?module=Offer Coupons", featureFlag: false },
+          { id: "of-partner", label: "Partner Businesses", route: "/admin/coming-soon?module=Partner Businesses", featureFlag: false },
+          { id: "of-rep", label: "Offer Reports", route: "/admin/coming-soon?module=Offer Reports", featureFlag: false },
+          { id: "of-an", label: "Offer Analytics", route: "/admin/coming-soon?module=Offer Analytics", featureFlag: false }
         ]
       },
       {
@@ -638,10 +638,10 @@ export const NESTED_NAV = [
         icon: TrendingUp,
         children: [
           { id: "fr-don", label: "Donation", route: "/admin/reports/donations" },
-          { id: "fr-pay", label: "Payment", route: "/admin/coming-soon?module=Payment Reports", featureFlag: true },
-          { id: "fr-spon", label: "Sponsor", route: "/admin/coming-soon?module=Sponsor Reports", featureFlag: true },
-          { id: "fr-ad", label: "Advertisement", route: "/admin/coming-soon?module=Ad Reports", featureFlag: true },
-          { id: "fr-sum", label: "Financial Summary", route: "/admin/coming-soon?module=Financial Summary", featureFlag: true }
+          { id: "fr-pay", label: "Payment", route: "/admin/coming-soon?module=Payment Reports", featureFlag: false },
+          { id: "fr-spon", label: "Sponsor", route: "/admin/coming-soon?module=Sponsor Reports", featureFlag: false },
+          { id: "fr-ad", label: "Advertisement", route: "/admin/coming-soon?module=Ad Reports", featureFlag: false },
+          { id: "fr-sum", label: "Financial Summary", route: "/admin/coming-soon?module=Financial Summary", featureFlag: false }
         ]
       }
     ]
@@ -659,14 +659,14 @@ export const NESTED_NAV = [
         icon: ScanLine,
         children: [
           { id: "vi-in", label: "Visitor Entry", route: "/admin/visitors" },
-          { id: "vi-out", label: "Visitor Exit", route: "/admin/coming-soon?module=Visitor Exit", featureFlag: true },
-          { id: "vi-hist", label: "Visitor History", route: "/admin/coming-soon?module=Visitor History", featureFlag: true },
-          { id: "vi-exp", label: "Expected Visitors", route: "/admin/coming-soon?module=Expected Visitors", featureFlag: true },
-          { id: "vi-veh", label: "Vehicle Entry", route: "/admin/coming-soon?module=Vehicle Entry", featureFlag: true },
-          { id: "vi-qr", label: "QR Check-In", route: "/admin/coming-soon?module=Visitor QR Check-In", featureFlag: true },
-          { id: "vi-vip", label: "VIP Visitors", route: "/admin/coming-soon?module=VIP Visitors", featureFlag: true },
-          { id: "vi-black", label: "Blacklisted Visitors", route: "/admin/coming-soon?module=Blacklisted Visitors", featureFlag: true },
-          { id: "vi-rep", label: "Visitor Reports", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: true }
+          { id: "vi-out", label: "Visitor Exit", route: "/admin/coming-soon?module=Visitor Exit", featureFlag: false },
+          { id: "vi-hist", label: "Visitor History", route: "/admin/coming-soon?module=Visitor History", featureFlag: false },
+          { id: "vi-exp", label: "Expected Visitors", route: "/admin/coming-soon?module=Expected Visitors", featureFlag: false },
+          { id: "vi-veh", label: "Vehicle Entry", route: "/admin/coming-soon?module=Vehicle Entry", featureFlag: false },
+          { id: "vi-qr", label: "QR Check-In", route: "/admin/coming-soon?module=Visitor QR Check-In", featureFlag: false },
+          { id: "vi-vip", label: "VIP Visitors", route: "/admin/coming-soon?module=VIP Visitors", featureFlag: false },
+          { id: "vi-black", label: "Blacklisted Visitors", route: "/admin/coming-soon?module=Blacklisted Visitors", featureFlag: false },
+          { id: "vi-rep", label: "Visitor Reports", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: false }
         ]
       },
       {
@@ -677,11 +677,11 @@ export const NESTED_NAV = [
         children: [
           { id: "tr-live", label: "Live Tracking", route: "/admin/tracking" },
           { id: "tr-man", label: "Manual Tracking", route: "/admin/manual-tracking" },
-          { id: "tr-route", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: true },
+          { id: "tr-route", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: false },
           { id: "tr-journey", label: "Journey Logs", route: "/admin/journey-logs" },
           { id: "tr-map", label: "Live Map", route: "/admin/live-map" },
-          { id: "tr-chat", label: "Chaturmas Tracking", route: "/admin/coming-soon?module=Chaturmas Tracking", featureFlag: true },
-          { id: "tr-rep", label: "Route Reports", route: "/admin/coming-soon?module=Route Reports", featureFlag: true }
+          { id: "tr-chat", label: "Chaturmas Tracking", route: "/admin/coming-soon?module=Chaturmas Tracking", featureFlag: false },
+          { id: "tr-rep", label: "Route Reports", route: "/admin/coming-soon?module=Route Reports", featureFlag: false }
         ]
       },
       {
@@ -690,12 +690,12 @@ export const NESTED_NAV = [
         label: "Staff Operations",
         icon: Briefcase,
         children: [
-          { id: "so-man", label: "Manual Attendance", route: "/admin/coming-soon?module=Manual Attendance", featureFlag: true },
-          { id: "so-qr", label: "QR Attendance", route: "/admin/coming-soon?module=QR Attendance", featureFlag: true },
-          { id: "so-leave", label: "Leave Management", route: "/admin/staff?tab=leaves", featureFlag: true },
-          { id: "so-hours", label: "Working Hours", route: "/admin/staff?tab=hours", featureFlag: true },
-          { id: "so-salary", label: "Shift and Salary Management", route: "/admin/coming-soon?module=Shift and Salary Management", featureFlag: true },
-          { id: "so-rep", label: "Attendance Reports", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: true }
+          { id: "so-man", label: "Manual Attendance", route: "/admin/coming-soon?module=Manual Attendance", featureFlag: false },
+          { id: "so-qr", label: "QR Attendance", route: "/admin/coming-soon?module=QR Attendance", featureFlag: false },
+          { id: "so-leave", label: "Leave Management", route: "/admin/staff?tab=leaves", featureFlag: false },
+          { id: "so-hours", label: "Working Hours", route: "/admin/staff?tab=hours", featureFlag: false },
+          { id: "so-salary", label: "Shift and Salary Management", route: "/admin/coming-soon?module=Shift and Salary Management", featureFlag: false },
+          { id: "so-rep", label: "Attendance Reports", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: false }
         ]
       },
       {
@@ -704,11 +704,11 @@ export const NESTED_NAV = [
         label: "Document Management",
         icon: BookOpen,
         children: [
-          { id: "dm-org", label: "Organization Documents", route: "/admin/coming-soon?module=Organization Documents", featureFlag: true },
-          { id: "dm-staff", label: "Staff Documents", route: "/admin/staff?tab=documents", featureFlag: true },
-          { id: "dm-upload", label: "Upload Documents", route: "/admin/coming-soon?module=Upload Documents", featureFlag: true },
-          { id: "dm-exp", label: "Expiry Reminders", route: "/admin/coming-soon?module=Expiry Reminders", featureFlag: true },
-          { id: "dm-dl", label: "Download Documents", route: "/admin/coming-soon?module=Download Documents", featureFlag: true }
+          { id: "dm-org", label: "Organization Documents", route: "/admin/coming-soon?module=Organization Documents", featureFlag: false },
+          { id: "dm-staff", label: "Staff Documents", route: "/admin/staff?tab=documents", featureFlag: false },
+          { id: "dm-upload", label: "Upload Documents", route: "/admin/coming-soon?module=Upload Documents", featureFlag: false },
+          { id: "dm-exp", label: "Expiry Reminders", route: "/admin/coming-soon?module=Expiry Reminders", featureFlag: false },
+          { id: "dm-dl", label: "Download Documents", route: "/admin/coming-soon?module=Download Documents", featureFlag: false }
         ]
       },
       {
@@ -716,7 +716,7 @@ export const NESTED_NAV = [
         module: "STAFF",
         label: "Task Management",
         icon: CheckSquare,
-        featureFlag: true,
+        featureFlag: false,
         children: [
           { id: "tk-pend", label: "Pending Tasks", route: "/admin/coming-soon?module=Pending Tasks" },
           { id: "tk-app", label: "Pending Approvals", route: "/admin/coming-soon?module=Pending Approvals" },
@@ -731,10 +731,10 @@ export const NESTED_NAV = [
         label: "Reports",
         icon: TrendingUp,
         children: [
-          { id: "or-vis", label: "Visitor", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: true },
-          { id: "or-track", label: "Tracking", route: "/admin/coming-soon?module=Tracking Reports", featureFlag: true },
-          { id: "or-att", label: "Attendance", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: true },
-          { id: "or-sum", label: "Operational Summary", route: "/admin/coming-soon?module=Operational Summary", featureFlag: true }
+          { id: "or-vis", label: "Visitor", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: false },
+          { id: "or-track", label: "Tracking", route: "/admin/coming-soon?module=Tracking Reports", featureFlag: false },
+          { id: "or-att", label: "Attendance", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: false },
+          { id: "or-sum", label: "Operational Summary", route: "/admin/coming-soon?module=Operational Summary", featureFlag: false }
         ]
       }
     ]
@@ -748,12 +748,12 @@ export const NESTED_NAV = [
     children: [
       { id: "rp-exec", label: "Executive Dashboard", route: "/admin/reports" },
       { id: "rp-people", label: "People Reports", route: "/admin/reports/members" },
-      { id: "rp-org", label: "Organization Reports", route: "/admin/coming-soon?module=Organization Reports", featureFlag: true },
+      { id: "rp-org", label: "Organization Reports", route: "/admin/coming-soon?module=Organization Reports", featureFlag: false },
       { id: "rp-comm", label: "Community Reports", route: "/admin/reports/events" },
-      { id: "rp-book", label: "Booking Reports", route: "/admin/reports?tab=bookings", featureFlag: true },
+      { id: "rp-book", label: "Booking Reports", route: "/admin/reports?tab=bookings", featureFlag: false },
       { id: "rp-fin", label: "Financial Reports", route: "/admin/reports/donations" },
-      { id: "rp-op", label: "Operations Reports", route: "/admin/coming-soon?module=Operations Reports", featureFlag: true },
-      { id: "rp-export", label: "Export Center", route: "/admin/coming-soon?module=Export Center", featureFlag: true }
+      { id: "rp-op", label: "Operations Reports", route: "/admin/coming-soon?module=Operations Reports", featureFlag: false },
+      { id: "rp-export", label: "Export Center", route: "/admin/coming-soon?module=Export Center", featureFlag: false }
     ]
   },
 
@@ -766,7 +766,7 @@ export const NESTED_NAV = [
       { id: "su-ticket", label: "Support Tickets", route: "/admin/support-tickets", icon: Ticket },
       { id: "su-feedback", label: "Feedback", route: "/admin/feedback", icon: MessageSquareWarning },
       { id: "su-incorrect", label: "Incorrect Information", route: "/admin/incorrect-reports", icon: AlertTriangle },
-      { id: "su-contacts", label: "Contact Requests", route: "/admin/coming-soon?module=Contact Requests", featureFlag: true, icon: PhoneCall },
+      { id: "su-contacts", label: "Contact Requests", route: "/admin/coming-soon?module=Contact Requests", featureFlag: false, icon: PhoneCall },
       { id: "su-kb", label: "Knowledge Base", route: "/admin/faq", icon: HelpCircle }
     ]
   },
@@ -779,12 +779,12 @@ export const NESTED_NAV = [
     children: [
       { id: "se-admin", label: "Admin Management", route: "/admins", roles: ["SUPER_ADMIN"] },
       { id: "se-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
-      { id: "se-roles", label: "Roles & Permissions", route: "/admin/coming-soon?module=Roles & Permissions", roles: ["SUPER_ADMIN"], featureFlag: true },
+      { id: "se-roles", label: "Roles & Permissions", route: "/admin/coming-soon?module=Roles & Permissions", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-master", label: "Master Data", route: "/admin/master-data", roles: ["SUPER_ADMIN"] },
-      { id: "se-notif", label: "Notification Center", route: "/admin/notifications/preferences", featureFlag: true },
+      { id: "se-notif", label: "Notification Center", route: "/admin/notifications/preferences", featureFlag: false },
       { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
-      { id: "se-payment", label: "Payment Settings", route: "/admin/coming-soon?module=Payment Settings", roles: ["SUPER_ADMIN"], featureFlag: true },
-      { id: "se-security", label: "Security", route: "/admin/settings?tab=security", roles: ["SUPER_ADMIN"], featureFlag: true },
+      { id: "se-payment", label: "Payment Settings", route: "/admin/coming-soon?module=Payment Settings", roles: ["SUPER_ADMIN"], featureFlag: false },
+      { id: "se-security", label: "Security", route: "/admin/settings?tab=security", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-sub", label: "Subscription", route: "/admin/subscription-plans", roles: ["SUPER_ADMIN"] }
     ]
   }

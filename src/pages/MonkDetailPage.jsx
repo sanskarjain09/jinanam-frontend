@@ -227,6 +227,7 @@ export default function MonkDetailPage() {
   const [editForm, setEditForm] = useState({});
   const [editTab, setEditTab] = useState("basic");
   const [temples, setTemples] = useState([]);
+  const [groups, setGroups] = useState([]);
 
   const loadMonk = () => {
     setLoading(true);
@@ -251,6 +252,7 @@ export default function MonkDetailPage() {
   useEffect(() => {
     loadMonk();
     api.get("/temples").then((r) => setTemples(r.data?.data?.items || r.data?.data || [])).catch(() => {});
+    api.get("/monks/groups").then((r) => setGroups(r.data?.data || [])).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -318,6 +320,7 @@ export default function MonkDetailPage() {
       
       acharyaGuruId: monk.acharyaGuruId || "",
       currentSangh: monk.currentSangh || "",
+      groupId: monk.groupId || "",
       
       fatherMemberId: monk.preDikshaFather?.memberId || "",
       fatherNameText: monk.preDikshaFather?.name || "",
@@ -396,6 +399,7 @@ export default function MonkDetailPage() {
         nirvanaDate: editForm.nirvanaDate ? new Date(editForm.nirvanaDate).toISOString() : undefined,
         nirvanaPlace: editForm.nirvanaPlace || undefined,
         assignedAdminId: editForm.assignedAdminId || undefined,
+        groupId: editForm.groupId || undefined,
 
         preDikshaFather: { memberId: editForm.fatherMemberId || undefined, name: editForm.fatherNameText || undefined },
         preDikshaMother: { memberId: editForm.motherMemberId || undefined, name: editForm.motherNameText || undefined },
@@ -463,7 +467,7 @@ export default function MonkDetailPage() {
         },
       };
 
-      await api.post(`/monks/${id}`, payload);
+      await api.patch(`/monks/${id}`, payload);
       toast.success(t("MS Profile updated successfully."));
       setEditOpen(false);
       loadMonk();
@@ -1177,6 +1181,18 @@ export default function MonkDetailPage() {
                           {eField("Place of Nirvana / Samadhi", "nirvanaPlace")}
                         </div>
                       )}
+
+                      <div>
+                        <Label className="text-xs font-semibold">{t("Sangh / Group Assignment")}</Label>
+                        <SearchableSelect
+                          value={editForm.groupId}
+                          onValueChange={(val) => setEditForm({ ...editForm, groupId: val })}
+                          options={groups.map(g => ({ value: g.id, label: g.name }))}
+                          placeholder={t("Select a group...")}
+                          searchPlaceholder={t("Search groups...")}
+                          className="mt-1"
+                        />
+                      </div>
 
                       <div>
                         <Label className="text-xs font-semibold">{t("Short Bio (3-5 Lines Summary)")}</Label>

@@ -341,10 +341,9 @@ export default function App() {
                 <Route path="dharamshala-management/:id" element={<OrgDetailPage />} />
                 <Route path="dharamshalas" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="dharamshalas/:id" element={<OrgDetailPage />} />
-                <Route path="sthanak-management" element={<SthanaksPage />} />
+                <Route path="sthanak-management" element={<OrgListPage defaultType="STHANAK" />} />
                 <Route path="sthanak-management/:id" element={<OrgDetailPage />} />
-                <Route path="stanaks" element={<SthanaksPage />} />
-                <Route path="stanaks/:id" element={<OrgDetailPage />} />
+                <Route path="sthanaks" element={<OrgListPage defaultType="STHANAK" />} />
                 <Route path="sthanaks/:id" element={<OrgDetailPage />} />
                 <Route path="orgs/:id" element={<OrgDetailPage />} />
                 <Route path="org/:id" element={<OrgDetailPage />} />
@@ -361,8 +360,7 @@ export default function App() {
                 <Route path="timings" element={<BhojanshalaManagementPage />} />
                 <Route path="menu" element={<BhojanshalaManagementPage />} />
                 <Route path="pass-management" element={<BhojanshalaManagementPage />} />
-                <Route path="sthanak-management" element={<SthanaksPage />} />
-                <Route path="stanaks" element={<SthanaksPage />} />
+                {/* duplicate sthanak routes removed */}
                 <Route path="my-page" element={<CommunityPagesPage />} />
                 <Route path="community-pages" element={<CommunityPagesPage />} />
                 <Route path="page-information" element={<CommunityPagesPage />} />
@@ -499,7 +497,7 @@ export default function App() {
               <Route path="/temples"      element={<KeepSearchRedirect to="/admin/temples" />} />
               <Route path="/jain-centers" element={<KeepSearchRedirect to="/admin/jain-centers" />} />
               <Route path="/dharamshalas" element={<KeepSearchRedirect to="/admin/dharamshalas" />} />
-              <Route path="/stanaks"      element={<KeepSearchRedirect to="/admin/stanaks" />} />
+              <Route path="/sthanaks"     element={<KeepSearchRedirect to="/admin/sthanaks" />} />
               <Route path="/sthanaks"     element={<KeepSearchRedirect to="/admin/sthanaks" />} />
               <Route path="/volunteers"   element={<KeepSearchRedirect to="/admin/volunteers" />} />
               <Route path="/members"      element={<KeepSearchRedirect to="/admin/members" />} />

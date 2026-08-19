@@ -21,7 +21,7 @@ export default function RoutesPage() {
   const [groups, setGroups] = useState([]);
   const [rows, setRows] = useState([]);
   const [orgs, setOrgs] = useState([]);
-  const [form, setForm] = useState({ id: null, name: "", targetType: "monk", targetId: "", journeyDate: "", stops: [] });
+  const [form, setForm] = useState({ id: null, name: "", monkId: "", monkGroupId: "", journeyDate: "", stops: [] });
 
   const loadRoutesAndMonks = async () => {
     setLoading(true);
@@ -59,8 +59,8 @@ export default function RoutesPage() {
     setForm({
       id: null,
       name: "",
-      targetType: "monk",
-      targetId: "",
+      monkId: "",
+      monkGroupId: "",
       journeyDate: "",
       stops: [
         { templeId: "", templeName: "" },
@@ -74,8 +74,8 @@ export default function RoutesPage() {
     setForm({
       id: r.id,
       name: r.name,
-      targetType: r.monkGroupId ? "group" : "monk",
-      targetId: r.monkGroupId || r.monkId || "",
+      monkId: r.monkId || "",
+      monkGroupId: r.monkGroupId || "",
       journeyDate: r.journeyDate ? r.journeyDate.slice(0, 10) : "",
       stops: r.stops && r.stops.length > 0 ? r.stops.map(s => ({ templeId: s.templeId || "", templeName: s.templeName || "" })) : [
         { templeId: "", templeName: "" },
@@ -86,8 +86,8 @@ export default function RoutesPage() {
   };
 
   const saveRoute = async () => {
-    if (!form.name || !form.targetId || !form.journeyDate) {
-      toast.error(t("Please fill in Route Name, Target, and Vihar Start Date."));
+    if (!form.name || (!form.monkId && !form.monkGroupId) || !form.journeyDate) {
+      toast.error(t("Please fill in Route Name, Target (at least one), and Vihar Start Date."));
       return;
     }
     const validStops = form.stops.filter(s => s.templeName.trim());
@@ -98,8 +98,8 @@ export default function RoutesPage() {
 
     const payload = {
       name: form.name,
-      monkId: form.targetType === "monk" ? form.targetId : undefined,
-      monkGroupId: form.targetType === "group" ? form.targetId : undefined,
+      monkId: form.monkId || undefined,
+      monkGroupId: form.monkGroupId || undefined,
       journeyDate: new Date(form.journeyDate).toISOString(),
       stops: validStops.map((s, idx) => ({
         order: idx,
@@ -192,44 +192,33 @@ export default function RoutesPage() {
             <DialogTitle>{form.id ? t("Edit Vihar Route") : t("Add Vihar Route")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-6 mb-2">
-              <Label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={form.targetType === "monk"} onChange={() => setForm({ ...form, targetType: "monk", targetId: "" })} disabled={!!form.id} />
-                <span className="text-sm">{t("Individual Monk/Sadhvi")}</span>
-              </Label>
-              <Label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={form.targetType === "group"} onChange={() => setForm({ ...form, targetType: "group", targetId: "" })} disabled={!!form.id} />
-                <span className="text-sm">{t("Sangh/Group")}</span>
-              </Label>
-            </div>
-
-            {form.targetType === "monk" ? (
-              <div>
-                <Label className="text-xs">{t("Monk / Sadhvi *")}</Label>
+            <div className="flex flex-col md:flex-row gap-4 mb-2">
+              <div className="flex-1">
+                <Label className="text-xs">{t("Monk / Sadhvi (Optional)")}</Label>
                 <SearchableSelect
-                  value={form.targetId}
-                  onValueChange={(val) => setForm({ ...form, targetId: val })}
+                  value={form.monkId}
+                  onValueChange={(val) => setForm({ ...form, monkId: val })}
                   options={monks.map((m) => ({ value: m.id, label: `${m.dikshaName} (${m.publicId})` }))}
                   placeholder={t("Select a monk")}
                   searchPlaceholder={t("Search monks…")}
                   className="mt-1"
-                  disabled={!!form.id}
+                  disabled={!!form.id && !!form.monkId}
                 />
               </div>
-            ) : (
-              <div>
-                <Label className="text-xs">{t("Sangh / Group *")}</Label>
+              <div className="flex-1">
+                <Label className="text-xs">{t("Sangh / Group (Optional)")}</Label>
                 <SearchableSelect
-                  value={form.targetId}
-                  onValueChange={(val) => setForm({ ...form, targetId: val })}
+                  value={form.monkGroupId}
+                  onValueChange={(val) => setForm({ ...form, monkGroupId: val })}
                   options={groups.map((g) => ({ value: g.id, label: g.name }))}
                   placeholder={t("Select a group")}
                   searchPlaceholder={t("Search groups…")}
                   className="mt-1"
-                  disabled={!!form.id}
+                  disabled={!!form.id && !!form.monkGroupId}
                 />
               </div>
-            )}
+            </div>
+
             <div><Label className="text-xs">{t("Route Name *")}</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("e.g. Mumbai-Pune Highway Route")} className="mt-1" /></div>
             
             <div className="border border-slate-200 rounded-md p-3 space-y-3 bg-slate-50/50">
