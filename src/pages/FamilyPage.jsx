@@ -34,8 +34,10 @@ import { PhoneField } from "@/components/common/PhoneInput";
  *   `anchorMemberPublicId` is omitted for "my family"; Super Admins send it to
  *   link two arbitrary members under one family.
  * ------------------------------------------------------------------ */
-function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel }) {
+function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel, myPublicId }) {
   const { t } = useLanguage();
+  const { user, isSuperAdmin } = useAuth();
+  const orgId = user?.organizationIds?.[0];
   const [mode, setMode] = useState("link");
   const [linkedMember, setLinkedMember] = useState("");
   const [form, setForm] = useState({
@@ -68,21 +70,26 @@ function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel
     }
     setSaving(true);
     try {
-      const payload = mode === "link"
-        ? {
-            ...(anchorPublicId ? { anchorMemberPublicId: anchorPublicId } : {}),
-            relatedMemberPublicId: linkedMember,
-            relationshipTypeId: form.relationshipTypeId,
-          }
-        : {
-            ...(anchorPublicId ? { anchorMemberPublicId: anchorPublicId } : {}),
-            name: `${form.firstName} ${form.surname}`.trim(),
-            mobile: form.mobile,
-            relationshipTypeId: form.relationshipTypeId,
-            category: "JAIN",
-          };
-      await api.post("/family", payload);
-      toast.success(mode === "link" ? t("Members linked into one family.") : t("Family member added."));
+      if (mode === "link") {
+        await api.post("/family/link", {
+          primaryMemberPublicId: anchorPublicId || myPublicId,
+          relatedMemberPublicId: linkedMember,
+          relationshipTypeId: form.relationshipTypeId,
+          ...(orgId && !isSuperAdmin ? { organizationId: orgId } : {})
+        });
+        toast.success(t("Members linked into one family."));
+      } else {
+        const payload = {
+          ...(anchorPublicId ? { anchorMemberPublicId: anchorPublicId } : {}),
+          name: `${form.firstName} ${form.surname}`.trim(),
+          mobile: form.mobile,
+          relationshipTypeId: form.relationshipTypeId,
+          category: "JAIN",
+          ...(orgId && !isSuperAdmin ? { organizationId: orgId } : {})
+        };
+        await api.post("/family", payload);
+        toast.success(t("Family member added."));
+      }
       onCreated();
       onClose();
       reset();
@@ -276,6 +283,7 @@ function CreateFamilyGroupDialog({ open, onClose, onCreated, setAnchorPublicId }
             primaryMemberPublicId: anchorId,
             relatedMemberPublicId: otherId,
             relationshipTypeId: relPerMember[otherId],
+            ...(orgId && !isSuperAdmin ? { organizationId: orgId } : {})
           })
         )
       );
@@ -491,6 +499,7 @@ function FamilyCard({ link, onClick }) {
 export default function FamilyPage() {
   const { t } = useLanguage();
   const { user, isSuperAdmin } = useAuth();
+  const orgId = user?.organizationIds?.[0];
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -555,7 +564,7 @@ export default function FamilyPage() {
     // Fetch full detail if publicId available
     if (m.publicId) {
       try {
-        const res = await api.get(`/members/${m.publicId}`);
+        const res = await api.get(`/members/${m.publicId}`, { params: !isSuperAdmin && orgId ? { organizationId: orgId } : {} });
         const detail = res.data?.data;
         if (detail) {
           setSelectedMember({ ...detail, relation: link.relation, direction: link.direction });
@@ -572,20 +581,19 @@ export default function FamilyPage() {
     setSelectedMember(null);
   };
 
-  /* Save edited profile fields */
   const handleSave = async (fields) => {
     if (!selectedMember?.publicId) return;
-    await api.patch(`/members/${selectedMember.publicId}`, fields);
+    await api.patch(`/members/${selectedMember.publicId}`, { ...fields, ...(orgId && !isSuperAdmin && { organizationId: orgId }) });
     load();
   };
 
-  /* Save uploaded photo */
   const handlePhotoSave = async (file) => {
     if (!selectedMember?.publicId) return;
     const fd = new FormData();
     fd.append("photo", file);
     await api.post(`/members/${selectedMember.publicId}/photo`, fd, {
       headers: { "Content-Type": "multipart/form-data" },
+      params: !isSuperAdmin && orgId ? { organizationId: orgId } : {}
     });
     load();
   };
@@ -647,18 +655,22 @@ export default function FamilyPage() {
         subtitle={t("See and manage your family tree. Adding a member sends them a signup invite via SMS.")}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCreateGroupOpen(true)} data-testid="family-group-create-btn">
-              <Users className="h-4 w-4 mr-2" /> {t("Create Family Group")}
-            </Button>
-            <Button onClick={() => setAddOpen(true)} data-testid="family-add-btn">
-              <UserPlus className="h-4 w-4 mr-2" /> {t("Add Family Member")}
-            </Button>
+            {canSeeAllFamilies && !anchorPublicId && (
+              <Button variant="outline" onClick={() => setCreateGroupOpen(true)} data-testid="family-group-create-btn">
+                <Users className="h-4 w-4 mr-2" /> {t("Create Family Group")}
+              </Button>
+            )}
+            {(!canSeeAllFamilies || anchorPublicId) && (
+              <Button onClick={() => setAddOpen(true)} data-testid="family-add-btn">
+                <UserPlus className="h-4 w-4 mr-2" /> {t("Add Family Member")}
+              </Button>
+            )}
           </div>
         }
       />
 
-      {/* Super Admin: pick whose family group to view / link members into */}
-      {isSuperAdmin && (
+      {/* Admin: pick whose family group to view / link members into */}
+      {canSeeAllFamilies && (
         <Card className="p-4 rounded-xl border-border mb-4">
           <Label className="text-xs font-semibold">{t("View Family Group Of")}</Label>
           <div className="flex items-center gap-2 mt-1.5">
@@ -791,6 +803,7 @@ export default function FamilyPage() {
         onCreated={load}
         anchorPublicId={anchorPublicId}
         anchorLabel={anchorPublicId || null}
+        myPublicId={members.find((l) => l.direction === "ANCHOR")?.member?.publicId}
       />
 
       {/* Create Family Group Dialog */}

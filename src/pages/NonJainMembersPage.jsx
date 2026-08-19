@@ -46,6 +46,8 @@ function calculateAge(dobString) {
 }
 
 function RegisterNonJainDialog({ onCreated }) {
+  const { user } = useAuth();
+  const orgId = user?.organizationIds?.[0];
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [subTab, setSubTab] = useState("personal");
@@ -133,6 +135,7 @@ function RegisterNonJainDialog({ onCreated }) {
         status: "ACTIVE",
         dob: form.dob ? new Date(form.dob).toISOString() : undefined,
         currentAddress: (form.currentAddress.city || form.currentAddress.state) ? { city: form.currentAddress.city || undefined, state: form.currentAddress.state || undefined } : undefined,
+        ...(orgId && { organizationId: orgId }),
       });
       const data = res.data?.data || {};
       setCreatedId({ publicId: data.publicId, fullName: data.fullName });
@@ -685,24 +688,17 @@ export default function NonJainMembersPage() {
     const params = { page: 1, pageSize: 100, q, category: "NON_JAIN" };
     if (!isSuperAdmin) {
       if (user?.id) params.createdByUserId = user.id;
-      if (orgId) params.createdByOrgId = orgId;
+      if (orgId) {
+        params.createdByOrgId = orgId;
+        params.organizationId = orgId; // Required for Staff permission validation in auth middleware
+      }
     }
 
     api.get("/members", { params })
       .then((res) => {
         if (!mounted) return;
         const fetched = res.data?.data?.items || res.data?.data || [];
-        const scoped = isSuperAdmin
-          ? fetched
-          : fetched.filter(
-              (m) =>
-                m.createdByUserId === user?.id ||
-                m.createdById === user?.id ||
-                m.organizationId === orgId ||
-                m.createdByOrgId === orgId ||
-                m.isCreatedByCurrentOrg
-            );
-        setMembers(scoped);
+        setMembers(fetched);
       })
       .catch(() => mounted && setMembers([]))
       .finally(() => mounted && setLoading(false));
@@ -728,11 +724,11 @@ export default function NonJainMembersPage() {
   const handleSave = async (fields) => {
     if (!selectedMember?.publicId) return;
     if (fields._statusOnly) {
-      await api.patch(`/members/${selectedMember.publicId}/status`, { status: fields.status });
+      await api.patch(`/members/${selectedMember.publicId}/status`, { status: fields.status, ...(orgId && { organizationId: orgId }) });
       setReloadKey((k) => k + 1);
       return;
     }
-    await api.patch(`/members/${selectedMember.publicId}`, fields);
+    await api.patch(`/members/${selectedMember.publicId}`, { ...fields, ...(orgId && { organizationId: orgId }) });
     setReloadKey((k) => k + 1);
   };
 
@@ -742,6 +738,7 @@ export default function NonJainMembersPage() {
     fd.append("photo", file);
     await api.post(`/members/${selectedMember.publicId}/photo`, fd, {
       headers: { "Content-Type": "multipart/form-data" },
+      params: orgId ? { organizationId: orgId } : {}
     });
     setReloadKey((k) => k + 1);
   };

@@ -21,14 +21,10 @@ import { ROLE_LABELS } from "@/constants/modules";
 import { LanguageSwitcher } from "@/components/common/LanguageSwitcher";
 
 export default function Topbar({ onToggleSidebar }) {
-  const { user, logout, isSuperAdmin } = useAuth();
+  const { user, logout, isSuperAdmin, canDo } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const hideSearchFilters =
-    pathname === "/admin/a-dashboard" ||
-    pathname === "/admin/sa-dashboard" ||
-    pathname === "/admin/members" ||
-    pathname.startsWith("/admin/members/");
+  const showSearchFilters = pathname === "/admin/temples";
   const [activeAdmins, setActiveAdmins] = useState(1);
   const [templeSearch, setTempleSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -94,7 +90,7 @@ export default function Topbar({ onToggleSidebar }) {
       <div className="hidden sm:block h-7 w-px bg-slate-200 mx-1 shrink-0" />
 
       {/* Global search bar for active temples — hidden on A Dashboard (filters live there) */}
-      <div className={`relative flex-1 max-w-2xl items-center gap-2 ${hideSearchFilters ? "hidden" : "hidden md:flex"}`}>
+      <div className={`relative flex-1 max-w-2xl items-center gap-2 ${!showSearchFilters ? "hidden" : "hidden md:flex"}`}>
         {/* Search input */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
@@ -155,16 +151,18 @@ export default function Topbar({ onToggleSidebar }) {
 
         <LanguageSwitcher />
 
-        <button
-          className="relative h-9 w-9 md:h-10 md:w-10 rounded-full border border-border bg-white flex items-center justify-center hover:bg-secondary/60 transition-colors"
-          onClick={() => navigate("/notifications")}
-          data-testid="topbar-notifications-button"
-        >
-          <Bell className="h-4 w-4 text-foreground" />
-          <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center">
-            12
-          </span>
-        </button>
+        {(isSuperAdmin || canDo("NOTIFICATIONS", "VIEW")) && (
+          <button
+            className="relative h-9 w-9 md:h-10 md:w-10 rounded-full border border-border bg-white flex items-center justify-center hover:bg-secondary/60 transition-colors"
+            onClick={() => navigate("/notifications")}
+            data-testid="topbar-notifications-button"
+          >
+            <Bell className="h-4 w-4 text-foreground" />
+            <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center">
+              12
+            </span>
+          </button>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PhoneField } from "@/components/common/PhoneInput";
 
-export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
+export function DelegateModuleModal({ open, onClose, moduleKey, orgId, onSuccess }) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [createdPassword, setCreatedPassword] = useState(null);
@@ -16,6 +16,7 @@ export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
     firstName: "",
     lastName: "",
     mobile: "",
+    permissionLevel: "READ_WRITE"
   });
 
   const handleChange = (e) => {
@@ -37,7 +38,8 @@ export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
         mobile: formData.mobile,
         role: "STAFF",
         organizationIds: [orgId],
-        modules: [moduleKey]
+        modules: [moduleKey],
+        permissionLevel: formData.permissionLevel
       };
       
       const res = await api.post("/auth/admins", payload);
@@ -46,6 +48,7 @@ export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
       if (res.data?.data?.tempPassword) {
         setCreatedPassword(res.data.data.tempPassword);
       } else {
+        if (onSuccess) onSuccess();
         onClose();
       }
       
@@ -71,7 +74,10 @@ export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
             <p className="text-sm"><span className="font-semibold text-slate-700">{t("Password")}:</span> <code className="bg-white px-2 py-1 rounded text-blue-600 font-mono border border-slate-200">{createdPassword}</code></p>
           </div>
           <div className="flex justify-end pt-4">
-            <Button onClick={onClose} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => {
+              if (onSuccess) onSuccess();
+              onClose();
+            }} className="bg-blue-600 hover:bg-blue-700">
               {t("Done")}
             </Button>
           </div>
@@ -110,6 +116,37 @@ export function DelegateModuleModal({ open, onClose, moduleKey, orgId }) {
               onChange={(val) => setFormData(prev => ({ ...prev, mobile: val }))} 
               required 
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>{t("Access Level")} *</Label>
+            <div className="flex space-x-4 mt-1">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="permissionLevel" 
+                  value="READ" 
+                  checked={formData.permissionLevel === "READ"}
+                  onChange={handleChange}
+                  className="form-radio text-blue-600"
+                />
+                <span className="text-sm font-medium">{t("Read Only")}</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="permissionLevel" 
+                  value="READ_WRITE" 
+                  checked={formData.permissionLevel === "READ_WRITE"}
+                  onChange={handleChange}
+                  className="form-radio text-blue-600"
+                />
+                <span className="text-sm font-medium">{t("Read & Write")}</span>
+              </label>
+            </div>
+            <p className="text-xs text-slate-500">
+              {formData.permissionLevel === "READ" ? t("User can only view the data.") : t("User can view, add, edit and manage data.")}
+            </p>
           </div>
 
           <div className="flex justify-end pt-4 space-x-2">

@@ -505,6 +505,9 @@ function UserPermissionOverrides() {
 
 function OrgConfigForm({ orgId }) {
   const { t } = useLanguage();
+  const { canEdit } = useAuth();
+  const hasEditAccess = canEdit("SETTINGS");
+  
   const [form, setForm] = useState({
     staffWorkingHoursStart: "",
     staffWorkingHoursEnd: "",
@@ -552,27 +555,29 @@ function OrgConfigForm({ orgId }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <Label className="text-xs font-semibold text-slate-700">{t("Staff Working Hours Start")}</Label>
-          <Input type="time" value={form.staffWorkingHoursStart} onChange={(e) => setForm({ ...form, staffWorkingHoursStart: e.target.value })} className="mt-1" />
+          <Input type="time" value={form.staffWorkingHoursStart} disabled={!hasEditAccess} onChange={(e) => setForm({ ...form, staffWorkingHoursStart: e.target.value })} className="mt-1" />
         </div>
         <div>
           <Label className="text-xs font-semibold text-slate-700">{t("Staff Working Hours End")}</Label>
-          <Input type="time" value={form.staffWorkingHoursEnd} onChange={(e) => setForm({ ...form, staffWorkingHoursEnd: e.target.value })} className="mt-1" />
+          <Input type="time" value={form.staffWorkingHoursEnd} disabled={!hasEditAccess} onChange={(e) => setForm({ ...form, staffWorkingHoursEnd: e.target.value })} className="mt-1" />
         </div>
         <div>
           <Label className="text-xs font-semibold text-slate-700">{t("Mark Late Arrival After")}</Label>
-          <Input type="time" value={form.staffLateArrivalAfter} onChange={(e) => setForm({ ...form, staffLateArrivalAfter: e.target.value })} className="mt-1" />
+          <Input type="time" value={form.staffLateArrivalAfter} disabled={!hasEditAccess} onChange={(e) => setForm({ ...form, staffLateArrivalAfter: e.target.value })} className="mt-1" />
         </div>
         <div>
           <Label className="text-xs font-semibold text-slate-700">{t("Mark Early Exit Before")}</Label>
-          <Input type="time" value={form.staffEarlyExitBefore} onChange={(e) => setForm({ ...form, staffEarlyExitBefore: e.target.value })} className="mt-1" />
+          <Input type="time" value={form.staffEarlyExitBefore} disabled={!hasEditAccess} onChange={(e) => setForm({ ...form, staffEarlyExitBefore: e.target.value })} className="mt-1" />
         </div>
       </div>
       
-      <div className="flex justify-end mt-4">
-        <Button onClick={save} disabled={saving} className="bg-orange-500 hover:bg-orange-600 text-white">
-          <Save className="h-4 w-4 mr-2" /> {saving ? t("Saving...") : t("Save Settings")}
-        </Button>
-      </div>
+      {hasEditAccess && (
+        <div className="flex justify-end mt-4">
+          <Button onClick={save} disabled={saving} className="bg-orange-500 hover:bg-orange-600 text-white">
+            <Save className="h-4 w-4 mr-2" /> {saving ? t("Saving...") : t("Save Settings")}
+          </Button>
+        </div>
+      )}
     </Card>
   );
 }

@@ -386,8 +386,8 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}
         return key === moduleKey || key?.toUpperCase() === moduleKey.toUpperCase();
       });
 
-      // Implicitly allow EVENTS, ANNOUNCEMENTS, VOLUNTEERS, and MODULE_CONTROLLER if the admin has any organization module
-      if (!isAllowed && (moduleKey === "EVENTS" || moduleKey === "ANNOUNCEMENTS" || moduleKey === "VOLUNTEERS" || moduleKey === "MODULE_CONTROLLER")) {
+      // Implicitly allow EVENTS, ANNOUNCEMENTS, VOLUNTEERS, MODULE_CONTROLLER, and SETTINGS if the admin has any organization module
+      if (!isAllowed && (moduleKey === "EVENTS" || moduleKey === "ANNOUNCEMENTS" || moduleKey === "VOLUNTEERS" || moduleKey === "MODULE_CONTROLLER" || moduleKey === "SETTINGS")) {
         const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALAS", "COMMUNITY_PAGES"];
         isAllowed = granted.some((m) => {
           const key = typeof m === "string" ? m : m.module;

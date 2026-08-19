@@ -313,14 +313,20 @@ export default function MemberFeedPage() {
   const filtered = sortedPosts.filter((p) => {
     // ?filter=sponsored is the Sponsored Posts tab
     if (sponsoredOnly && !p.isAd) return false;
-    if (p.isAd) return true;
     if (search) {
       const q = search.toLowerCase();
       const matchText =
-        p.title?.toLowerCase().includes(q) || p.org?.toLowerCase().includes(q);
+        p.title?.toLowerCase().includes(q) || 
+        p.org?.toLowerCase().includes(q) ||
+        p.body?.toLowerCase().includes(q);
       const matchId = p.entityPublicId?.toLowerCase().includes(q);
       if (!matchText && !matchId) return false;
     }
+    
+    // Ads bypass category filters so they can interleave in the feed.
+    // (If the search filter rejected them, they're already gone by now).
+    if (p.isAd) return true;
+
     // Spaces were stripped from the needle but not the haystack, so any
     // two-word category ("MS Updates", "Temple Updates") could never match.
     // Normalise both sides.

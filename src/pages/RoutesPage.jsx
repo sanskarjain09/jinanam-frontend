@@ -57,8 +57,8 @@ export default function RoutesPage() {
       monkId: form.monkId,
       journeyDate: new Date(form.journeyDate).toISOString(),
       stops: [
-        { order: 0, templeId: null, templeName: form.startLoc, expectedArrival: null, status: "PENDING" },
-        { order: 1, templeId: null, templeName: form.endLoc, expectedArrival: null, status: "PENDING" }
+        { order: 0, templeName: form.startLoc, expectedArrival: undefined, status: "PENDING" },
+        { order: 1, templeName: form.endLoc, expectedArrival: undefined, status: "PENDING" }
       ]
     };
 

@@ -230,10 +230,17 @@ export default function MonkDetailPage() {
 
   const loadMonk = () => {
     setLoading(true);
-    api.get(`/monks/${id}`)
-      .then((r) => {
-        setMonk(r.data?.data);
-        setFollowing(r.data?.data?.follows?.length > 0 || false);
+    Promise.all([
+      api.get(`/monks/${id}`),
+      api.get(`/chaturmas/monk/${id}`).catch(() => ({ data: { data: [] } }))
+    ])
+      .then(([r, cRes]) => {
+        const data = r.data?.data;
+        if (data) {
+          data.chaturmasHistory = cRes.data?.data || [];
+        }
+        setMonk(data);
+        setFollowing(data?.follows?.length > 0 || false);
       })
       .catch((e) => {
         toast.error(t("Failed to load Maharaj Saheb profile."));
@@ -272,10 +279,11 @@ export default function MonkDetailPage() {
     setTicketSaving(true);
     try {
       await api.post("/support-tickets", {
+        type: "INCORRECT_INFO",
         subject: `Incorrect Information Report for Monk ${monk?.dikshaName} (${monk?.publicId})`,
         description: ticketDescription,
-        category: "MONK_PROFILE",
-        priority: "MEDIUM",
+        relatedEntityType: "MONK",
+        relatedEntityId: monk?.id,
       });
       toast.success(t("Support ticket created. Admin will review the corrections."));
       setReportOpen(false);

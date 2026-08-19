@@ -254,6 +254,8 @@ function calculateAge(dobString) {
  * Register Member Dialog
  * ───────────────────────────────────────────────────────────────────────── */
 function RegisterMemberDialog({ onCreated }) {
+  const { user } = useAuth();
+  const orgId = user?.organizationIds?.[0];
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [subTab, setSubTab] = useState("personal");
@@ -447,6 +449,7 @@ function RegisterMemberDialog({ onCreated }) {
         subCommunityId: jainSubCommunityId,
         tithiCalendarTypeId: jainTithiId,
         gacchaId: jainGacchaId,
+        ...(orgId && { organizationId: orgId }),
       });
       const data = res.data?.data || {};
       setCreatedId({ publicId: data.publicId, fullName: data.fullName });
@@ -1476,7 +1479,10 @@ export default function MembersPage() {
     const params = { page: 1, pageSize: 100, q, category: "JAIN" };
     if (!isSuperAdmin) {
       if (user?.id) params.createdByUserId = user.id;
-      if (orgId) params.createdByOrgId = orgId;
+      if (orgId) {
+        params.createdByOrgId = orgId;
+        params.organizationId = orgId; // Required for Staff permission validation in auth middleware
+      }
     }
 
     api.get("/members", { params })
@@ -1531,12 +1537,12 @@ export default function MembersPage() {
     const memberId = selectedMember?.publicId || selectedMember?.id;
     if (!memberId) { toast.error(t("Cannot save — member ID is missing.")); return; }
     if (fields._statusOnly) {
-      await api.patch(`/members/${memberId}/status`, { status: fields.status });
+      await api.patch(`/members/${memberId}/status`, { status: fields.status, ...(orgId && { organizationId: orgId }) });
       setSelectedMember((p) => p ? { ...p, status: fields.status } : p);
       setMembers((prev) => prev.map((m) => (m.publicId || m.id) === memberId ? { ...m, status: fields.status } : m));
       return;
     }
-    await api.patch(`/members/${memberId}`, fields);
+    await api.patch(`/members/${memberId}`, { ...fields, ...(orgId && { organizationId: orgId }) });
     setReloadKey((k) => k + 1);
   };
 
@@ -1547,6 +1553,7 @@ export default function MembersPage() {
     fd.append("photo", file);
     const res = await api.post(`/members/${selectedMember.publicId}/photo`, fd, {
       headers: { "Content-Type": "multipart/form-data" },
+      params: orgId ? { organizationId: orgId } : {}
     });
     const photoUrl = res.data?.data?.photoUrl;
     if (photoUrl) setSelectedMember((p) => p ? { ...p, photoUrl } : p);
@@ -1557,8 +1564,9 @@ export default function MembersPage() {
   const handleActivateMember = async (member) => {
     try {
       const mId = member.publicId || member.id;
-      await api.patch(`/members/${mId}/status`, { status: "ACTIVE" }).catch(() => null);
-      await api.patch(`/members/${mId}`, { status: "ACTIVE" }).catch(() => null);
+      const payload = { status: "ACTIVE", ...(orgId && { organizationId: orgId }) };
+      await api.patch(`/members/${mId}/status`, payload).catch(() => null);
+      await api.patch(`/members/${mId}`, payload).catch(() => null);
       setMembers((prev) =>
         prev.map((m) => ((m.publicId || m.id) === mId ? { ...m, status: "ACTIVE", isAutoCreated: false } : m))
       );
@@ -1573,8 +1581,9 @@ export default function MembersPage() {
     if (!window.confirm(`Mark "${member.fullName || member.firstName || "this profile"}" as Inactive?`)) return;
     try {
       const mId = member.publicId || member.id;
-      await api.patch(`/members/${mId}/status`, { status: "INACTIVE" }).catch(() => null);
-      await api.patch(`/members/${mId}`, { status: "INACTIVE" }).catch(() => null);
+      const payload = { status: "INACTIVE", ...(orgId && { organizationId: orgId }) };
+      await api.patch(`/members/${mId}/status`, payload).catch(() => null);
+      await api.patch(`/members/${mId}`, payload).catch(() => null);
       setMembers((prev) =>
         prev.map((m) => ((m.publicId || m.id) === mId ? { ...m, status: "INACTIVE" } : m))
       );

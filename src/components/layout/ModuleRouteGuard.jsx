@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Navigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShieldAlert } from "lucide-react";
@@ -47,33 +47,7 @@ export default function ModuleRouteGuard({ children }) {
 
   if (!blocked) return children;
 
-  return (
-    <div className="space-y-6" data-testid="module-route-blocked">
-      <Card className="p-8 max-w-xl mx-auto rounded-2xl border border-orange-100 bg-orange-50/40 text-center space-y-4 shadow-sm">
-        <div className="h-12 w-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mx-auto">
-          <ShieldAlert className="h-6 w-6" />
-        </div>
-        <div>
-          <h3 className="font-bold text-slate-800 text-base">{t("Tab not available")}</h3>
-          <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
-            {t("Your account has not been granted the")}{" "}
-            <strong>{t(moduleLabel(moduleKey))}</strong>{" "}
-            {t("tab. Ask whoever onboarded your account if you need it.")}
-          </p>
-          {allowedModules.length > 0 && (
-            <p className="text-[11px] text-slate-500 mt-2">
-              {t("You currently have access to")} <strong>{allowedModules.length}</strong>{" "}
-              {t("tab(s).")}
-            </p>
-          )}
-        </div>
-        <Button
-          onClick={() => { window.location.href = "/admin/a-dashboard"; }}
-          className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs"
-        >
-          {t("Return to Dashboard")}
-        </Button>
-      </Card>
-    </div>
-  );
+  // If a user manually types a URL they don't have permission for, silently redirect to the dashboard
+  // instead of showing the full-page "Tab not available" error screen.
+  return <Navigate to="/admin/a-dashboard" replace />;
 }

@@ -156,7 +156,7 @@ export const NESTED_NAV = [
     label: "MS Management",
     icon: HandHeart,
     children: [
-      { id: "ms-profiles", label: "MS Profiles", route: "/admin/monks" },
+      { id: "ms-profiles", label: "MS Profiles", route: "/admin/ms-profiles" },
       { id: "ms-hierarchy", label: "Guru Hierarchy", route: "/admin/coming-soon?module=Guru Hierarchy", featureFlag: true },
       { id: "ms-groups", label: "MS Groups", route: "/admin/coming-soon?module=MS Groups", featureFlag: true },
       { id: "ms-assoc", label: "MS Associations", route: "/admin/coming-soon?module=MS Associations", featureFlag: true },
@@ -782,7 +782,7 @@ export const NESTED_NAV = [
       { id: "se-roles", label: "Roles & Permissions", route: "/admin/coming-soon?module=Roles & Permissions", roles: ["SUPER_ADMIN"], featureFlag: true },
       { id: "se-master", label: "Master Data", route: "/admin/master-data", roles: ["SUPER_ADMIN"] },
       { id: "se-notif", label: "Notification Center", route: "/admin/notifications/preferences", featureFlag: true },
-      { id: "se-platform", label: "Platform Settings", route: "/admin/settings", roles: ["SUPER_ADMIN"] },
+      { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
       { id: "se-payment", label: "Payment Settings", route: "/admin/coming-soon?module=Payment Settings", roles: ["SUPER_ADMIN"], featureFlag: true },
       { id: "se-security", label: "Security", route: "/admin/settings?tab=security", roles: ["SUPER_ADMIN"], featureFlag: true },
       { id: "se-sub", label: "Subscription", route: "/admin/subscription-plans", roles: ["SUPER_ADMIN"] }

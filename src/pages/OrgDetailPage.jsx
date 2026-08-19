@@ -40,6 +40,7 @@ import { toOptions, ALL_COUNTRIES, COUNTRY_OPTIONS } from "@/constants/dropdownO
 import TimePicker, { TimeRangePicker } from "@/components/common/TimePicker";
 import MemberLinkSelect from "@/components/common/MemberLinkSelect";
 import { PermissionGate, ReadEditOnlyNotice } from "@/components/common/PermissionGate";
+import { useVisibilityEngine } from "@/contexts/VisibilityEngineContext";
 
 const STATUSES = ["AVAILABLE", "BOOKED", "PENDING"];
 const ROOM_AMENITIES_LIST = [
@@ -733,15 +734,19 @@ function AnnouncementsTab({ announcements, apiPrefix, orgId, onRefresh, canEdit 
 }
 
 /* ─── Reviews Tab ───────────────────────────────────────────────────────────── */
-function ReviewsTab({ reviews, apiPrefix, orgId, onRefresh, isSuperAdmin, canEdit }) {
+function ReviewsTab({ reviews, apiPrefix, orgId, onRefresh, isSuperAdmin, canEdit, hasMemberProfile, isMemberView }) {
   const apiClient = useContext(ApiClientContext);
   const { t } = useLanguage();
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState("");
   const [replying, setReplying] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const canReply = canEdit || isSuperAdmin || true; // Admins managing portal can reply to reviews
+  const visibleReviews = (reviews || []).filter(r => isSuperAdmin || canEdit || r.isPublished);
 
   const doDelete = async () => {
     try {
@@ -768,11 +773,46 @@ function ReviewsTab({ reviews, apiPrefix, orgId, onRefresh, isSuperAdmin, canEdi
     }
   };
 
+  const handlePublishReview = async (reviewId) => {
+    try {
+      await apiClient.patch(`${apiPrefix}/reviews/${reviewId}/publish`, { isPublished: true });
+      toast.success(t("Review published successfully!"));
+      onRefresh();
+    } catch (e) {
+      toast.error(extractErrorMessage(e));
+    }
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    setSubmittingReview(true);
+    try {
+      await apiClient.post(`${apiPrefix}/${orgId}/reviews`, reviewForm);
+      toast.success(t("Review submitted successfully! It will be visible once approved."));
+      setReviewDialogOpen(false);
+      setReviewForm({ rating: 5, comment: "" });
+      onRefresh();
+    } catch (error) {
+      toast.error(extractErrorMessage(error));
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <div>
-      {reviews?.length > 0 ? (
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold text-sm text-slate-800">{t("Reviews")} ({visibleReviews.length})</h3>
+        {(hasMemberProfile || isMemberView) && (
+          <Button onClick={() => setReviewDialogOpen(true)} size="sm" className="h-8 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5">
+            <Star className="h-3.5 w-3.5" /> {t("Write Review")}
+          </Button>
+        )}
+      </div>
+
+      {visibleReviews.length > 0 ? (
         <div className="space-y-4 divide-y divide-slate-100">
-          {reviews.map((r, i) => (
+          {visibleReviews.map((r, i) => (
             <div key={r.id || i} className="pt-4 first:pt-0 flex items-start justify-between group">
               <div className="flex-1 mr-4">
                 <div className="flex items-center gap-2">
@@ -801,18 +841,28 @@ function ReviewsTab({ reviews, apiPrefix, orgId, onRefresh, isSuperAdmin, canEdi
                   </div>
                 )}
 
-                {/* Show Reply button if no reply yet and not currently open */}
-                {!r.adminReply && replyingTo?.id !== r.id && canReply && (
-                  <button
-                    onClick={() => {
-                      setReplyingTo(r);
-                      setReplyText("");
-                    }}
-                    className="mt-2.5 text-[11px] text-orange-600 font-semibold hover:bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5"
-                  >
-                    <MessageSquare className="h-3.5 w-3.5 text-orange-500" /> {t("Reply on Review")}
-                  </button>
-                )}
+                {/* Show Reply/Publish buttons */}
+                <div className="flex items-center gap-2 mt-2.5">
+                  {!r.adminReply && replyingTo?.id !== r.id && canReply && (
+                    <button
+                      onClick={() => {
+                        setReplyingTo(r);
+                        setReplyText("");
+                      }}
+                      className="text-[11px] text-orange-600 font-semibold hover:bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5"
+                    >
+                      <MessageSquare className="h-3.5 w-3.5 text-orange-500" /> {t("Reply on Review")}
+                    </button>
+                  )}
+                  {!r.isPublished && (canEdit || isSuperAdmin) && (
+                    <button
+                      onClick={() => handlePublishReview(r.id)}
+                      className="text-[11px] text-green-600 font-semibold hover:bg-green-50 border border-green-200 px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5 text-green-500" /> {t("Publish")}
+                    </button>
+                  )}
+                </div>
 
                 {/* Reply Textarea Form */}
                 {replyingTo?.id === r.id && (
@@ -872,6 +922,65 @@ function ReviewsTab({ reviews, apiPrefix, orgId, onRefresh, isSuperAdmin, canEdi
       )}
 
       <Confirm open={!!deleteTarget} message={t("Remove this user review?")} onConfirm={doDelete} onCancel={() => setDeleteTarget(null)} />
+
+      <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-white/60 backdrop-blur-xl border-white/40 shadow-2xl rounded-2xl">
+          <div className="px-6 py-4 border-b border-white/40 bg-white/40 flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-lg font-bold text-slate-800">{t("Write a Review")}</DialogTitle>
+              <p className="text-xs text-slate-500 mt-1">{t("Share your experience with the community")}</p>
+            </div>
+            <button onClick={() => setReviewDialogOpen(false)} className="p-2 rounded-full hover:bg-white/50 text-slate-500 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <form onSubmit={handleSubmitReview} className="p-6 space-y-5">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-700">{t("Rating")}</Label>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                    className="focus:outline-none transition-transform hover:scale-110"
+                  >
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        star <= reviewForm.rating
+                          ? "fill-orange-400 text-orange-400 drop-shadow-sm"
+                          : "text-slate-200 hover:text-orange-200"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold text-slate-700">{t("Comment (Optional)")}</Label>
+              <textarea
+                value={reviewForm.comment}
+                onChange={(e) => setReviewForm(prev => ({ ...prev, comment: e.target.value }))}
+                className="w-full text-sm p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/50 bg-white/50 transition-all placeholder:text-slate-400"
+                rows={4}
+                placeholder={t("What did you like? What could be improved?")}
+              />
+            </div>
+            
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={submittingReview}
+                className="w-full bg-gradient-to-r from-orange-500 to-rose-500 hover:from-orange-600 hover:to-rose-600 text-white font-semibold py-2.5 rounded-xl shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                {submittingReview ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
+                {submittingReview ? t("Submitting...") : t("Submit Review")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1306,6 +1415,7 @@ function ChaturmasTab({ chaturmasStays = [], apiPrefix, orgId, org, onRefresh, c
     setSaving(true);
     try {
       const payload = {
+        organizationId: orgId,
         year: Number(form.year),
         startDate: new Date(form.startDate).toISOString(),
         endDate: new Date(form.endDate).toISOString(),
@@ -1319,10 +1429,10 @@ function ChaturmasTab({ chaturmasStays = [], apiPrefix, orgId, org, onRefresh, c
       };
 
       if (editingRecord?.id) {
-        await apiClient.put(`${apiPrefix}/${orgId}/chaturmas/${editingRecord.id}`, payload);
+        await apiClient.patch(`/chaturmas/${editingRecord.id}`, payload);
         toast.success(t("Chaturmas entry updated successfully."));
       } else {
-        await apiClient.post(`${apiPrefix}/${orgId}/chaturmas`, payload);
+        await apiClient.post(`/chaturmas`, payload);
         toast.success(t("Chaturmas entry created successfully."));
       }
       setOpen(false);
@@ -1345,7 +1455,7 @@ function ChaturmasTab({ chaturmasStays = [], apiPrefix, orgId, org, onRefresh, c
 
   const doDelete = async () => {
     try {
-      await apiClient.delete(`${apiPrefix}/${orgId}/chaturmas/${deleteTarget.id}`);
+      await apiClient.delete(`/chaturmas/${deleteTarget.id}`);
       toast.success(t("Chaturmas stay record deleted."));
       setDeleteTarget(null);
       onRefresh();
@@ -2104,6 +2214,8 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
         hasDharamshala: org.hasDharamshala ?? false,
         hasPathshala: org.hasPathshala ?? false,
         pathshalaPublished: org.pathshalaPublished ?? false,
+        bhojanshalaPublished: org.bhojanshalaPublished ?? false,
+        dharamshalaPublished: org.dharamshalaPublished ?? false,
         upashrayLocation: org.upashrayLocation || "Within Property",
         eventHallPurpose: org.eventHallPurpose || "Available for Booking",
         eventHallBookingLink: org.eventHallBookingLink || "",
@@ -2967,6 +3079,17 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       <div className="border p-4 rounded-xl bg-white space-y-3">
                         {toggle("Bhojanshala (Food) Available", "hasBhojanshala")}
                         {form.hasBhojanshala && (
+                          <div className="mb-3 px-6">
+                            <label className="flex items-center space-x-2 p-3 bg-orange-50 rounded-xl border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors">
+                              <Checkbox 
+                                checked={form.bhojanshalaPublished} 
+                                onCheckedChange={(c) => setForm({ ...form, bhojanshalaPublished: !!c })}
+                              />
+                              <span className="text-sm font-semibold text-orange-900">Publish Bhojanshala Profile</span>
+                            </label>
+                          </div>
+                        )}
+                        {form.hasBhojanshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                               <div>
@@ -2987,6 +3110,17 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       /* Dharamshala Unit */
                       <div className="border p-4 rounded-xl bg-white space-y-3">
                         {toggle("Dharamshala Available", "hasDharamshala")}
+                        {form.hasDharamshala && (
+                          <div className="mb-3 px-6">
+                            <label className="flex items-center space-x-2 p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
+                              <Checkbox 
+                                checked={form.dharamshalaPublished} 
+                                onCheckedChange={(c) => setForm({ ...form, dharamshalaPublished: !!c })}
+                              />
+                              <span className="text-sm font-semibold text-blue-900">Publish Dharamshala Profile</span>
+                            </label>
+                          </div>
+                        )}
                         {form.hasDharamshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                             <div className="grid grid-cols-3 gap-3">
@@ -3086,6 +3220,17 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🥗 Bhojanalay / Food Facility")}</h3>
                     {toggle("Bhojanalay Available Inside?", "hasBhojanshala")}
+                    {form.hasBhojanshala && (
+                      <div className="mb-3 px-6">
+                        <label className="flex items-center space-x-2 p-3 bg-orange-50 rounded-xl border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors">
+                          <Checkbox 
+                            checked={form.bhojanshalaPublished} 
+                            onCheckedChange={(c) => setForm({ ...form, bhojanshalaPublished: !!c })}
+                          />
+                          <span className="text-sm font-semibold text-orange-900">Publish Bhojanalay Profile</span>
+                        </label>
+                      </div>
+                    )}
                     {form.hasBhojanshala && (
                       <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
@@ -3626,7 +3771,7 @@ function resolveOrgConfig(pathname) {
 }
 
 /* ─── Events Tab ────────────────────────────────────────────────────────────── */
-function EventsTab({ orgId, canEdit }) {
+function EventsTab({ orgId, canEdit, isMemberView }) {
   const apiClient = useContext(ApiClientContext);
   const { t } = useLanguage();
   const [events, setEvents] = useState([]);
@@ -3638,7 +3783,8 @@ function EventsTab({ orgId, canEdit }) {
 
   const fetchEvents = () => {
     setLoading(true);
-    apiClient.get(`/events/org/${orgId}`)
+    const endpoint = isMemberView ? `/events/member?organizationId=${orgId}` : `/events/org/${orgId}`;
+    apiClient.get(endpoint)
       .then(res => setEvents(res.data?.data?.items || []))
       .catch(e => console.error(e))
       .finally(() => setLoading(false));
@@ -3776,7 +3922,7 @@ function EventsTab({ orgId, canEdit }) {
 }
 
 /* ─── Timeline Tab ──────────────────────────────────────────────────────────── */
-function TimelineTab({ orgId, notices = [], chaturmasStays = [] }) {
+function TimelineTab({ orgId, notices = [], chaturmasStays = [], isMemberView }) {
   const apiClient = useContext(ApiClientContext);
   const { t } = useLanguage();
   const [events, setEvents] = useState([]);
@@ -3784,11 +3930,12 @@ function TimelineTab({ orgId, notices = [], chaturmasStays = [] }) {
 
   useEffect(() => {
     setLoading(true);
-    apiClient.get(`/events/org/${orgId}?status=PUBLISHED`)
+    const endpoint = isMemberView ? `/events/member?organizationId=${orgId}` : `/events/org/${orgId}?status=PUBLISHED`;
+    apiClient.get(endpoint)
       .then(res => setEvents(res.data?.data?.items || []))
       .catch(e => console.error(e))
       .finally(() => setLoading(false));
-  }, [orgId]);
+  }, [orgId, isMemberView]);
 
   // Merge events, notices, chaturmas into one list and sort by date
   const timelineItems = useMemo(() => {
@@ -3946,9 +4093,15 @@ export default function OrgDetailPage(props) {
 
   const loadOrg = () => {
     setLoading(true);
-    apiClient.get(`${apiPrefix}/${id}`)
-      .then((res) => {
+    Promise.all([
+      apiClient.get(`${apiPrefix}/${id}`),
+      apiClient.get(`/chaturmas/org/${id}`).catch(() => ({ data: { data: [] } }))
+    ])
+      .then(([res, chaturmasRes]) => {
         const data = res.data?.data || null;
+        if (data) {
+          data.chaturmasStays = chaturmasRes.data?.data || [];
+        }
         setOrg(data);
         if (data) {
           try {
@@ -3972,17 +4125,24 @@ export default function OrgDetailPage(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, apiPrefix]);
 
-  const follow = async () => {
-    try { await apiClient.post(`${apiPrefix}/${id}/follow`); toast.success(`Following this ${entityLabel.toLowerCase()}.`); loadOrg(); }
-    catch (e) {
-      const msg = extractErrorMessage(e);
-      // Explain the cause instead of echoing the raw backend string.
-      toast.error(
-        /member profile not found/i.test(msg)
-          ? t("Following is a member feature. Your admin account is not linked to a member profile.")
-          : msg
-      );
+  const { isEntityFollowed, toggleFollow } = useVisibilityEngine();
+  const [optimisticCount, setOptimisticCount] = useState(null);
+  const following = org ? isEntityFollowed(org.publicId) : false;
+  const displayCount = optimisticCount ?? (org?.followerCount ?? 0);
+
+  const handleFollow = async () => {
+    if (!org) return;
+    if (!hasMemberProfile(user) && !isMemberView) {
+      toast.error(t("Following is a member feature. Your account is not linked to a member profile."));
+      return;
     }
+    const wasFollowed = following;
+    setOptimisticCount(Math.max(0, displayCount + (wasFollowed ? -1 : 1)));
+    let type = "temple";
+    if (org.type === "DHARAMSHALA") type = "dharamshala";
+    if (org.type === "BHOJANSHALA") type = "bhojanshala";
+    if (org.type === "JAIN_CENTER") type = "jain_center";
+    await toggleFollow(org.publicId, { type, apiId: org.id, name: org.name, image: org.logoUrl, category: type });
   };
 
   const uploadLogo = async (file) => {
@@ -4096,11 +4256,10 @@ export default function OrgDetailPage(props) {
                 <Flag className="h-4 w-4 mr-2" /> {t("Report Error")}
               </Button>
               {/* Following is a member-panel action: the backend ties a follow to a
-                member profile, which staff/admin accounts don't have. Showing it
-                to them only produced "Member profile not found". */}
-              {!isSuperAdmin && hasMemberProfile(user) && (
-                <Button variant="outline" onClick={follow} className="bg-white/20 border-white/30 text-white hover:bg-white/30">
-                  <Heart className="h-4 w-4 mr-2" /> {t("Follow")}
+                member profile, which staff/admin accounts don't have. */}
+              {(isMemberView || (!isSuperAdmin && hasMemberProfile(user))) && (
+                <Button variant={following ? "default" : "outline"} onClick={handleFollow} className={following ? "bg-white text-orange-600 hover:bg-white/90 font-bold" : "bg-white/20 border-white/30 text-white hover:bg-white/30"}>
+                  <Heart className={`h-4 w-4 mr-2 ${following ? "fill-orange-600 text-orange-600" : ""}`} /> {following ? t("Following") : t("Follow")}
                 </Button>
               )}
               {canEdit && (
@@ -4163,9 +4322,9 @@ export default function OrgDetailPage(props) {
 
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 border-t pt-5 border-slate-100">
               {[
-                ["Followers", org.followerCount || 0, "❤️"],
+                ["Followers", displayCount, "❤️"],
                 ["Dhaja Records", org.dhajaRecords?.length || 0, "🚩"],
-                ["Average Rating", org.averageRating || "—", "⭐"],
+                ["Average Rating", org.avgRating ? Number(org.avgRating).toFixed(1) : "—", "⭐"],
                 ["Volunteers", org.volunteerCount || 0, "🤝"]
               ].map(([label, count, emoji]) => (
                 <div key={label} className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
@@ -4636,7 +4795,7 @@ export default function OrgDetailPage(props) {
           </TabsContent>
 
           <TabsContent value="reviews">
-            <ReviewsTab reviews={org.reviews} apiPrefix={apiPrefix} orgId={org.id} onRefresh={loadOrg} isSuperAdmin={isSuperAdmin} canEdit={canEdit} />
+            <ReviewsTab reviews={org.reviews} apiPrefix={apiPrefix} orgId={org.id} onRefresh={loadOrg} isSuperAdmin={isSuperAdmin} canEdit={canEdit} hasMemberProfile={hasMemberProfile(user)} isMemberView={isMemberView} />
           </TabsContent>
 
           <TabsContent value="dhaja">
@@ -4656,11 +4815,11 @@ export default function OrgDetailPage(props) {
           </TabsContent>
 
           <TabsContent value="events">
-            <EventsTab orgId={org.id} canEdit={canEdit} />
+            <EventsTab orgId={org.id} canEdit={canEdit} isMemberView={isMemberView} />
           </TabsContent>
 
           <TabsContent value="timeline">
-            <TimelineTab orgId={org.id} notices={org.notices || []} chaturmasStays={org.chaturmasStays || []} />
+            <TimelineTab orgId={org.id} notices={org.notices || []} chaturmasStays={org.chaturmasStays || []} isMemberView={isMemberView} />
           </TabsContent>
         </Tabs>
 
@@ -4730,6 +4889,7 @@ export default function OrgDetailPage(props) {
 }
 
 function BhojanshalaMenuTab({ org, isMemberView, onBookPass }) {
+  const apiClient = useContext(ApiClientContext);
   const { t } = useLanguage();
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -4737,7 +4897,7 @@ function BhojanshalaMenuTab({ org, isMemberView, onBookPass }) {
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const res = await memberClient.get(`/bhojanshalas/${org.id}/menu`);
+        const res = await apiClient.get(`/bhojanshala/${org.id}/menu`);
         setMenuItems(res.data?.data || []);
       } catch (err) {
         console.error("Failed to load menu", err);

@@ -23,6 +23,7 @@ import DharamshalaBookingsPage from "./pages/dharamshala/DharamshalaBookingsPage
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const SADashboardPage = lazy(() => import("@/pages/SADashboardPage"));
 const MembersPage = lazy(() => import("@/pages/MembersPage"));
+const NonJainMembersPage = lazy(() => import("@/pages/NonJainMembersPage"));
 const FamilyPage = lazy(() => import("@/pages/FamilyPage"));
 const MonksPage = lazy(() => import("@/pages/MonksPage"));
 const MonkDetailPage = lazy(() => import("@/pages/MonkDetailPage"));
@@ -43,6 +44,7 @@ const PollsPage = lazy(() => import("@/pages/PollsPage"));
 const CalendarPage = lazy(() => import("@/pages/CalendarPage"));
 const CountersPage = lazy(() => import("@/pages/CountersPage"));
 const TrackingPage = lazy(() => import("@/pages/TrackingPage"));
+const RoutesPage = lazy(() => import("@/pages/RoutesPage"));
 const DevicesPage = lazy(() => import("@/pages/DevicesPage"));
 const AlertsPage = lazy(() => import("@/pages/AlertsPage"));
 const AnnouncementsPage = lazy(() => import("@/pages/AnnouncementsPage"));
@@ -153,10 +155,12 @@ function SmartRouteResolver() {
     role.includes("DHARAMSHALA") ||
     role.includes("MONK") ||
     role.includes("CENTER") ||
+    role.includes("STAFF") ||
     role === "TEMPLE_ADMIN" ||
     role === "DHARAMSHALA_ADMIN" ||
     role === "JC_ADMIN" ||
-    role === "MONK_ADMIN";
+    role === "MONK_ADMIN" ||
+    role === "STAFF";
 
   // A /member/* URL is never an admin URL. Without this the resolver rewrote
   // /member/anything to /admin/member/anything for admin sessions, which is how
@@ -259,7 +263,7 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN"]}>
+                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
                     <AdminLayout />
                   </ProtectedRoute>
                 }
@@ -273,7 +277,7 @@ export default function App() {
                 <Route path="a-dashboard" element={<DashboardPage />} />
                 <Route path="members" element={<MembersPage />} />
                 <Route path="jain-members" element={<MembersPage />} />
-                <Route path="non-jain-members" element={<MembersPage />} />
+                <Route path="non-jain-members" element={<NonJainMembersPage />} />
                 <Route path="family" element={<FamilyPage />} />
                 <Route path="family-management" element={<FamilyPage />} />
                 <Route path="member-requests" element={<MembersPage />} />
@@ -292,6 +296,7 @@ export default function App() {
                 <Route path="guru-hierarchy" element={<MonksPage />} />
                 <Route path="ms-groups" element={<MonksPage />} />
                 <Route path="ms-associations" element={<MonksPage />} />
+                <Route path="routes" element={<RoutesPage />} />
                 <Route path="current-route" element={<TrackingPage />} />
                 <Route path="route-planning" element={<TrackingPage />} />
                 <Route path="journey-history" element={<TrackingPage />} />

@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { Search, X, Loader2, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * MemberLinkSelect — Searchable dropdown to link members.
@@ -40,6 +41,9 @@ export default function MemberLinkSelect({
   returnValueType = "publicId",
 }) {
   const { t } = useLanguage();
+  const { user, isSuperAdmin } = useAuth();
+  const orgId = user?.organizationIds?.[0];
+
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
@@ -84,6 +88,9 @@ export default function MemberLinkSelect({
       const cat = buildCategoryParam();
       const base = { page: 1, pageSize: 20 };
       if (term) base.q = term;
+      if (!isSuperAdmin && orgId) {
+        base.organizationId = orgId;
+      }
 
       let list = unwrapList(await api.get("/members", { params: cat ? { ...base, category: cat } : base }));
 
@@ -178,7 +185,9 @@ export default function MemberLinkSelect({
     if (missing.length === 0) return;
     Promise.all(
       missing.map((id) =>
-        api.get(`/members/${id}`).then((r) => r.data?.data).catch(() => null)
+        api.get(`/members/${id}`, { params: !isSuperAdmin && orgId ? { organizationId: orgId } : {} })
+          .then((r) => r.data?.data)
+          .catch(() => null)
       )
     ).then((fetched) => {
       setSelectedMembers((prev) => [

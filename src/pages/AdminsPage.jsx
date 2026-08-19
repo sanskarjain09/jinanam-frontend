@@ -351,6 +351,12 @@ export default function AdminsPage() {
    * to sub-admins and staff.
    */
   if (!isSuperAdmin) {
+    // If the user is STAFF, they shouldn't even see the "My Access" overview page.
+    // Redirect them silently if they try to access the route manually.
+    if (user?.role === "STAFF" || user?.primaryRoleKey === "STAFF") {
+      return <Navigate to="/admin/a-dashboard" replace />;
+    }
+
     return (
       <div className="space-y-6" data-testid="admins-access-restricted">
         <PageHeader

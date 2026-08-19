@@ -225,7 +225,7 @@ function MonkIdCardVisual({ monk }) {
           style={{ background: accent }}>
           <div className="flex items-center gap-1.5">
             <Star className="h-3 w-3 text-yellow-300" />
-            <span className="text-[9px] text-white/70">{monk?._count?.followers ?? monk?.followers ?? 0} {t("Followers")}</span>
+            <span className="text-[9px] text-white/70">{monk?._count?.follows ?? monk?.followers ?? 0} {t("Followers")}</span>
           </div>
           <span className="text-[10px] font-black font-mono text-white tracking-widest">
             {monk?.publicId || "—"}
@@ -1842,7 +1842,7 @@ export default function MonksPage() {
   const navigate = useNavigate();
 
   const openCard = (row) => {
-    navigate(`/monks/${row.id}`);
+    navigate(`/admin/ms/${row.id}`);
   };
 
   const handleSave = async (fields) => {
@@ -1919,7 +1919,7 @@ export default function MonksPage() {
       render: (r) => (
         <div className="flex items-center gap-1 text-sm">
           <Users className="h-3.5 w-3.5 text-purple-400" />
-          {r._count?.followers ?? 0}
+          {r._count?.follows ?? r.followerCount ?? 0}
         </div>
       ),
     },
