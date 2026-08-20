@@ -62,7 +62,7 @@ export default function MemberFollowingPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {followedIds.map((id) => {
+          {followedIds.filter(Boolean).map((id) => {
             const meta = followedMeta[id];
             const Icon = CATEGORY_ICON[meta?.category] || HelpCircle;
             const path = detailPathFor(meta);

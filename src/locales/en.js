@@ -43,7 +43,7 @@ export default {
   // Table Headers & Columns
   "col.name": "Name",
   "col.mobile": "Mobile Number",
-  "col.city": "Location",
+  "col.city": "City",
   "col.status": "Status",
   "col.actions": "Actions",
   "col.joiningDate": "Joining Date",

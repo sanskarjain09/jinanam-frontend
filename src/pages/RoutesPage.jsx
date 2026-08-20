@@ -63,8 +63,8 @@ export default function RoutesPage() {
       monkGroupId: "",
       journeyDate: "",
       stops: [
-        { templeId: "", templeName: "" },
-        { templeId: "", templeName: "" }
+        { templeId: "", templeName: "", dateTime: "" },
+        { templeId: "", templeName: "", dateTime: "" }
       ]
     });
     setOpen(true);
@@ -77,9 +77,9 @@ export default function RoutesPage() {
       monkId: r.monkId || "",
       monkGroupId: r.monkGroupId || "",
       journeyDate: r.journeyDate ? r.journeyDate.slice(0, 10) : "",
-      stops: r.stops && r.stops.length > 0 ? r.stops.map(s => ({ templeId: s.templeId || "", templeName: s.templeName || "" })) : [
-        { templeId: "", templeName: "" },
-        { templeId: "", templeName: "" }
+      stops: r.stops && r.stops.length > 0 ? r.stops.map(s => ({ templeId: s.templeId || "", templeName: s.templeName || "", dateTime: s.dateTime || "" })) : [
+        { templeId: "", templeName: "", dateTime: "" },
+        { templeId: "", templeName: "", dateTime: "" }
       ]
     });
     setOpen(true);
@@ -96,6 +96,15 @@ export default function RoutesPage() {
       return;
     }
 
+    for (let i = 1; i < validStops.length; i++) {
+      if (validStops[i].dateTime && validStops[i-1].dateTime) {
+        if (new Date(validStops[i].dateTime) < new Date(validStops[i-1].dateTime)) {
+          toast.error(t(`Stop ${i + 1} date/time cannot be before Stop ${i} date/time.`));
+          return;
+        }
+      }
+    }
+
     const payload = {
       name: form.name,
       monkId: form.monkId || undefined,
@@ -105,6 +114,7 @@ export default function RoutesPage() {
         order: idx,
         templeName: s.templeName,
         templeId: s.templeId || undefined,
+        dateTime: s.dateTime || undefined,
         status: "PENDING"
       }))
     };
@@ -140,7 +150,7 @@ export default function RoutesPage() {
   };
 
   const addStop = () => {
-    setForm({ ...form, stops: [...form.stops, { templeId: "", templeName: "" }] });
+    setForm({ ...form, stops: [...form.stops, { templeId: "", templeName: "", dateTime: "" }] });
   };
 
   const removeStop = (index) => {
@@ -239,6 +249,13 @@ export default function RoutesPage() {
                       value={stop.templeName} 
                       onChange={(e) => updateStop(idx, 'templeName', e.target.value)} 
                       placeholder={t("Location / Stop Name *")}
+                    />
+                    <Input 
+                      type="datetime-local"
+                      value={stop.dateTime || ""} 
+                      onChange={(e) => updateStop(idx, 'dateTime', e.target.value)} 
+                      min={idx > 0 && form.stops[idx-1].dateTime ? form.stops[idx-1].dateTime : undefined}
+                      className="text-xs"
                     />
                   </div>
                   {form.stops.length > 2 && (

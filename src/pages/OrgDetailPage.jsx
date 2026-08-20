@@ -3748,7 +3748,7 @@ const ORG_ROUTE_CONFIG = [
   { match: /(^|\/)(temples?|temple-management)(\/|$)/, entityLabel: "Temple", apiPrefix: "/temples", basePath: "/admin/temples" },
   { match: /(^|\/)(dharamshalas?|dharamshala-management)(\/|$)/, entityLabel: "Dharamshala", apiPrefix: "/dharamshalas", basePath: "/admin/dharamshalas" },
   { match: /(^|\/)(jain-cent(er|re)s?|jain-center-management)(\/|$)/, entityLabel: "Jain Center", apiPrefix: "/jain-centers", basePath: "/admin/jain-centers" },
-  { match: /(^|\/)(sthanaks?|stanaks?|sthanak-management)(\/|$)/, entityLabel: "Sthanak", apiPrefix: "/jain-centers", basePath: "/admin/stanaks" },
+  { match: /(^|\/)(sthanaks?|stanaks?|sthanak-management)(\/|$)/, entityLabel: "Sthanak", apiPrefix: "/sthanaks", basePath: "/admin/sthanaks" },
 ];
 
 /**
@@ -4341,7 +4341,7 @@ export default function OrgDetailPage(props) {
         {canEdit && <ReadEditOnlyNotice className="mb-4" />}
 
         {/* Holds the tab but not this record — say why it's read-only. */}
-        {!canEdit && !isSuperAdmin && canDo(orgModuleKey, "EDIT") && !inScope && (
+        {!canEdit && !isSuperAdmin && canDo(orgModuleKey, "EDIT") && !inScope && pathname.startsWith("/admin") && (
           <div className="mb-4 flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900">
             <Shield className="h-3.5 w-3.5 mt-px shrink-0 text-amber-600" />
             <span>

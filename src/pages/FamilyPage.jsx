@@ -505,6 +505,7 @@ export default function FamilyPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
+  const [targetAnchorId, setTargetAnchorId] = useState(null);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
 
   // Super Admin can view/manage any member's family group, not just their own.
@@ -781,7 +782,11 @@ export default function FamilyPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => setAddOpen(true)}
+                        onClick={() => {
+                          const anchorLink = links.find(l => l.direction === "ANCHOR") || links[0];
+                          setTargetAnchorId(anchorLink?.member?.publicId);
+                          setAddOpen(true);
+                        }}
                         className="text-xs"
                       >
                         <UserPlus className="h-3.5 w-3.5 mr-1.5" /> {t("Add to")} {familyName}
@@ -801,10 +806,10 @@ export default function FamilyPage() {
       {/* Add Dialog */}
       <AddFamilyDialog
         open={addOpen}
-        onClose={() => setAddOpen(false)}
+        onClose={() => { setAddOpen(false); setTargetAnchorId(null); }}
         onCreated={load}
-        anchorPublicId={anchorPublicId}
-        anchorLabel={anchorPublicId || null}
+        anchorPublicId={targetAnchorId || anchorPublicId}
+        anchorLabel={targetAnchorId || anchorPublicId || null}
         myPublicId={members.find((l) => l.direction === "ANCHOR")?.member?.publicId}
       />
 

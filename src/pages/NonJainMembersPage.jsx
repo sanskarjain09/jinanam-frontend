@@ -774,8 +774,12 @@ export default function NonJainMembersPage() {
       }
     },
     {
-      key: "city", header: t("Location"),
+      key: "city", header: t("City"),
       render: (r) => r.currentAddress?.city || r.city || "—"
+    },
+    {
+      key: "state", header: t("State"),
+      render: (r) => r.currentAddress?.state || r.state || "—"
     },
     {
       key: "status", header: t("Status"),

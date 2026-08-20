@@ -191,7 +191,7 @@ export const ROUTE_TO_MODULE = {
   "/dharamshala/rules": "DHARAMSHALAS",
 
   "/jain-centers": "JAIN_CENTERS",
-  "/stanaks": "STHANAKS",
+  "/sthanaks": "STHANAKS",
   "/community-pages": "COMMUNITY_PAGES",
 
   "/feed": "FEED",
@@ -375,13 +375,14 @@ export function buildCapabilities({ role, modules, permissions, overrides } = {}
     ? { ...fromModules, ...fromOverrides }
     : fromPermissions;
 
-  // Implicitly grant EVENTS, ANNOUNCEMENTS, and VOLUNTEERS to any admin who has an organization module
+  // Implicitly grant EVENTS, ANNOUNCEMENTS, VOLUNTEERS, and SETTINGS to any admin who has an organization module
   const orgModules = ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALAS", "COMMUNITY_PAGES"];
   const hasOrgModule = orgModules.some((mod) => grantedSet[mod] !== undefined);
   if (hasOrgModule) {
     if (grantedSet.EVENTS === undefined) grantedSet.EVENTS = null;
     if (grantedSet.ANNOUNCEMENTS === undefined) grantedSet.ANNOUNCEMENTS = null;
     if (grantedSet.VOLUNTEERS === undefined) grantedSet.VOLUNTEERS = null;
+    if (grantedSet.SETTINGS === undefined) grantedSet.SETTINGS = null;
   }
 
   for (const [moduleKey, grantActions] of Object.entries(grantedSet)) {

@@ -25,7 +25,7 @@ const MODULE_UI = {
   DHARAMSHALAS:   { icon: Hotel,         tone: "teal",   route: "/admin/dharamshalas" },
   JAIN_CENTERS:   { icon: Building2,     tone: "purple", route: "/admin/jain-centers" },
   BHOJANSHALAS:   { icon: Sigma,         tone: "pink",   route: "/admin/coming-soon?module=Bhojanshala" },
-  STHANAKS:       { icon: Building2,     tone: "blue",   route: "/admin/stanaks" },
+  STHANAKS:       { icon: Building2,     tone: "blue",   route: "/admin/sthanaks" },
   COMMUNITY_PAGES:{ icon: Globe,         tone: "pink",   route: "/admin/community-pages" },
   MEMBERS:        { icon: Users,         tone: "blue",   route: "/admin/members" },
   MONKS:          { icon: HandHeart,     tone: "orange", route: "/admin/monks" },

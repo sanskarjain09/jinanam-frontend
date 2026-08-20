@@ -13,7 +13,7 @@ import { Shield, Save, Building2, UserPlus } from "lucide-react";
 import { DelegateModuleModal } from "@/components/modals/DelegateModuleModal";
 
 export default function ModuleControllerPage() {
-  const { user, isSuperAdmin, canEdit } = useAuth();
+  const { user, isSuperAdmin, canEdit, canDo, organizations: authOrgs } = useAuth();
   const { t } = useLanguage();
   
   const hasEditAccess = isSuperAdmin || ["TEMPLES", "DHARAMSHALAS", "JAIN_CENTERS", "STHANAKS", "BHOJANSHALAS", "COMMUNITY_PAGES"].some(m => canEdit(m));
@@ -35,19 +35,38 @@ export default function ModuleControllerPage() {
   const fetchOrganizations = async () => {
     try {
       setLoading(true);
-      // Fetch all organizations user has access to
-      const res = await api.get("/temples");
-      let allOrgs = res.data?.data?.items || res.data?.data || [];
-      
-      if (!isSuperAdmin) {
-        allOrgs = allOrgs.filter(org => user?.organizationIds?.includes(org._id) || user?.organizationIds?.includes(org.id));
+      let allOrgs = [];
+
+      if (isSuperAdmin) {
+        // Super admin sees all organizations globally
+        const [templesRes, dharamshalasRes, jainCentersRes] = await Promise.all([
+          api.get("/temples").catch(() => ({ data: { data: [] } })),
+          api.get("/dharamshalas").catch(() => ({ data: { data: [] } })),
+          api.get("/jain-centers").catch(() => ({ data: { data: [] } }))
+        ]);
+        
+        const t = templesRes.data?.data?.items || templesRes.data?.data || [];
+        const d = dharamshalasRes.data?.data?.items || dharamshalasRes.data?.data || [];
+        const j = jainCentersRes.data?.data?.items || jainCentersRes.data?.data || [];
+        
+        allOrgs = [...t, ...d, ...j];
+      } else {
+        // Scoped admins use their pre-fetched organizations from AuthContext
+        allOrgs = authOrgs || [];
       }
       
       setOrgs(allOrgs);
       if (allOrgs.length > 0) {
         setSelectedOrgId(allOrgs[0].id || allOrgs[0]._id);
-        const initialModules = allOrgs[0].activeModules || [];
-        setActiveModules(new Set(initialModules));
+        let initialModules = allOrgs[0].activeModules;
+        if (!initialModules || initialModules.length === 0) {
+          initialModules = PLATFORM_MODULES
+            .filter(m => isSuperAdmin || canDo(m.key, "VIEW"))
+            .map(m => m.key);
+        } else if (initialModules.length === 1 && initialModules[0] === "NONE") {
+          initialModules = [];
+        }
+        setActiveModules(new Set(initialModules || []));
       }
     } catch (err) {
       toast.error(t("Failed to load organizations"));
@@ -61,7 +80,17 @@ export default function ModuleControllerPage() {
     setSelectedOrgId(orgId);
     const org = orgs.find(o => (o.id === orgId || o._id === orgId));
     if (org) {
-      setActiveModules(new Set(org.activeModules || []));
+      const initialModules = org.activeModules;
+      if (!initialModules || initialModules.length === 0) {
+        setActiveModules(new Set(PLATFORM_MODULES
+          .filter(m => isSuperAdmin || canDo(m.key, "VIEW"))
+          .map(m => m.key)
+        ));
+      } else if (initialModules.length === 1 && initialModules[0] === "NONE") {
+        setActiveModules(new Set());
+      } else {
+        setActiveModules(new Set(initialModules));
+      }
     }
   };
 
@@ -95,16 +124,15 @@ export default function ModuleControllerPage() {
       setSaving(true);
       const org = orgs.find(o => (o.id === selectedOrgId || o._id === selectedOrgId));
       
-      // Determine the endpoint based on org type (all go to /temples effectively in backend but let's use the type if needed, 
-      // wait, in the backend they are separate routers but all map to different prefixes? No, /temples, /dharamshalas, /jain-centers)
-      // Actually backend /temples/:id works for ANY organization type if using makeOrganizationController, but it's cleaner to use the correct route if possible.
-      // Wait, makeOrganizationController('TEMPLE') only fetches TEMPLE if we use GET, but PATCH /temples/:id might only update TEMPLES?
-      // No, in organizations.service.ts updateOrganization takes orgId and doesn't enforce type.
-      // Let's just use /temples/:id
-      const endpoint = `/temples/${selectedOrgId}`;
+      let endpointPrefix = "temples";
+      if (org?.type === "DHARAMSHALA") endpointPrefix = "dharamshalas";
+      else if (org?.type === "JAIN_CENTER") endpointPrefix = "jain-centers";
+      else if (org?.type === "BHOJANSHALA") endpointPrefix = "bhojanshalas";
+      
+      const endpoint = `/${endpointPrefix}/${selectedOrgId}`;
       
       await api.patch(endpoint, {
-        activeModules: Array.from(activeModules)
+        activeModules: activeModules.size === 0 ? ["NONE"] : Array.from(activeModules)
       });
       
       toast.success(t("Modules updated successfully"));
@@ -187,7 +215,11 @@ export default function ModuleControllerPage() {
               
               {/* Note: Physical facilities validation is handled in Sidebar.jsx. Here we just let them toggle what they want. */}
               <div className="grid grid-cols-1 gap-4">
-                {PLATFORM_MODULES.map((mod) => {
+                {PLATFORM_MODULES.filter(mod => {
+                  if (!isSuperAdmin && !canDo(mod.key, "VIEW")) return false;
+
+                  return true;
+                }).map((mod) => {
                   const moduleStaff = staffList.filter(s => s.modules && s.modules[mod.key]);
                   
                   return (

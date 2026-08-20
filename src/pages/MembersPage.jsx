@@ -1629,12 +1629,12 @@ export default function MembersPage() {
       },
     },
     {
-      key: "category", header: t("Category"),
-      render: (r) => <Badge variant="outline">{r.category || "JAIN"}</Badge>,
+      key: "city", header: t("City"),
+      render: (r) => r.currentAddress?.city || r.city || "—",
     },
     {
-      key: "city", header: t("City"),
-      render: (r) => r.currentAddress?.city || r.city || r.community?.name || "—",
+      key: "state", header: t("State"),
+      render: (r) => r.currentAddress?.state || r.state || "—",
     },
     {
       key: "status", header: t("Status"),

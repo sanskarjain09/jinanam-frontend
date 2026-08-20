@@ -416,6 +416,11 @@ export default function MemberFeedPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Main Feed Column */}
         <div className="lg:col-span-8 space-y-4">
+          <ListState
+            loading={loading} error={error} count={interleaved.length}
+            emptyTitle={t("No posts found")}
+            emptyHint={t("Check back later or adjust your filters to see more community updates.")}
+          >
           {interleaved.map((post) => {
             if (post.isAd) {
               return (
@@ -460,6 +465,7 @@ export default function MemberFeedPage() {
               />
             );
           })}
+          </ListState>
         </div>
 
         {/* Sidebar Info & Followed Summary */}
@@ -474,7 +480,7 @@ export default function MemberFeedPage() {
               boosted to Priority 1 (Highest) across all screens.
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {followedIds.map((id) => (
+              {followedIds.filter(Boolean).map((id) => (
                 <span
                   key={id}
                   className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl flex items-center gap-1"

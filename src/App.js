@@ -355,6 +355,7 @@ export default function App() {
                 <Route path="pricing" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="rules" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="bhojanshalas" element={<OrgListPage defaultType="BHOJANSHALA" />} />
+                <Route path="bhojanshalas/:id" element={<OrgDetailPage />} />
                 <Route path="bhojanshala-management" element={<BhojanshalaManagementPage />} />
                 <Route path="bhojanshala" element={<BhojanshalaManagementPage />} />
                 <Route path="timings" element={<BhojanshalaManagementPage />} />

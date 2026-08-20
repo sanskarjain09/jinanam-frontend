@@ -128,23 +128,27 @@ export default function FeedPostCard({
           </div>
         </div>
 
-        <button
-          onClick={() => followPost(post)}
-          disabled={resolvingFollowId === post.id}
-          className={cn(
-            "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-60",
-            followed
-              ? "bg-emerald-50 text-emerald-700 border-emerald-300"
-              : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100",
-          )}
-        >
-          {followed ? (
-            <Check className="h-3.5 w-3.5" />
-          ) : (
-            <Plus className="h-3.5 w-3.5" />
-          )}
-          <span>{followed ? "Following" : "Follow"}</span>
-        </button>
+        {post.entityPublicId ? (
+          <button
+            onClick={() => followPost(post)}
+            disabled={resolvingFollowId === post.id}
+            className={cn(
+              "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-60",
+              followed
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300"
+                : "bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100",
+            )}
+          >
+            {followed ? (
+              <Check className="h-3.5 w-3.5" />
+            ) : (
+              <Plus className="h-3.5 w-3.5" />
+            )}
+            <span>{followed ? "Following" : "Follow"}</span>
+          </button>
+        ) : (
+          <div className="w-[88px]" /> // placeholder to maintain layout
+        )}
       </div>
 
       {/* Priority Badge */}

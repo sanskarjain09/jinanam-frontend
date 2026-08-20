@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api, extractErrorMessage, API_BASE } from "@/lib/api";
 import { Card } from "@/components/ui/card";
@@ -532,6 +532,65 @@ export default function MonkDetailPage() {
   const eRemoveNonJainContact = (idx) => setEditForm(p => ({ ...p, nonJainContacts: p.nonJainContacts.filter((_, i) => i !== idx) }));
   const eUpdateNonJainContact = (idx, k, v) => setEditForm(p => ({ ...p, nonJainContacts: p.nonJainContacts.map((c, i) => i === idx ? { ...c, [k]: v } : c) }));
 
+  const timelineEvents = useMemo(() => {
+    if (!monk) return [];
+    const events = [];
+
+    if (monk.preDikshaName) {
+      events.push({
+        id: "pre-diksha",
+        date: new Date('1000-01-01'), // to sort first
+        displayDate: t("Pre-Diksha Life"),
+        title: `${t("Known as")} ${monk.preDikshaName}`,
+        color: "bg-slate-300"
+      });
+    }
+
+    if (monk.dikshaDate) {
+      events.push({
+        id: "diksha",
+        date: new Date(monk.dikshaDate),
+        displayDate: new Date(monk.dikshaDate).toLocaleDateString(),
+        title: t("Initiation (Diksha)"),
+        subtitle: `${monk.dikshaPlace ? t("Place") + ": " + monk.dikshaPlace : ""} ${monk.dikshaGuru ? ' • ' + t("Guru") + ": " + monk.dikshaGuru.dikshaName : ""}`,
+        color: "bg-purple-600"
+      });
+    }
+
+    if (monk.chaturmasHistory && monk.chaturmasHistory.length > 0) {
+      monk.chaturmasHistory.forEach((c, idx) => {
+        events.push({
+          id: `chaturmas-${idx}`,
+          date: new Date(`${c.year}-07-01`),
+          displayDate: `${t("Chaturmas")} ${c.year}`,
+          title: `${c.templeName || c.temple?.name || t("Unknown Place")} ${c.city ? `- ${c.city}` : ""}`,
+          color: "bg-orange-500"
+        });
+      });
+    }
+
+    if (monk.status === 'SAMADHI' && monk.nirvanaDate) {
+      events.push({
+        id: "samadhi",
+        date: new Date(monk.nirvanaDate),
+        displayDate: new Date(monk.nirvanaDate).toLocaleDateString(),
+        title: t("Samadhi / Devlok"),
+        subtitle: monk.nirvanaPlace ? `${t("Place")}: ${monk.nirvanaPlace}` : "",
+        color: "bg-red-500"
+      });
+    } else if (monk.status === 'ACTIVE') {
+      events.push({
+        id: "current",
+        date: new Date('9999-12-31'), // to sort last
+        displayDate: t("Current"),
+        title: t("Active (Vihar/Darshan)"),
+        color: "bg-green-500"
+      });
+    }
+
+    return events.sort((a, b) => a.date - b.date);
+  }, [monk, t]);
+
   if (loading) {
     return (
       <div className="flex h-[80vh] items-center justify-center">
@@ -702,6 +761,8 @@ export default function MonkDetailPage() {
                 <TabsTrigger value="family" className="text-xs font-bold px-4 py-2 rounded-lg data-[state=active]:bg-purple-700 data-[state=active]:text-white">{t("🏠 Pre-Diksha Family")}</TabsTrigger>
                 <TabsTrigger value="routine" className="text-xs font-bold px-4 py-2 rounded-lg data-[state=active]:bg-purple-700 data-[state=active]:text-white">{t("🕒 Daily Routine")}</TabsTrigger>
                 <TabsTrigger value="contacts" className="text-xs font-bold px-4 py-2 rounded-lg data-[state=active]:bg-purple-700 data-[state=active]:text-white">{t("📞 Contacts & Links")}</TabsTrigger>
+                <TabsTrigger value="chaturmas" className="text-xs font-bold px-4 py-2 rounded-lg data-[state=active]:bg-purple-700 data-[state=active]:text-white">{t("📅 Chaturmas History")}</TabsTrigger>
+                <TabsTrigger value="timeline" className="text-xs font-bold px-4 py-2 rounded-lg data-[state=active]:bg-purple-700 data-[state=active]:text-white">{t("📜 Timeline")}</TabsTrigger>
               </TabsList>
 
               {/* TABS CONTENT */}
@@ -1061,6 +1122,57 @@ export default function MonkDetailPage() {
                   </div>
                 </div>
 
+              </TabsContent>
+
+              {/* 7. Chaturmas History Tab */}
+              <TabsContent value="chaturmas" className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-1">{t("📅 Chaturmas History")}</h4>
+                  {monk.chaturmasHistory?.length > 0 ? (
+                    <div className="space-y-3">
+                      {monk.chaturmasHistory.sort((a,b) => b.year - a.year).map((c, i) => (
+                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-xl bg-slate-50">
+                          <div>
+                            <div className="font-bold text-sm text-slate-800">{c.year}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{c.templeName || c.temple?.name || t("Unknown Place")} {c.city ? `- ${c.city}` : ""}</div>
+                          </div>
+                          {c.templeId && (
+                            <Button variant="outline" size="sm" className="mt-2 sm:mt-0 text-[10px] h-7" onClick={() => navigate(`/admin/temples/${c.templeId}`)}>
+                              {t("View Location")}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-400 p-4 text-center border rounded-xl bg-slate-50/50">{t("No Chaturmas history recorded yet.")}</div>
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* 8. Timeline Tab */}
+              <TabsContent value="timeline" className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-1">{t("📜 Important Events Timeline")}</h4>
+                  <div className="relative border-l-2 border-purple-200 ml-3 pl-4 space-y-6 mt-4">
+                    
+                    {timelineEvents.length > 0 ? (
+                      timelineEvents.map((evt) => (
+                        <div key={evt.id} className="relative">
+                          <div className={`absolute -left-[23px] top-1 border-2 border-white rounded-full h-3 w-3 ${evt.color}`} />
+                          <div className="text-xs text-slate-400 font-bold mb-1">{evt.displayDate}</div>
+                          <div className="font-bold text-slate-800 text-sm">{evt.title}</div>
+                          {evt.subtitle && (
+                            <div className="text-xs text-slate-500 mt-1">{evt.subtitle}</div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                       <div className="text-xs text-slate-400 py-4 italic">{t("No major events recorded to build a timeline.")}</div>
+                    )}
+
+                  </div>
+                </div>
               </TabsContent>
 
             </Tabs>

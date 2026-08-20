@@ -330,17 +330,6 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}
     }
   }
 
-  if (node.id === "folder-bhojanshala" || node.id?.startsWith("bh-") || node.id === "flat-bhojanshala") {
-    if (!orgFacilities.hasBhojanshala && !isSuperAdmin) return false;
-  }
-  
-  if (node.id === "folder-dharamshala-admin" || node.id === "flat-dharamshalas" || node.id?.startsWith("d-")) {
-    if (!orgFacilities.hasDharamshala && !isSuperAdmin) return false;
-  }
-  
-  if (node.id === "br-path") {
-    if (!orgFacilities.hasPathshala && !isSuperAdmin) return false;
-  }
 
   // Super Admin sees all tabs that passed the role check
   if (isSuperAdmin) return true;
@@ -362,7 +351,7 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}
   // 0. Org Admin Controller Check (activeModules)
   // SETTINGS, DASHBOARD, and MODULE_CONTROLLER are administrative modules that are always available if the user has role/tab access,
   // they should NOT be disabled by the activeModules list (which only applies to PLATFORM_MODULES).
-  if (!isSuperAdmin && ownModule && ownModule !== "SETTINGS" && ownModule !== "DASHBOARD" && ownModule !== "MODULE_CONTROLLER" && orgFacilities.activeModules) {
+  if (!isSuperAdmin && ownModule && ownModule !== "SETTINGS" && ownModule !== "DASHBOARD" && ownModule !== "MODULE_CONTROLLER" && orgFacilities.hasConfiguredModules) {
     if (!orgFacilities.activeModules.has(ownModule)) {
       return false; // Not activated by org
     }
@@ -830,10 +819,18 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
     
     const fetchTemples = () => {
       if (user) {
-        api.get("/temples")
-          .then((res) => {
+        Promise.all([
+          api.get("/temples").catch(() => ({ data: { data: [] } })),
+          api.get("/dharamshalas").catch(() => ({ data: { data: [] } })),
+          api.get("/jain-centers").catch(() => ({ data: { data: [] } }))
+        ])
+          .then(([templesRes, dharamshalasRes, jainCentersRes]) => {
             if (!isMounted) return;
-            const temples = res.data?.data?.items || res.data?.data || [];
+            const t = templesRes.data?.data?.items || templesRes.data?.data || [];
+            const d = dharamshalasRes.data?.data?.items || dharamshalasRes.data?.data || [];
+            const j = jainCentersRes.data?.data?.items || jainCentersRes.data?.data || [];
+            const temples = [...t, ...d, ...j];
+            
             const hasBhojanshala = temples.some(t => {
               const tid = t._id || t.id;
               const matchesOrg = activeOrganizationId 
@@ -856,16 +853,22 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
               return matchesOrg && t.hasPathshala === true;
             });
             const activeModulesSet = new Set();
+            let hasConfiguredModules = false;
             temples.forEach(t => {
               const tid = t._id || t.id;
               const matchesOrg = activeOrganizationId 
                 ? tid === activeOrganizationId 
                 : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
-              if (matchesOrg && Array.isArray(t.activeModules)) {
-                t.activeModules.forEach(m => activeModulesSet.add(m));
+              if (matchesOrg && t.activeModules && t.activeModules.length > 0) {
+                hasConfiguredModules = true;
+                if (Array.isArray(t.activeModules)) {
+                  t.activeModules.forEach(m => {
+                    if (m !== "NONE") activeModulesSet.add(m);
+                  });
+                }
               }
             });
-            setOrgFacilities({ hasBhojanshala, hasDharamshala, hasPathshala, activeModules: activeModulesSet });
+            setOrgFacilities({ hasBhojanshala, hasDharamshala, hasPathshala, activeModules: activeModulesSet, hasConfiguredModules });
           })
           .catch((err) => {
             console.error("Failed to fetch temples for sidebar:", err);

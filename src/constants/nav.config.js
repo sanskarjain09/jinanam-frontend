@@ -74,7 +74,7 @@ export const FLAT_NAV = [
   { id: "flat-jain-centers", label: "Jain Centre", icon: Building2, route: "/admin/jain-centers" },
   { id: "flat-dharamshalas", label: "Dharamshala", icon: Hotel, route: "/admin/dharamshalas" },
   { id: "flat-bhojanshala", label: "Bhojanshala", icon: Sigma, route: "/admin/coming-soon?module=Bhojanshala", featureFlag: false },
-  { id: "flat-stanaks", label: "Sthanaks", icon: HomeIcon, route: "/admin/sthanaks" },
+  { id: "flat-sthanaks", label: "Sthanaks", icon: HomeIcon, route: "/admin/sthanaks" },
   { id: "flat-community-pages", label: "Community Pages", icon: Globe, route: "/admin/community-pages" },
 
   { id: "sep-people", isSeparator: true, label: "People" },

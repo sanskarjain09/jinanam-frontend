@@ -132,7 +132,7 @@ export default function OrgListPage(props) {
     moduleKey = moduleKey || "DHARAMSHALAS";
     testId = testId || "dharamshala-list-page";
   } else if (typeKey === "STHANAK" || typeKey === "STANAK") {
-    endpoint = endpoint || "/stanaks";
+    endpoint = endpoint || "/sthanaks";
     entity = entity || "sthanak";
     label = label || "Sthanak";
     pluralLabel = pluralLabel || "Sthanaks";
@@ -232,6 +232,24 @@ export default function OrgListPage(props) {
       setForm((f) => ({ ...f, preferredCurrency: defaultCur }));
     }
   }, [form.country]);
+
+  const handleTogglePublish = async (org) => {
+    try {
+      const isDharamshala = typeKey === "DHARAMSHALA";
+      const isBhojanshala = typeKey === "BHOJANSHALA";
+      
+      if (!isDharamshala && !isBhojanshala) return;
+      
+      const field = isDharamshala ? "dharamshalaPublished" : "bhojanshalaPublished";
+      const newValue = !org[field];
+      
+      await api.patch(`${endpoint}/${org.id}`, { [field]: newValue });
+      toast.success(t(`Publish status updated successfully`));
+      setReloadKey(k => k + 1);
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    }
+  };
 
   const handleCreateDeitySubmit = async (e) => {
     e.preventDefault();
@@ -507,6 +525,26 @@ export default function OrgListPage(props) {
         </span>
       ),
     },
+    ...(isSuperAdmin && (typeKey === "DHARAMSHALA" || typeKey === "BHOJANSHALA") ? [{
+      key: "published",
+      header: t("Published"),
+      render: (r) => {
+        const isPublished = typeKey === "DHARAMSHALA" ? r.dharamshalaPublished : r.bhojanshalaPublished;
+        return (
+          <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => handleTogglePublish(r)}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`}
+            >
+              <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isPublished ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+            </button>
+            <span className={`text-[10px] font-bold ${isPublished ? 'text-emerald-700' : 'text-slate-500'}`}>
+              {isPublished ? 'Yes' : 'No'}
+            </span>
+          </div>
+        );
+      }
+    }] : []),
     ...(isSuperAdmin ? [{
       key: "accessControl",
       header: t("Access Control"),
@@ -1856,7 +1894,7 @@ export default function OrgListPage(props) {
         loading={loading}
         testId={`${testId}-table`}
         onRowClick={(r) => {
-          const folder = entity === "jain-center" ? "jain-centers" : entity === "sthanak" ? "stanaks" : `${entity}s`;
+          const folder = entity === "jain-center" ? "jain-centers" : entity === "sthanak" ? "sthanaks" : `${entity}s`;
           const targetId = r.id || r.publicId;
           navigate(`/admin/${folder}/${targetId}`);
         }}

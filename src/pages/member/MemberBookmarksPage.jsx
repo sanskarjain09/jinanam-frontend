@@ -391,7 +391,7 @@ export default function MemberBookmarksPage() {
               boosted to Priority 1 (Highest) across all screens.
             </p>
             <div className="flex flex-wrap gap-1.5 pt-1">
-              {followedIds.map((id) => (
+              {followedIds.filter(Boolean).map((id) => (
                 <span
                   key={id}
                   className="text-[10px] font-mono font-bold bg-amber-100 text-amber-900 px-2.5 py-1 rounded-xl flex items-center gap-1"

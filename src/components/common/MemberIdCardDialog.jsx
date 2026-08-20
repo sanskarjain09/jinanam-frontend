@@ -27,6 +27,7 @@ import {
   toOptions,
 } from "@/constants/dropdownOptions";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatPan, formatAadhaar } from "@/lib/idFormats";
 
 /* ─── Helpers & Constants ─────────────────────────────────────── */
 function initials(name = "") {

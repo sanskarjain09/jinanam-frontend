@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 import FamilyMembersCard from "@/components/member/FamilyMembersCard";
 import { bookingsApi, donationsApi, eventsApi, memberProfileApi } from "@/lib/memberApi";
 
+import { memberClient } from "@/lib/memberClient";
+
 function StatBadge({ label, value, icon: Icon, color }) {
   return (
     <div className={cn("flex flex-col items-center gap-1.5 p-4 rounded-2xl border border-slate-100", color)}>
@@ -96,13 +98,14 @@ export default function MemberProfilePage() {
       eventsApi.myEvents().catch(() => []),
       donationsApi.mine().catch(() => ({ items: [] })),
       bookingsApi.mine().catch(() => []),
+      memberClient.get('/bhojanshala/my-passes').then(res => res.data?.data || []).catch(() => []),
       memberProfileApi.getMyProfile().catch(() => null)
-    ]).then(([events, donations, bookings, myProfile]) => {
+    ]).then(([events, donations, bookings, bhojanshalaPasses, myProfile]) => {
       if (cancelled) return;
       setStats({
         events: events.length,
         donations: donations.items.length,
-        bookings: bookings.length,
+        bookings: bookings.length + bhojanshalaPasses.length,
       });
       if (myProfile) {
         setProfile(myProfile);

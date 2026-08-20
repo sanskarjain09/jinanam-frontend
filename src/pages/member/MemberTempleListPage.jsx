@@ -138,18 +138,19 @@ export default function MemberTempleListPage() {
           const followed = isEntityFollowed(tmpl.publicId);
 
           return (
-            <div key={tmpl.id} className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4 relative flex flex-col justify-between">
+            <div key={tmpl.id} className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4 relative flex flex-col justify-between group hover:border-orange-200 transition-colors">
+              <Link to={`/member/temples/${tmpl.id}`} className="absolute inset-0 z-0 rounded-3xl" aria-label={`View ${tmpl.name}`} />
               
               <div className="space-y-3">
                 {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between gap-3 relative">
+                  <div className="flex items-center gap-3 pointer-events-none">
                     <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl shrink-0">
                       {tmpl.emoji}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-black text-slate-900">{tmpl.name}</h2>
+                        <h2 className="text-sm font-black text-slate-900 group-hover:text-orange-600 transition-colors">{tmpl.name}</h2>
                         <span className="text-[10px] font-mono font-bold text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200">
                           {tmpl.publicId}
                         </span>
@@ -163,7 +164,7 @@ export default function MemberTempleListPage() {
                   <button
                     onClick={() => toggleFollow(tmpl.publicId, { type: "temple", apiId: tmpl.id, name: tmpl.name, image: tmpl.emoji, category: "temple" })}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex items-center gap-1",
+                      "relative z-10 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-colors flex items-center gap-1",
                       followed ? "bg-slate-100 text-slate-600 border-slate-200" : "bg-orange-500 text-white border-orange-500 hover:bg-orange-600"
                     )}
                     title={followed ? "Unfollow" : "Follow"}
@@ -226,26 +227,30 @@ export default function MemberTempleListPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3 pt-3 border-t border-slate-100">
-                <div className="grid grid-cols-3 gap-2">
-                  <Link
-                    to="/member/donations"
-                    className="py-2 px-3 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 text-center font-bold text-xs border border-orange-200 transition-colors"
-                  >
-                    Donate
-                  </Link>
-
-                  {tmpl.dharamshala ? (
+              <div className="relative z-10 space-y-3 pt-3 border-t border-slate-100">
+                <div className="flex gap-2">
+                  {tmpl.dharamshala && (
                     <Link
                       to="/member/bookings"
-                      className="py-2 px-3 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 text-center font-bold text-xs border border-sky-200 transition-colors"
+                      className="flex-1 flex items-center justify-center py-2 px-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 font-bold text-xs border border-sky-200 transition-colors"
                     >
                       Book Stay
                     </Link>
-                  ) : (
+                  )}
+                  
+                  {tmpl.bhojanshala && (
+                    <Link
+                      to="/member/bhojanshala"
+                      className="flex-1 flex items-center justify-center py-2 px-2 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold text-xs border border-orange-200 transition-colors"
+                    >
+                      Book Food
+                    </Link>
+                  )}
+
+                  {(!tmpl.dharamshala || !tmpl.bhojanshala) && (
                     <button
                       onClick={() => onShare(tmpl.name, tmpl.publicId)}
-                      className="py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-center font-bold text-xs border border-slate-200 transition-colors flex items-center justify-center gap-1"
+                      className="flex-1 flex items-center justify-center py-2 px-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 transition-colors gap-1"
                     >
                       <Share2 className="h-3.5 w-3.5" /> Share
                     </button>
@@ -253,7 +258,7 @@ export default function MemberTempleListPage() {
 
                   <button
                     onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(tmpl.name + " " + tmpl.city)}`, "_blank")}
-                    className="py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-center font-bold text-xs border border-emerald-200 transition-colors flex items-center justify-center gap-1"
+                    className="flex-1 flex items-center justify-center py-2 px-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200 transition-colors gap-1"
                   >
                     <Navigation className="h-3.5 w-3.5" /> Maps
                   </button>
