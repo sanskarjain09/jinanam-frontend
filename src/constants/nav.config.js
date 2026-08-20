@@ -67,7 +67,7 @@ export const TONE_HEX = {
 export const FLAT_NAV = [
   { id: "sep-overview", isSeparator: true, label: "Overview" },
   { id: "sa-dashboard", label: "SA Dashboard", icon: LayoutDashboard, route: "/admin/sa-dashboard", roles: ["SUPER_ADMIN"] },
-  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
 
   { id: "sep-orgs", isSeparator: true, label: "Organizations" },
   { id: "flat-temples", label: "Temple", icon: Landmark, route: "/admin/temples" },
@@ -88,7 +88,7 @@ export const FLAT_NAV = [
   { id: "sep-comm", isSeparator: true, label: "Communication" },
   { id: "flat-feed", label: "Feed", icon: Newspaper, route: "/admin/feed" },
   { id: "flat-events", label: "Events", icon: PartyPopper, route: "/admin/events" },
-  { id: "flat-announcements", label: "Announcements", icon: Megaphone, route: "/announcements" },
+  { id: "flat-announcements", label: "Announcements", icon: Megaphone, route: "/admin/announcements" },
   { id: "flat-news", label: "News", icon: ScrollText, route: "/admin/news" },
   { id: "flat-polls", label: "Polls", icon: BarChart3, route: "/admin/polls" },
   { id: "flat-notifications", label: "Notifications", icon: Bell, route: "/admin/notifications" },
@@ -96,14 +96,14 @@ export const FLAT_NAV = [
   { id: "flat-99-management", label: "99 Management", icon: GitBranch, route: "/admin/coming-soon?module=99 Management", featureFlag: false },
   { id: "flat-varshitap", label: "Varshitap Management", icon: Flame, route: "/admin/coming-soon?module=Varshitap Management", featureFlag: false },
 
-  { id: "sep-bookings", isSeparator: true, label: "Bookings" },
-  { id: "flat-booking-setup", label: "Booking Setup", icon: CalendarCheck, route: "/admin/coming-soon?module=Booking Setup", featureFlag: false },
+  { id: "sep-bookings", isSeparator: true, label: "Bookings", featureFlag: true },
+  { id: "flat-booking-setup", label: "Booking Setup", icon: CalendarCheck, route: "/admin/coming-soon?module=Booking Setup", featureFlag: true },
   { id: "flat-booking-categories", label: "Categories", icon: ClipboardList, route: "/admin/coming-soon?module=Booking Categories", featureFlag: false },
   { id: "flat-booking-requests", label: "Requests", icon: CalendarCheck, route: "/admin/bookings?tab=admin_bookings" },
   { id: "flat-booking-reservations", label: "Reservations", icon: CalendarCheck, route: "/admin/bookings?tab=reservations" },
   { id: "flat-booking-calendar", label: "Calendar", icon: Calendar, route: "/admin/booking-calendar" },
 
-  { id: "sep-operations", isSeparator: true, label: "Operations" },
+  { id: "sep-operations", isSeparator: true, label: "Operations", featureFlag: true },
   { id: "flat-visitors", label: "Visitors", icon: ScanLine, route: "/admin/visitors" },
   { id: "flat-gps", label: "GPS", icon: MapPin, route: "/admin/tracking" },
   { id: "flat-routes", label: "Routes", icon: GitBranch, route: "/admin/routes" },
@@ -111,31 +111,31 @@ export const FLAT_NAV = [
   { id: "flat-live-map", label: "Live Map", icon: MapIcon, route: "/admin/live-map" },
   { id: "flat-attendance", label: "Attendance", icon: CheckSquare, route: "/admin/staff?tab=attendance", featureFlag: false },
 
-  { id: "sep-finance", isSeparator: true, label: "Finance" },
-  { id: "flat-donations", label: "Donations", icon: HeartHandshake, route: "/admin/donations" },
+  { id: "sep-finance", isSeparator: true, label: "Finance", featureFlag: true },
+  { id: "flat-donations", label: "Donations", icon: HeartHandshake, route: "/admin/donations", featureFlag: true },
   { id: "flat-receipts", label: "Receipts", icon: Receipt, route: "/admin/receipts" },
   { id: "flat-sponsors", label: "Sponsors", icon: Wallet, route: "/admin/coming-soon?module=Sponsors", featureFlag: false },
   { id: "flat-offers", label: "Offers", icon: Tag, route: "/admin/offers" },
-  { id: "flat-ads", label: "Advertisements", icon: Megaphone, route: "/ads" },
+  { id: "flat-ads", label: "Advertisements", icon: Megaphone, route: "/admin/ads" },
 
   { id: "sep-admin-mgt", isSeparator: true, label: "Admin Management" },
-  { id: "flat-admin-users", label: "Admin Users", icon: UsersRound, route: "/admins", roles: ["SUPER_ADMIN"] },
+  { id: "flat-admin-users", label: "Admin Users", icon: UsersRound, route: "/admin/admins", roles: ["SUPER_ADMIN"] },
   { id: "flat-subscription-plans", label: "Subscription Plans", icon: CreditCard, route: "/admin/subscription-plans", roles: ["SUPER_ADMIN"] },
   { id: "flat-roles-permissions", label: "Roles & Permission Assignment", icon: Settings, route: "/admin/roles-permissions", roles: ["SUPER_ADMIN"] },
   { id: "flat-login-history", label: "Login History", icon: ClipboardList, route: "/admin/login-history", roles: ["SUPER_ADMIN"] },
-  { id: "flat-account-status", label: "Account Status", icon: ShieldAlert, route: "/account-status", roles: ["SUPER_ADMIN"] },
+  { id: "flat-account-status", label: "Account Status", icon: ShieldAlert, route: "/admin/account-status", roles: ["SUPER_ADMIN"] },
 
   { id: "flat-reports", label: "Reports", icon: TrendingUp, route: "/admin/reports" },
   { id: "flat-support", label: "Support", icon: LifeBuoy, route: "/admin/support-tickets" },
-  { id: "flat-activity-logs", label: "Activity Logs", icon: ClipboardList, route: "/audit-logs", roles: ["SUPER_ADMIN"] },
-  { id: "flat-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", icon: Settings, route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "flat-activity-logs", label: "Activity Logs", icon: ClipboardList, route: "/admin/audit-logs", roles: ["SUPER_ADMIN"] },
+  { id: "flat-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", icon: Settings, route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
   { id: "flat-settings", label: "Settings", icon: Settings, route: "/admin/settings" }
 ];
 
 // --- NESTED STRUCTURE (Option 2) ---
 export const NESTED_NAV = [
   { id: "sa-dashboard", label: "SA Dashboard", icon: LayoutDashboard, route: "/admin/sa-dashboard", roles: ["SUPER_ADMIN"] },
-  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
 
   {
     id: "folder-members",
@@ -176,12 +176,7 @@ export const NESTED_NAV = [
     icon: Briefcase,
     children: [
       { id: "st-mgt", label: "Staff Management", route: "/admin/staff" },
-      { id: "st-reg", label: "Staff Registration", route: "/admin/staff?action=register" },
-      { id: "st-qr", label: "Staff QR Cards", route: "/admin/coming-soon?module=Staff QR Cards", featureFlag: false },
-      { id: "st-att", label: "Attendance", route: "/admin/staff?tab=attendance" },
-      { id: "st-leave", label: "Leave Management", route: "/admin/staff?tab=leaves" },
-      { id: "st-docs", label: "Documents", route: "/admin/staff?tab=documents" },
-      { id: "st-hours", label: "Working Hours", route: "/admin/staff?tab=hours" }
+      { id: "st-docs", label: "Documents", route: "/admin/staff?tab=documents" }
     ]
   },
   {
@@ -211,7 +206,6 @@ export const NESTED_NAV = [
       { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: false },
       { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: false },
       { id: "t-dhaja", label: "Dhaja", route: "/admin/coming-soon?module=Temple Dhaja", featureFlag: false },
-      { id: "t-chat", label: "Chaturmas", route: "/admin/chaturmas" },
       { id: "t-social", label: "Social Links", route: "/admin/coming-soon?module=Temple Social Links", featureFlag: false }
     ]
   },
@@ -238,16 +232,9 @@ export const NESTED_NAV = [
     icon: Hotel,
     roles: ["SUPER_ADMIN"],
     children: [
-      { id: "d-mgt", label: "Dharamshala Management", route: "/admin/dharamshalas" },
-      { id: "d-build", label: "Buildings", route: "/admin/dharamshala/buildings" },
-      { id: "d-floor", label: "Floors", route: "/admin/dharamshala/floors" },
-      { id: "d-room", label: "Rooms", route: "/admin/dharamshala/rooms" },
-      { id: "d-cat", label: "Room Categories", route: "/admin/dharamshala/categories" },
-      { id: "d-am", label: "Amenities", route: "/admin/dharamshala/amenities" },
-      { id: "d-pr", label: "Pricing", route: "/admin/dharamshala/pricing" },
-      { id: "d-fac", label: "Facilities", route: "/admin/dharamshala/facilities" },
-      { id: "d-gal", label: "Gallery", route: "/admin/dharamshala/gallery" },
-      { id: "d-rule", label: "Rules", route: "/admin/dharamshala/rules" }
+      { id: "d-list", label: "Dharamshalas (Orgs)", route: "/admin/dharamshalas" },
+      { id: "d-mgt", label: "Dharamshala Setup", route: "/admin/dharamshala-management" },
+      { id: "d-book", label: "Bookings", route: "/admin/dharamshala/bookings" }
     ]
   },
   {
@@ -257,8 +244,8 @@ export const NESTED_NAV = [
     icon: Hotel,
     roles: ["DHARAMSHALA_ADMIN", "TEMPLE_ADMIN", "JAIN_CENTER_ADMIN", "JC_ADMIN", "MONK_ADMIN", "SUB_ADMIN", "STAFF", "ORG_ADMIN"],
     children: [
-      { id: "d-list-admin", module: "DHARAMSHALAS", label: "Dharamshalas", route: "/admin/dharamshalas" },
-      { id: "d-mgt-admin", module: "DHARAMSHALAS", label: "Dharamshala Management", route: "/admin/dharamshala/management" },
+      { id: "d-list-admin", module: "DHARAMSHALAS", label: "Dharamshalas (Orgs)", route: "/admin/dharamshalas" },
+      { id: "d-mgt-admin", module: "DHARAMSHALAS", label: "Dharamshala Setup", route: "/admin/dharamshala-management" },
       { id: "d-book-admin", module: "DHARAMSHALAS", label: "Bookings", route: "/admin/dharamshala/bookings" }
     ]
   },
@@ -278,21 +265,21 @@ export const NESTED_NAV = [
     module: "PATHSHALAS",
     label: "Pathshala",
     icon: Sigma,
-    roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
+    roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
     children: [
       { id: "pt-list", label: "Pathshalas (Orgs)", route: "/admin/pathshalas" },
       { id: "pt-mgt", label: "Pathshala Management", route: "/admin/pathshala-management" }
     ]
   },
   {
-    id: "folder-goshala",
-    module: "GOSHALAS",
-    label: "Goshala",
+    id: "folder-gaushala",
+    module: "GAUSHALAS",
+    label: "Gaushala",
     icon: Sigma,
-    roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
+    roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
     children: [
-      { id: "go-list", label: "Goshalas (Orgs)", route: "/admin/goshalas" },
-      { id: "go-mgt", label: "Goshala Management", route: "/admin/goshala-management" }
+      { id: "go-list", label: "Gaushalas (Orgs)", route: "/admin/gaushalas" },
+      { id: "go-mgt", label: "Gaushala Management", route: "/admin/gaushala-management" }
     ]
   },
   {
@@ -462,6 +449,7 @@ export const NESTED_NAV = [
   },
   {
     id: "group-bookings",
+    featureFlag: true,
     label: "Bookings",
     icon: CalendarCheck,
     children: [
@@ -557,6 +545,7 @@ export const NESTED_NAV = [
 
   {
     id: "group-finance",
+    featureFlag: true,
     label: "Finance",
     icon: HeartHandshake,
     children: [
@@ -610,7 +599,7 @@ export const NESTED_NAV = [
         label: "Advertisements",
         icon: Megaphone,
         children: [
-          { id: "ad-mgt", label: "Advertisement Management", route: "/ads" },
+          { id: "ad-mgt", label: "Advertisement Management", route: "/admin/ads" },
           { id: "ad-cat", label: "Advertisement Categories", route: "/admin/coming-soon?module=Ad Categories", featureFlag: false },
           { id: "ad-banner", label: "Banner Management", route: "/admin/banners" },
           { id: "ad-sched", label: "Campaign Schedule", route: "/admin/coming-soon?module=Campaign Schedule", featureFlag: false },
@@ -648,95 +637,20 @@ export const NESTED_NAV = [
   },
 
   {
-    id: "group-operations",
-    label: "Operations",
-    icon: Settings,
+    id: "folder-opvis",
+    module: "VISITORS",
+    label: "Visitor Management",
+    icon: ScanLine,
     children: [
-      {
-        id: "folder-opvis",
-        module: "VISITORS",
-        label: "Visitor Management",
-        icon: ScanLine,
-        children: [
-          { id: "vi-in", label: "Visitor Entry", route: "/admin/visitors" },
-          { id: "vi-out", label: "Visitor Exit", route: "/admin/coming-soon?module=Visitor Exit", featureFlag: false },
-          { id: "vi-hist", label: "Visitor History", route: "/admin/coming-soon?module=Visitor History", featureFlag: false },
-          { id: "vi-exp", label: "Expected Visitors", route: "/admin/coming-soon?module=Expected Visitors", featureFlag: false },
-          { id: "vi-veh", label: "Vehicle Entry", route: "/admin/coming-soon?module=Vehicle Entry", featureFlag: false },
-          { id: "vi-qr", label: "QR Check-In", route: "/admin/coming-soon?module=Visitor QR Check-In", featureFlag: false },
-          { id: "vi-vip", label: "VIP Visitors", route: "/admin/coming-soon?module=VIP Visitors", featureFlag: false },
-          { id: "vi-black", label: "Blacklisted Visitors", route: "/admin/coming-soon?module=Blacklisted Visitors", featureFlag: false },
-          { id: "vi-rep", label: "Visitor Reports", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: false }
-        ]
-      },
-      {
-        id: "folder-optracking",
-        module: "TRACKING",
-        label: "MS Tracking",
-        icon: MapPin,
-        children: [
-          { id: "tr-live", label: "Live Tracking", route: "/admin/tracking" },
-          { id: "tr-man", label: "Manual Tracking", route: "/admin/manual-tracking" },
-          { id: "tr-route", label: "Route Planning", route: "/admin/coming-soon?module=Route Planning", featureFlag: false },
-          { id: "tr-journey", label: "Journey Logs", route: "/admin/journey-logs" },
-          { id: "tr-map", label: "Live Map", route: "/admin/live-map" },
-          { id: "tr-chat", label: "Chaturmas Tracking", route: "/admin/coming-soon?module=Chaturmas Tracking", featureFlag: false },
-          { id: "tr-rep", label: "Route Reports", route: "/admin/coming-soon?module=Route Reports", featureFlag: false }
-        ]
-      },
-      {
-        id: "folder-opstaff",
-        module: "STAFF",
-        label: "Staff Operations",
-        icon: Briefcase,
-        children: [
-          { id: "so-man", label: "Manual Attendance", route: "/admin/coming-soon?module=Manual Attendance", featureFlag: false },
-          { id: "so-qr", label: "QR Attendance", route: "/admin/coming-soon?module=QR Attendance", featureFlag: false },
-          { id: "so-leave", label: "Leave Management", route: "/admin/staff?tab=leaves", featureFlag: false },
-          { id: "so-hours", label: "Working Hours", route: "/admin/staff?tab=hours", featureFlag: false },
-          { id: "so-salary", label: "Shift and Salary Management", route: "/admin/coming-soon?module=Shift and Salary Management", featureFlag: false },
-          { id: "so-rep", label: "Attendance Reports", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: false }
-        ]
-      },
-      {
-        id: "folder-opdocs",
-        module: "STAFF",
-        label: "Document Management",
-        icon: BookOpen,
-        children: [
-          { id: "dm-org", label: "Organization Documents", route: "/admin/coming-soon?module=Organization Documents", featureFlag: false },
-          { id: "dm-staff", label: "Staff Documents", route: "/admin/staff?tab=documents", featureFlag: false },
-          { id: "dm-upload", label: "Upload Documents", route: "/admin/coming-soon?module=Upload Documents", featureFlag: false },
-          { id: "dm-exp", label: "Expiry Reminders", route: "/admin/coming-soon?module=Expiry Reminders", featureFlag: false },
-          { id: "dm-dl", label: "Download Documents", route: "/admin/coming-soon?module=Download Documents", featureFlag: false }
-        ]
-      },
-      {
-        id: "folder-optasks",
-        module: "STAFF",
-        label: "Task Management",
-        icon: CheckSquare,
-        featureFlag: false,
-        children: [
-          { id: "tk-pend", label: "Pending Tasks", route: "/admin/coming-soon?module=Pending Tasks" },
-          { id: "tk-app", label: "Pending Approvals", route: "/admin/coming-soon?module=Pending Approvals" },
-          { id: "tk-follow", label: "Follow-ups", route: "/admin/coming-soon?module=Follow-ups" },
-          { id: "tk-remind", label: "Reminders", route: "/admin/coming-soon?module=Reminders" },
-          { id: "tk-comp", label: "Completed Tasks", route: "/admin/coming-soon?module=Completed Tasks" }
-        ]
-      },
-      {
-        id: "folder-oprep",
-        module: "REPORTS",
-        label: "Reports",
-        icon: TrendingUp,
-        children: [
-          { id: "or-vis", label: "Visitor", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: false },
-          { id: "or-track", label: "Tracking", route: "/admin/coming-soon?module=Tracking Reports", featureFlag: false },
-          { id: "or-att", label: "Attendance", route: "/admin/coming-soon?module=Attendance Reports", featureFlag: false },
-          { id: "or-sum", label: "Operational Summary", route: "/admin/coming-soon?module=Operational Summary", featureFlag: false }
-        ]
-      }
+      { id: "vi-in", label: "Visitor Entry", route: "/admin/visitors" },
+      { id: "vi-out", label: "Visitor Exit", route: "/admin/coming-soon?module=Visitor Exit", featureFlag: false },
+      { id: "vi-hist", label: "Visitor History", route: "/admin/coming-soon?module=Visitor History", featureFlag: false },
+      { id: "vi-exp", label: "Expected Visitors", route: "/admin/coming-soon?module=Expected Visitors", featureFlag: false },
+      { id: "vi-veh", label: "Vehicle Entry", route: "/admin/coming-soon?module=Vehicle Entry", featureFlag: false },
+      { id: "vi-qr", label: "QR Check-In", route: "/admin/coming-soon?module=Visitor QR Check-In", featureFlag: false },
+      { id: "vi-vip", label: "VIP Visitors", route: "/admin/coming-soon?module=VIP Visitors", featureFlag: false },
+      { id: "vi-black", label: "Blacklisted Visitors", route: "/admin/coming-soon?module=Blacklisted Visitors", featureFlag: false },
+      { id: "vi-rep", label: "Visitor Reports", route: "/admin/coming-soon?module=Visitor Reports", featureFlag: false }
     ]
   },
 
@@ -745,16 +659,7 @@ export const NESTED_NAV = [
     module: "REPORTS",
     label: "Reports & Analytics",
     icon: TrendingUp,
-    children: [
-      { id: "rp-exec", label: "Executive Dashboard", route: "/admin/reports" },
-      { id: "rp-people", label: "People Reports", route: "/admin/reports/members" },
-      { id: "rp-org", label: "Organization Reports", route: "/admin/coming-soon?module=Organization Reports", featureFlag: false },
-      { id: "rp-comm", label: "Community Reports", route: "/admin/reports/events" },
-      { id: "rp-book", label: "Booking Reports", route: "/admin/reports?tab=bookings", featureFlag: false },
-      { id: "rp-fin", label: "Financial Reports", route: "/admin/reports/donations" },
-      { id: "rp-op", label: "Operations Reports", route: "/admin/coming-soon?module=Operations Reports", featureFlag: false },
-      { id: "rp-export", label: "Export Center", route: "/admin/coming-soon?module=Export Center", featureFlag: false }
-    ]
+    route: "/admin/reports"
   },
 
   {
@@ -764,8 +669,8 @@ export const NESTED_NAV = [
     icon: LifeBuoy,
     children: [
       { id: "su-ticket", label: "Support Tickets", route: "/admin/support-tickets", icon: Ticket },
-      { id: "su-feedback", label: "Feedback", route: "/admin/feedback", icon: MessageSquareWarning },
-      { id: "su-incorrect", label: "Incorrect Information", route: "/admin/incorrect-reports", icon: AlertTriangle },
+      { id: "su-feedback", label: "Feedback", route: "/admin/feedback", icon: MessageSquareWarning, featureFlag: true },
+      { id: "su-incorrect", label: "Incorrect Information", route: "/admin/incorrect-reports", icon: AlertTriangle, featureFlag: true },
       { id: "su-contacts", label: "Contact Requests", route: "/admin/coming-soon?module=Contact Requests", featureFlag: false, icon: PhoneCall },
       { id: "su-kb", label: "Knowledge Base", route: "/admin/faq", icon: HelpCircle }
     ]
@@ -777,12 +682,12 @@ export const NESTED_NAV = [
     label: "Settings",
     icon: Settings,
     children: [
-      { id: "se-admin", label: "Admin Management", route: "/admins", roles: ["SUPER_ADMIN"] },
-      { id: "se-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+      { id: "se-admin", label: "Admin Management", route: "/admin/admins", roles: ["SUPER_ADMIN"] },
+      { id: "se-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
       { id: "se-roles", label: "Roles & Permissions", route: "/admin/coming-soon?module=Roles & Permissions", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-master", label: "Master Data", route: "/admin/master-data", roles: ["SUPER_ADMIN"] },
       { id: "se-notif", label: "Notification Center", route: "/admin/notifications/preferences", featureFlag: false },
-      { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
+      { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
       { id: "se-payment", label: "Payment Settings", route: "/admin/coming-soon?module=Payment Settings", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-security", label: "Security", route: "/admin/settings?tab=security", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-sub", label: "Subscription", route: "/admin/subscription-plans", roles: ["SUPER_ADMIN"] }

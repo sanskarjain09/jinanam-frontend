@@ -340,7 +340,7 @@ function isNodeAllowed(node, isSuperAdmin, user, authModules, orgFacilities = {}
     : (user?.grantedModules || user?.modules || user?.permissionOverrides);
 
   const route = node.route ? node.route.split("?")[0] : "";
-  const isDashboard = node.id === "a-dashboard" || node.id === "sa-dashboard" || route === "/" || route === "/a-dashboard" || route === "/sa-dashboard";
+  const isDashboard = node.id === "a-dashboard" || node.id === "sa-dashboard" || route === "/" || route === "/admin/a-dashboard" || route === "/admin/sa-dashboard" || route === "/a-dashboard" || route === "/sa-dashboard";
 
   // Dashboard is ALWAYS visible for personalized Org Admin Dashboard
   if (isDashboard) return true;
@@ -822,14 +822,18 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
         Promise.all([
           api.get("/temples").catch(() => ({ data: { data: [] } })),
           api.get("/dharamshalas").catch(() => ({ data: { data: [] } })),
-          api.get("/jain-centers").catch(() => ({ data: { data: [] } }))
+          api.get("/jain-centers").catch(() => ({ data: { data: [] } })),
+          api.get("/gaushalas").catch(() => ({ data: { data: [] } })),
+          api.get("/pathshalas").catch(() => ({ data: { data: [] } }))
         ])
-          .then(([templesRes, dharamshalasRes, jainCentersRes]) => {
+          .then(([templesRes, dharamshalasRes, jainCentersRes, gaushalasRes, pathshalasRes]) => {
             if (!isMounted) return;
             const t = templesRes.data?.data?.items || templesRes.data?.data || [];
             const d = dharamshalasRes.data?.data?.items || dharamshalasRes.data?.data || [];
             const j = jainCentersRes.data?.data?.items || jainCentersRes.data?.data || [];
-            const temples = [...t, ...d, ...j];
+            const g = gaushalasRes.data?.data?.items || gaushalasRes.data?.data || [];
+            const p = pathshalasRes.data?.data?.items || pathshalasRes.data?.data || [];
+            const temples = [...t, ...d, ...j, ...g, ...p];
             
             const hasBhojanshala = temples.some(t => {
               const tid = t._id || t.id;
@@ -850,7 +854,14 @@ export default function Sidebar({ onNavigate, collapsed = false }) {
               const matchesOrg = activeOrganizationId 
                 ? tid === activeOrganizationId 
                 : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
-              return matchesOrg && t.hasPathshala === true;
+              return matchesOrg && (t.type === "PATHSHALA" || t.hasPathshala === true);
+            });
+            const hasGaushala = temples.some(t => {
+              const tid = t._id || t.id;
+              const matchesOrg = activeOrganizationId 
+                ? tid === activeOrganizationId 
+                : (isSuperAdmin ? true : user.organizationIds?.includes(tid));
+              return matchesOrg && (t.type === "GAUSHALA" || t.hasGaushala === true);
             });
             const activeModulesSet = new Set();
             let hasConfiguredModules = false;

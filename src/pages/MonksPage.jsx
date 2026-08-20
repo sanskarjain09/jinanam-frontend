@@ -3,7 +3,7 @@
  * Features: List • Search • Register (all fields) • Click-to-ID-Card •
  *           Edit • Photo Upload • Status Toggle • Bulk Import • Export
  */
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, extractErrorMessage, API_BASE } from "@/lib/api";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toOptions } from "@/constants/dropdownOptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDate } from "@/lib/utils";
@@ -79,17 +80,25 @@ const MonkSelect = ({ label, value, onChange, placeholder = "Select Sadhuji / Sa
   return (
     <div>
       <Label className="text-xs font-semibold text-slate-600">{label}</Label>
-      <SearchableSelect
+      <Select
         value={value || ""}
         onValueChange={onChange}
-        options={monks.map(m => ({
-          value: m.id,
-          label: `${m.dikshaName} (${m.publicId || "No ID"})`
-        }))}
-        placeholder={placeholder}
-        searchPlaceholder={t("Search MS by name/ID…")}
-        className="mt-1"
-      />
+      >
+        <SelectTrigger className="w-full mt-1">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="max-h-[300px]">
+          {monks.length === 0 ? (
+            <SelectItem value="none" disabled>No monks found</SelectItem>
+          ) : (
+            monks.map(m => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.dikshaName} ({m.publicId || "No ID"})
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
     </div>
   );
 };
@@ -270,7 +279,18 @@ function MonkIdCardDialog({ open, onClose, monk, onSave, onPhotoSave, isSuperAdm
   const [temples, setTemples] = useState([]);
 
   useEffect(() => {
-    api.get("/temples").then((r) => setTemples(r.data?.data?.items || r.data?.data || [])).catch(() => {});
+    Promise.all([
+      api.get("/temples").catch(() => ({ data: { data: [] } })),
+      api.get("/sthanaks").catch(() => ({ data: { data: [] } })),
+      api.get("/jain-centers").catch(() => ({ data: { data: [] } }))
+    ]).then(([t, s, j]) => {
+      const allOrgs = [
+        ...(t.data?.data?.items || t.data?.data || []),
+        ...(s.data?.data?.items || s.data?.data || []),
+        ...(j.data?.data?.items || j.data?.data || [])
+      ];
+      setTemples(allOrgs);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -418,17 +438,25 @@ function MonkIdCardDialog({ open, onClose, monk, onSave, onPhotoSave, isSuperAdm
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs font-semibold">{t("Current Temple / Upashray")}</Label>
-                    <SearchableSelect
+                    <Select
                       value={form.currentTempleId || ""}
                       onValueChange={(v) => setForm({ ...form, currentTempleId: v })}
-                      options={temples.map((t) => ({
-                        value: t.id,
-                        label: `[${t.publicId || t.code || t.id?.slice(0, 8) || "TMP"}] ${t.name}${t.city ? ` (${t.city})` : ""}`
-                      }))}
-                      placeholder={t("Search temple by name or Temple ID…")}
-                      searchPlaceholder={t("Type temple name or ID…")}
-                      className="mt-1"
-                    />
+                    >
+                      <SelectTrigger className="w-full mt-1">
+                        <SelectValue placeholder={t("Select a location")} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {temples.length === 0 ? (
+                          <SelectItem value="none" disabled>No locations found</SelectItem>
+                        ) : (
+                          temples.map((t_item) => (
+                            <SelectItem key={t_item.id} value={t_item.id}>
+                              [{t_item.publicId || t_item.code || t_item.id?.slice(0, 8) || "TMP"}] {t_item.name}{t_item.city ? ` (${t_item.city})` : ""}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">{t("Bio / Description")}</Label>
@@ -614,7 +642,18 @@ function RegisterMonkDialog({ onCreated }) {
 
   useEffect(() => {
     if (open) {
-      api.get("/temples").then((r) => setTemples(r.data?.data?.items || r.data?.data || [])).catch(() => {});
+      Promise.all([
+        api.get("/temples").catch(() => ({ data: { data: [] } })),
+        api.get("/sthanaks").catch(() => ({ data: { data: [] } })),
+        api.get("/jain-centers").catch(() => ({ data: { data: [] } }))
+      ]).then(([t, s, j]) => {
+        const allOrgs = [
+          ...(t.data?.data?.items || t.data?.data || []),
+          ...(s.data?.data?.items || s.data?.data || []),
+          ...(j.data?.data?.items || j.data?.data || [])
+        ];
+        setTemples(allOrgs);
+      }).catch(() => {});
     }
   }, [open]);
 
@@ -1309,17 +1348,25 @@ function RegisterMonkDialog({ onCreated }) {
                           {field("Current Location Description", "currentLocation", "text", "Ashram / City name")}
                           <div className="col-span-2">
                             <Label className="text-xs font-semibold">{t("Current Temple / Jain Centre / Upashray")}</Label>
-                            <SearchableSelect
+                            <Select
                               value={form.currentTempleId || ""}
                               onValueChange={(v) => setForm({ ...form, currentTempleId: v })}
-                              options={temples.map((t) => ({
-                                value: t.id,
-                                label: `[${t.publicId || t.code || t.id?.slice(0, 8) || "TMP"}] ${t.name}${t.city ? ` (${t.city})` : ""}`
-                              }))}
-                              placeholder={t("Search temple by name or Temple ID…")}
-                              searchPlaceholder={t("Search by name or Temple ID…")}
-                              className="mt-1"
-                            />
+                            >
+                              <SelectTrigger className="w-full mt-1">
+                                <SelectValue placeholder={t("Select temple by name or Temple ID…")} />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                {temples.length === 0 ? (
+                                  <SelectItem value="none" disabled>No locations found</SelectItem>
+                                ) : (
+                                  temples.map((t_item) => (
+                                    <SelectItem key={t_item.id} value={t_item.id}>
+                                      [{t_item.publicId || t_item.code || t_item.id?.slice(0, 8) || "TMP"}] {t_item.name}{t_item.city ? ` (${t_item.city})` : ""}
+                                    </SelectItem>
+                                  ))
+                                )}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </div>
                       </div>
@@ -1812,7 +1859,55 @@ export default function MonksPage() {
   const [loading, setLoading]     = useState(true);
   const [q, setQ]                 = useState("");
   const [genderFilter, setGender] = useState("ALL");
+  const [orgFilter, setOrgFilter] = useState("ALL");
+  const [monthFilter, setMonthFilter] = useState("ALL");
+  const [yearFilter, setYearFilter] = useState("ALL");
+  const [communityFilter, setCommunityFilter] = useState("ALL");
   const [reloadKey, setReload]    = useState(0);
+
+  const uniqueOrgs = useMemo(() => {
+    const orgs = new Map();
+    monks.forEach(m => {
+      if (m.currentTemple && m.currentTemple.name && m.currentTemple.name.trim()) orgs.set(m.currentTemple.id, m.currentTemple.name.trim());
+    });
+    return Array.from(orgs.entries()).map(([value, label]) => ({ value, label }));
+  }, [monks]);
+
+  const uniqueYears = useMemo(() => {
+    const years = new Set();
+    monks.forEach(m => {
+      if (m.dikshaDate) years.add(new Date(m.dikshaDate).getFullYear());
+    });
+    return Array.from(years).filter(y => !isNaN(y) && y > 0).sort((a,b) => b - a);
+  }, [monks]);
+
+  const uniqueCommunities = useMemo(() => {
+    const comms = new Set();
+    monks.forEach(m => {
+      if (m.community?.name && m.community.name.trim()) comms.add(m.community.name.trim());
+    });
+    return Array.from(comms).sort();
+  }, [monks]);
+
+  const displayMonks = useMemo(() => {
+    return monks.filter((m) => {
+      if (orgFilter !== "ALL" && m.currentTemple?.id !== orgFilter) return false;
+      if (monthFilter !== "ALL") {
+        if (!m.dikshaDate) return false;
+        const d = new Date(m.dikshaDate);
+        if (d.getMonth() + 1 !== parseInt(monthFilter)) return false;
+      }
+      if (yearFilter !== "ALL") {
+        if (!m.dikshaDate) return false;
+        const d = new Date(m.dikshaDate);
+        if (d.getFullYear() !== parseInt(yearFilter)) return false;
+      }
+      if (communityFilter !== "ALL") {
+        if (m.community?.name !== communityFilter) return false;
+      }
+      return true;
+    });
+  }, [monks, orgFilter, monthFilter, yearFilter, communityFilter]);
 
   const [selectedMonk, setSelectedMonk] = useState(null);
   const [cardOpen, setCardOpen]         = useState(false);
@@ -1928,11 +2023,41 @@ export default function MonksPage() {
       />
 
       {/* Filters */}
-      <div className="mb-4 flex gap-3 flex-wrap">
+      <div className="mb-4 flex gap-3 flex-wrap items-center">
         <div className="relative max-w-xs flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("action.search", "Search monks…")} className="pl-9 bg-white" />
         </div>
+        <select 
+          className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
+          value={orgFilter} onChange={(e) => setOrgFilter(e.target.value)}
+        >
+          <option value="ALL">{t("All Organizations")}</option>
+          {uniqueOrgs.map(org => <option key={org.value} value={org.value}>{org.label}</option>)}
+        </select>
+        <select 
+          className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
+          value={communityFilter} onChange={(e) => setCommunityFilter(e.target.value)}
+        >
+          <option value="ALL">{t("All Communities")}</option>
+          {uniqueCommunities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select 
+          className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
+          value={monthFilter} onChange={(e) => setMonthFilter(e.target.value)}
+        >
+          <option value="ALL">{t("All Months")}</option>
+          {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+            <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
+          ))}
+        </select>
+        <select 
+          className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
+          value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}
+        >
+          <option value="ALL">{t("All Years")}</option>
+          {uniqueYears.map(y => <option key={y} value={y}>{y}</option>)}
+        </select>
         <div className="flex gap-1 rounded-lg border border-border bg-white p-1">
           {["ALL", "SADHU", "SADHVI"].map((g) => (
             <button key={g} onClick={() => setGender(g)}
@@ -1947,7 +2072,7 @@ export default function MonksPage() {
 
       <DataTable
         columns={columns}
-        rows={monks}
+        rows={displayMonks}
         loading={loading}
         testId="monks-table"
         emptyTitle={t("No monk profiles yet")}

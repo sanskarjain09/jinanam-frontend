@@ -16,10 +16,10 @@ import LandingPage from "@/pages/LandingPage";
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
 import PolicyPage from "@/pages/PolicyPage";
-import BuildingsPage from "./pages/dharamshala/BuildingsPage";
-import RoomsPage from "./pages/dharamshala/RoomsPage";
 import DharamshalaManagementPage from "./pages/dharamshala/DharamshalaManagementPage";
 import DharamshalaBookingsPage from "./pages/dharamshala/DharamshalaBookingsPage";
+import GaushalaManagementPage from "./pages/gaushala/GaushalaManagementPage";
+import PathshalaManagementPage from "./pages/pathshala/PathshalaManagementPage";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
 const SADashboardPage = lazy(() => import("@/pages/SADashboardPage"));
@@ -27,6 +27,7 @@ const MembersPage = lazy(() => import("@/pages/MembersPage"));
 const NonJainMembersPage = lazy(() => import("@/pages/NonJainMembersPage"));
 const FamilyPage = lazy(() => import("@/pages/FamilyPage"));
 const MonksPage = lazy(() => import("@/pages/MonksPage"));
+const ChaturmasPage = lazy(() => import("@/pages/ChaturmasPage"));
 const MonkDetailPage = lazy(() => import("@/pages/MonkDetailPage"));
 const OrgListPage = lazy(() => import("@/pages/OrgListPage"));
 const OrgDetailPage = lazy(() => import("@/pages/OrgDetailPage"));
@@ -155,11 +156,17 @@ function SmartRouteResolver() {
     role.includes("SUPER") ||
     role.includes("TEMPLE") ||
     role.includes("DHARAMSHALA") ||
+    role.includes("BHOJANSHALA") ||
+    role.includes("GAUSHALA") ||
+    role.includes("PATHSHALA") ||
     role.includes("MONK") ||
     role.includes("CENTER") ||
     role.includes("STAFF") ||
     role === "TEMPLE_ADMIN" ||
     role === "DHARAMSHALA_ADMIN" ||
+    role === "BHOJANSHALA_ADMIN" ||
+    role === "GAUSHALA_ADMIN" ||
+    role === "PATHSHALA_ADMIN" ||
     role === "JC_ADMIN" ||
     role === "MONK_ADMIN" ||
     role === "STAFF";
@@ -265,7 +272,7 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
+                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
                     <AdminLayout />
                   </ProtectedRoute>
                 }
@@ -304,7 +311,7 @@ export default function App() {
                 <Route path="route-planning" element={<TrackingPage />} />
                 <Route path="journey-history" element={<TrackingPage />} />
                 <Route path="journey-logs" element={<JourneyLogsPage />} />
-                <Route path="chaturmas" element={<MonksPage />} />
+                <Route path="chaturmas" element={<ChaturmasPage />} />
                 <Route path="tapasya" element={<MonksPage />} />
                 <Route path="timeline" element={<MonksPage />} />
                 <Route path="followers" element={<MonksPage />} />
@@ -337,23 +344,28 @@ export default function App() {
                 <Route path="jain-centers/:id" element={<OrgDetailPage />} />
                 <Route path="jain-centres/:id" element={<OrgDetailPage />} />
                 <Route path="centre-information" element={<OrgListPage defaultType="JAIN_CENTER" />} />
-                <Route path="dharamshala-management" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="dharamshala-management/:id" element={<OrgDetailPage />} />
+                <Route path="dharamshala-management" element={<DharamshalaManagementPage />} />
+                <Route path="dharamshala-management/:id" element={<DharamshalaManagementPage />} />
                 <Route path="dharamshalas" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="dharamshalas/:id" element={<OrgDetailPage />} />
+                
+                <Route path="gaushala-management" element={<GaushalaManagementPage />} />
+                <Route path="gaushala-management/:id" element={<GaushalaManagementPage />} />
+                <Route path="gaushalas" element={<OrgListPage defaultType="GAUSHALA" />} />
+                <Route path="gaushalas/:id" element={<OrgDetailPage />} />
+
+                <Route path="pathshala-management" element={<PathshalaManagementPage />} />
+                <Route path="pathshala-management/:id" element={<PathshalaManagementPage />} />
+                <Route path="pathshalas" element={<OrgListPage defaultType="PATHSHALA" />} />
+                <Route path="pathshalas/:id" element={<OrgDetailPage />} />
+
                 <Route path="sthanak-management" element={<OrgListPage defaultType="STHANAK" />} />
                 <Route path="sthanak-management/:id" element={<OrgDetailPage />} />
                 <Route path="sthanaks" element={<OrgListPage defaultType="STHANAK" />} />
                 <Route path="sthanaks/:id" element={<OrgDetailPage />} />
                 <Route path="orgs/:id" element={<OrgDetailPage />} />
                 <Route path="org/:id" element={<OrgDetailPage />} />
-                <Route path="buildings" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="floors" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="rooms" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="room-categories" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="amenities" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="pricing" element={<OrgListPage defaultType="DHARAMSHALA" />} />
-                <Route path="rules" element={<OrgListPage defaultType="DHARAMSHALA" />} />
+
                 <Route path="bhojanshalas" element={<OrgListPage defaultType="BHOJANSHALA" />} />
                 <Route path="bhojanshalas/:id" element={<OrgDetailPage />} />
                 <Route path="bhojanshala-management" element={<BhojanshalaManagementPage />} />
@@ -473,15 +485,6 @@ export default function App() {
                 {/* Dedicated Dharamshala Management Pages */}
                 <Route path="dharamshala/management" element={<DharamshalaManagementPage />} />
                 <Route path="dharamshala/bookings" element={<DharamshalaBookingsPage />} />
-                <Route path="dharamshala/buildings" element={<BuildingsPage />} />
-                <Route path="dharamshala/floors" element={<BuildingsPage />} />
-                <Route path="dharamshala/rooms" element={<RoomsPage />} />
-                <Route path="dharamshala/categories" element={<ComingSoonPage />} />
-                <Route path="dharamshala/amenities" element={<ComingSoonPage />} />
-                <Route path="dharamshala/pricing" element={<ComingSoonPage />} />
-                <Route path="dharamshala/facilities" element={<ComingSoonPage />} />
-                <Route path="dharamshala/gallery" element={<ComingSoonPage />} />
-                <Route path="dharamshala/rules" element={<ComingSoonPage />} />
 
                 <Route path="coming-soon" element={<ComingSoonPage />} />
                 {/* Unknown /admin/* → A Dashboard (accessible to every admin

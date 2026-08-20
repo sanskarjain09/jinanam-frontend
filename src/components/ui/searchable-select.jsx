@@ -116,7 +116,12 @@ const SearchableSelect = React.forwardRef(function SearchableSelect(
         align={align}
         sideOffset={4}
       >
-        <Command>
+        <Command filter={(value, search) => {
+          const normalizedValue = value.replace(/[\s.]+/g, "").toLowerCase();
+          const normalizedSearch = search.replace(/[\s.]+/g, "").toLowerCase();
+          if (normalizedValue.includes(normalizedSearch)) return 1;
+          return 0;
+        }}>
           <CommandInput placeholder={t(searchPlaceholder)} className="h-9" />
           <CommandList>
             <CommandEmpty>{t(emptyText)}</CommandEmpty>

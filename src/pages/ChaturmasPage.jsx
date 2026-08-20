@@ -8,7 +8,7 @@ import { Flame, Calendar, MapPin, Plus, UserCheck, Pencil, Trash2 } from "lucide
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
@@ -26,21 +26,35 @@ export default function ChaturmasPage() {
   const [editing, setEditing] = useState(null);
   
   const [monks, setMonks] = useState([]);
+  const [temples, setTemples] = useState([]);
   const [rows, setRows] = useState([]);
   const [form, setForm] = useState({
     monkId: "none", monkName: "", locationName: "", startDate: "", endDate: "", contactPerson: "", contactMobile: "", status: "ACTIVE", notes: ""
   });
 
   const loadData = async () => {
-    if (!orgId) return;
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN' || user?.primaryRoleKey === 'SUPER_ADMIN' || user?.isSuperAdmin;
+    if (!orgId && !isSuperAdmin) return;
     setLoading(true);
     try {
-      const [chaturmasRes, monksRes] = await Promise.all([
-        api.get(`/chaturmas/org/${orgId}`),
-        api.get(`/monks`)
+      const chaturmasEndpoint = orgId ? `/chaturmas/org/${orgId}` : `/chaturmas`;
+      const [chaturmasRes, monksRes, tRes, sRes, jRes] = await Promise.all([
+        api.get(chaturmasEndpoint).catch((err) => { toast.error("chaturmas error: " + err.message); return { data: { data: [] } }; }),
+        api.get(`/monks`).catch((err) => { toast.error("monks error: " + err.message); return { data: { data: [] } }; }),
+        api.get(`/temples`).catch((err) => { toast.error("temples error: " + err.message); return { data: { data: [] } }; }),
+        api.get(`/sthanaks`).catch((err) => { toast.error("sthanaks error: " + err.message); return { data: { data: [] } }; }),
+        api.get(`/jain-centers`).catch((err) => { toast.error("jain-centers error: " + err.message); return { data: { data: [] } }; })
       ]);
-      setRows(chaturmasRes.data.data || []);
-      setMonks(monksRes.data.data || []);
+      setRows(chaturmasRes.data?.data?.items || chaturmasRes.data?.data || []);
+      const fetchedMonks = monksRes.data?.data?.items || monksRes.data?.data || [];
+      setMonks(fetchedMonks);
+      console.log("Fetched monks:", fetchedMonks);
+      const allOrgs = [
+        ...(tRes.data?.data?.items || tRes.data?.data || []),
+        ...(sRes.data?.data?.items || sRes.data?.data || []),
+        ...(jRes.data?.data?.items || jRes.data?.data || [])
+      ];
+      setTemples(allOrgs);
     } catch (e) {
       toast.error(t("Failed to load Chaturmas stays and monks."));
     } finally {
@@ -56,7 +70,7 @@ export default function ChaturmasPage() {
   const openAdd = () => {
     setEditing(null);
     setForm({
-      monkId: "none", monkName: "", locationName: "", startDate: "", endDate: "", contactPerson: "", contactMobile: "", status: "ACTIVE", notes: ""
+      monkId: "", monkName: "", locationName: "", startDate: "", endDate: "", contactPerson: "", contactMobile: "", status: "ACTIVE", notes: ""
     });
     setOpen(true);
   };
@@ -64,7 +78,7 @@ export default function ChaturmasPage() {
   const openEdit = (row) => {
     setEditing(row);
     setForm({
-      monkId: row.monkId || "none",
+      monkId: row.monkId || "",
       monkName: row.monkName,
       locationName: row.locationName,
       startDate: row.startDate ? row.startDate.slice(0, 10) : "",
@@ -79,23 +93,38 @@ export default function ChaturmasPage() {
 
   const handleSave = async () => {
     let finalMonkName = form.monkName;
-    if (form.monkId !== "none") {
+    if (form.monkId) {
       const selectedMonk = monks.find(m => m.id === form.monkId);
       if (selectedMonk) {
         finalMonkName = selectedMonk.dikshaName;
       }
     }
 
-    if (!finalMonkName || !form.locationName || !form.startDate) {
+    let finalOrgId = orgId;
+    const finalLocationName = form.locationName;
+
+    if (form.locationName) {
+      const selectedTemple = temples.find(t => t.name === form.locationName);
+      if (selectedTemple) {
+        finalOrgId = selectedTemple.id;
+      }
+    }
+
+    if (!finalMonkName || !finalLocationName || !form.startDate || !form.monkId) {
       toast.error(t("Please fill in monk name, location and start date."));
       return;
     }
 
+    if (!finalOrgId) {
+      toast.error(t("Please select a Temple from the list to link this Chaturmas entry."));
+      return;
+    }
+
     const payload = {
-      organizationId: orgId,
-      monkId: form.monkId === "none" ? null : form.monkId,
+      organizationId: finalOrgId,
+      monkId: form.monkId,
       monkName: finalMonkName,
-      locationName: form.locationName,
+      locationName: finalLocationName,
       startDate: form.startDate,
       endDate: form.endDate || null,
       contactPerson: form.contactPerson || null,
@@ -185,28 +214,48 @@ export default function ChaturmasPage() {
           </DialogHeader>
           <div className="space-y-3 pt-2">
             <div>
-              <Label className="text-xs">{t("Linked Monk Profile (Optional)")}</Label>
-              <SearchableSelect
-                value={form.monkId}
-                onValueChange={(val) => setForm({ ...form, monkId: val })}
-                options={[
-                  { value: "none", label: t("Create Custom Monk Record (Not Linked)") },
-                  ...monks.map((m) => ({ value: m.id, label: `${m.dikshaName} (${m.publicId})` }))
-                ]}
-                placeholder={t("Select a monk")}
-                searchPlaceholder={t("Search monks…")}
-                className="mt-1"
-              />
+              <Label className="text-xs">{t("Select Monk / Sadhvi *")}</Label>
+              <Select
+                value={form.monkId || ""}
+                onValueChange={(val) => setForm({ ...form, monkId: val, monkName: monks.find(m => m.id === val)?.dikshaName || "" })}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder={t("Select a monk")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {monks.length === 0 ? (
+                    <SelectItem value="none" disabled>No monks found</SelectItem>
+                  ) : (
+                    monks.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.dikshaName} {m.publicId ? `(${m.publicId})` : ''}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            {form.monkId === "none" && (
-              <div>
-                <Label className="text-xs">{t("Monk / Sadhvi Name *")}</Label>
-                <Input value={form.monkName} onChange={(e) => setForm({ ...form, monkName: e.target.value })} placeholder={t("e.g. Pujya Naypadmasagarji MS")} />
-              </div>
-            )}
             <div>
               <Label className="text-xs">{t("Chaturmas Location / Temple *")}</Label>
-              <Input value={form.locationName} onChange={(e) => setForm({ ...form, locationName: e.target.value })} placeholder={t("e.g. Ghatkopar Sthanak, Mumbai")} />
+              <Select
+                value={form.locationName || ""}
+                onValueChange={(val) => setForm({ ...form, locationName: val })}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder={t("Select a location")} />
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {temples.length === 0 ? (
+                    <SelectItem value="none" disabled>No locations found</SelectItem>
+                  ) : (
+                    temples.map((t) => (
+                      <SelectItem key={t.name} value={t.name}>
+                        {t.name} {t.city ? `(${t.city})` : ''}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -231,17 +280,19 @@ export default function ChaturmasPage() {
             {editing && (
               <div>
                 <Label className="text-xs">{t("Status")}</Label>
-                <SearchableSelect
+                <Select
                   value={form.status}
                   onValueChange={(val) => setForm({ ...form, status: val })}
-                  options={[
-                    { value: "ACTIVE", label: "ACTIVE" },
-                    { value: "COMPLETED", label: "COMPLETED" },
-                    { value: "CANCELLED", label: "CANCELLED" },
-                  ]}
-                  placeholder={t("Select status")}
-                  className="mt-1"
-                />
+                >
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder={t("Select status")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACTIVE">ACTIVE</SelectItem>
+                    <SelectItem value="COMPLETED">COMPLETED</SelectItem>
+                    <SelectItem value="CANCELLED">CANCELLED</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>

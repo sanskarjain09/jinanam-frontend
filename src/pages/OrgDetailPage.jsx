@@ -4080,6 +4080,9 @@ export default function OrgDetailPage(props) {
    * set. Loading the master list lets the view resolve the id to a name.
    */
   const [bhagwanNameById, setBhagwanNameById] = useState({});
+  const [allGaushalas, setAllGaushalas] = useState([]);
+  const [allPathshalas, setAllPathshalas] = useState([]);
+  
   useEffect(() => {
     apiClient.get("/master-data/bhagwans")
       .then((r) => {
@@ -4088,6 +4091,14 @@ export default function OrgDetailPage(props) {
           Object.fromEntries((Array.isArray(list) ? list : []).map((b) => [b.id, b.name]))
         );
       })
+      .catch(() => { });
+
+    apiClient.get("/gaushalas", { params: { pageSize: 1000 } })
+      .then((r) => setAllGaushalas(r.data?.data?.items || r.data?.data || []))
+      .catch(() => { });
+
+    apiClient.get("/pathshalas", { params: { pageSize: 1000 } })
+      .then((r) => setAllPathshalas(r.data?.data?.items || r.data?.data || []))
       .catch(() => { });
   }, []);
 

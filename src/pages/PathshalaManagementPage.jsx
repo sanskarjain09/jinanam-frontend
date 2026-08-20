@@ -23,7 +23,7 @@ import { ScanPassModal } from "../components/modals/ScanPassModal";
 import CreatePassModal from "../components/modals/CreatePassModal";
 import { useAuth } from "../contexts/AuthContext";
 
-const BhojanshalaManagementPage = () => {
+const PathshalaManagementPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "timings";
 
@@ -48,8 +48,8 @@ const BhojanshalaManagementPage = () => {
           }
         }
         
-        // Filter to only those organizations that are BHOJANSHALAs or have hasBhojanshala=true
-        orgs = orgs.filter(o => o.type === "BHOJANSHALA" || o.hasBhojanshala);
+        // Filter to only those organizations that are BHOJANSHALAs or have hasPathshala=true
+        orgs = orgs.filter(o => o.type === "BHOJANSHALA" || o.hasPathshala);
 
         setOrganizations(orgs);
         if (orgs.length > 0 && !selectedOrgId) {
@@ -67,10 +67,10 @@ const BhojanshalaManagementPage = () => {
   const handleTogglePublish = async () => {
     if (!selectedOrg) return;
     try {
-      const payload = { bhojanshalaPublished: !selectedOrg.bhojanshalaPublished };
+      const payload = { pathshalaPublished: !selectedOrg.pathshalaPublished };
       await api.patch(`/temples/${selectedOrg.id}`, payload);
-      toast.success(payload.bhojanshalaPublished ? "Bhojanshala published successfully!" : "Bhojanshala unpublished.");
-      setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, bhojanshalaPublished: payload.bhojanshalaPublished } : o));
+      toast.success(payload.pathshalaPublished ? "Pathshala published successfully!" : "Pathshala unpublished.");
+      setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, pathshalaPublished: payload.pathshalaPublished } : o));
     } catch (error) {
       toast.error(extractErrorMessage(error));
     }
@@ -82,7 +82,7 @@ const BhojanshalaManagementPage = () => {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Bhojanshala Management</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pathshala Management</h1>
           <p className="text-slate-500 text-sm mt-1">Manage timings, pricing, menus, and booking passes.</p>
         </div>
         
@@ -96,10 +96,10 @@ const BhojanshalaManagementPage = () => {
               className="px-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white min-w-[200px]"
               disabled={loadingOrgs}
             >
-              <option value="" disabled>-- Select Bhojanshala --</option>
+              <option value="" disabled>-- Select Pathshala --</option>
               {organizations.map((org) => (
                 <option key={org.id} value={org.id}>
-                  {org.bhojanshalaName || org.name}
+                  {org.pathshalaName || org.name}
                 </option>
               ))}
             </select>
@@ -172,7 +172,7 @@ const BhojanshalaManagementPage = () => {
         <div className="p-6 bg-slate-50/50 min-h-[500px]">
           {!selectedOrgId ? (
             <div className="flex items-center justify-center h-64 text-slate-500">
-              Please select an organization to manage Bhojanshala.
+              Please select an organization to manage Pathshala.
             </div>
           ) : (
             <>
@@ -189,18 +189,18 @@ const BhojanshalaManagementPage = () => {
   );
 };
 
-export default BhojanshalaManagementPage;
+export default PathshalaManagementPage;
 
 // --- Tab Components ---
 
 const TimingsTab = ({ orgId, selectedOrg }) => {
   const [formData, setFormData] = useState({
-    bhojanshalaBreakfastTiming: "",
-    bhojanshalaBreakfastCharge: "",
-    bhojanshalaLunchTiming: "",
-    bhojanshalaLunchCharge: "",
-    bhojanshalaDinnerTiming: "",
-    bhojanshalaDinnerCharge: "",
+    pathshalaBreakfastTiming: "",
+    pathshalaBreakfastCharge: "",
+    pathshalaLunchTiming: "",
+    pathshalaLunchCharge: "",
+    pathshalaDinnerTiming: "",
+    pathshalaDinnerCharge: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -210,12 +210,12 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
       api.get(`/temples/${orgId}`).then(res => {
         const org = res.data?.data || selectedOrg || {};
         setFormData({
-          bhojanshalaBreakfastTiming: org.bhojanshalaBreakfastTiming || "",
-          bhojanshalaBreakfastCharge: org.bhojanshalaBreakfastCharge || "",
-          bhojanshalaLunchTiming: org.bhojanshalaLunchTiming || "",
-          bhojanshalaLunchCharge: org.bhojanshalaLunchCharge || "",
-          bhojanshalaDinnerTiming: org.bhojanshalaDinnerTiming || "",
-          bhojanshalaDinnerCharge: org.bhojanshalaDinnerCharge || "",
+          pathshalaBreakfastTiming: org.pathshalaBreakfastTiming || "",
+          pathshalaBreakfastCharge: org.pathshalaBreakfastCharge || "",
+          pathshalaLunchTiming: org.pathshalaLunchTiming || "",
+          pathshalaLunchCharge: org.pathshalaLunchCharge || "",
+          pathshalaDinnerTiming: org.pathshalaDinnerTiming || "",
+          pathshalaDinnerCharge: org.pathshalaDinnerCharge || "",
         });
       }).catch(console.error);
     }
@@ -228,7 +228,7 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await api.put(`/bhojanshala/${orgId}/timings`, formData);
+      await api.put(`/pathshala/${orgId}/timings`, formData);
       alert("Timings and prices saved successfully!");
     } catch (err) {
       alert("Error saving: " + extractErrorMessage(err));
@@ -252,11 +252,11 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-slate-500 font-medium">Timing (e.g., 08:00 AM - 10:00 AM)</label>
-                <input name="bhojanshalaBreakfastTiming" value={formData.bhojanshalaBreakfastTiming} onChange={handleChange} type="text" placeholder="08:00 AM - 10:00 AM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaBreakfastTiming" value={formData.pathshalaBreakfastTiming} onChange={handleChange} type="text" placeholder="08:00 AM - 10:00 AM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
               <div>
                 <label className="text-xs text-slate-500 font-medium">Charge (₹)</label>
-                <input name="bhojanshalaBreakfastCharge" value={formData.bhojanshalaBreakfastCharge} onChange={handleChange} type="number" placeholder="50" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaBreakfastCharge" value={formData.pathshalaBreakfastCharge} onChange={handleChange} type="number" placeholder="50" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
             </div>
           </div>
@@ -270,11 +270,11 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-slate-500 font-medium">Timing (e.g., 12:00 PM - 02:00 PM)</label>
-                <input name="bhojanshalaLunchTiming" value={formData.bhojanshalaLunchTiming} onChange={handleChange} type="text" placeholder="12:00 PM - 02:00 PM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaLunchTiming" value={formData.pathshalaLunchTiming} onChange={handleChange} type="text" placeholder="12:00 PM - 02:00 PM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
               <div>
                 <label className="text-xs text-slate-500 font-medium">Charge (₹)</label>
-                <input name="bhojanshalaLunchCharge" value={formData.bhojanshalaLunchCharge} onChange={handleChange} type="number" placeholder="100" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaLunchCharge" value={formData.pathshalaLunchCharge} onChange={handleChange} type="number" placeholder="100" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
             </div>
           </div>
@@ -288,11 +288,11 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-slate-500 font-medium">Timing (e.g., 06:00 PM - 08:30 PM)</label>
-                <input name="bhojanshalaDinnerTiming" value={formData.bhojanshalaDinnerTiming} onChange={handleChange} type="text" placeholder="05:30 PM - 07:30 PM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaDinnerTiming" value={formData.pathshalaDinnerTiming} onChange={handleChange} type="text" placeholder="05:30 PM - 07:30 PM" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
               <div>
                 <label className="text-xs text-slate-500 font-medium">Charge (₹)</label>
-                <input name="bhojanshalaDinnerCharge" value={formData.bhojanshalaDinnerCharge} onChange={handleChange} type="number" placeholder="100" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
+                <input name="pathshalaDinnerCharge" value={formData.pathshalaDinnerCharge} onChange={handleChange} type="number" placeholder="100" className="w-full mt-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-orange-500 outline-none" />
               </div>
             </div>
           </div>
@@ -334,7 +334,7 @@ const MenuTab = ({ orgId }) => {
   const fetchMenu = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/bhojanshala/${orgId}/menu`, { params: { dayOfWeek: selectedDay } });
+      const res = await api.get(`/pathshala/${orgId}/menu`, { params: { dayOfWeek: selectedDay } });
       setMenuItems(res.data?.data || []);
     } catch (err) {
       console.error(err);
@@ -382,9 +382,9 @@ const MenuTab = ({ orgId }) => {
       };
 
       if (editingItem) {
-        await api.put(`/bhojanshala/${orgId}/menu/${editingItem.id}`, payload);
+        await api.put(`/pathshala/${orgId}/menu/${editingItem.id}`, payload);
       } else {
-        await api.post(`/bhojanshala/${orgId}/menu`, payload);
+        await api.post(`/pathshala/${orgId}/menu`, payload);
       }
       setIsModalOpen(false);
       fetchMenu();
@@ -396,7 +396,7 @@ const MenuTab = ({ orgId }) => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this menu item?")) {
       try {
-        await api.delete(`/bhojanshala/${orgId}/menu/${id}`);
+        await api.delete(`/pathshala/${orgId}/menu/${id}`);
         fetchMenu();
       } catch (err) {
         alert("Error deleting menu item: " + extractErrorMessage(err));
@@ -545,7 +545,7 @@ const PassesTab = ({ orgId }) => {
   const fetchPasses = () => {
     if (orgId) {
       setLoading(true);
-      api.get(`/bhojanshala/${orgId}/passes`)
+      api.get(`/pathshala/${orgId}/passes`)
         .then(res => setPasses(res.data?.data || []))
         .catch(console.error)
         .finally(() => setLoading(false));
@@ -558,7 +558,7 @@ const PassesTab = ({ orgId }) => {
     let toastId;
     try {
       toastId = toast.loading("Cancelling pass...");
-      await api.patch(`/bhojanshala/${orgId}/passes/${passId}/cancel`);
+      await api.patch(`/pathshala/${orgId}/passes/${passId}/cancel`);
       toast.success("Pass cancelled successfully", { id: toastId });
       fetchPasses();
     } catch (error) {
@@ -571,7 +571,7 @@ const PassesTab = ({ orgId }) => {
     let toastId;
     try {
       toastId = toast.loading("Approving pass...");
-      await api.patch(`/bhojanshala/${orgId}/passes/${passId}/approve`);
+      await api.patch(`/pathshala/${orgId}/passes/${passId}/approve`);
       toast.success("Pass approved successfully", { id: toastId });
       fetchPasses();
     } catch (error) {
@@ -584,7 +584,7 @@ const PassesTab = ({ orgId }) => {
     let toastId;
     try {
       toastId = toast.loading("Moving to pending...");
-      await api.patch(`/bhojanshala/${orgId}/passes/${passId}/pending`);
+      await api.patch(`/pathshala/${orgId}/passes/${passId}/pending`);
       toast.success("Pass marked as pending", { id: toastId });
       fetchPasses();
     } catch (error) {
@@ -744,7 +744,7 @@ const ManagersTab = ({ orgId }) => {
   const fetchManagers = () => {
     if (!orgId) return;
     setLoading(true);
-    api.get(`/bhojanshala/${orgId}/managers`)
+    api.get(`/pathshala/${orgId}/managers`)
       .then(res => setManagers(res.data?.data || []))
       .catch(err => toast.error(extractErrorMessage(err)))
       .finally(() => setLoading(false));
@@ -763,7 +763,7 @@ const ManagersTab = ({ orgId }) => {
     
     try {
       setIsAdding(true);
-      const res = await api.post(`/bhojanshala/${orgId}/managers`, { mobile });
+      const res = await api.post(`/pathshala/${orgId}/managers`, { mobile });
       toast.success("Manager added successfully!");
       if (res.data?.data?.tempPassword) {
         // Show the temporary password for a new user in the real world
@@ -781,7 +781,7 @@ const ManagersTab = ({ orgId }) => {
   const handleRemove = async (userId) => {
     if (!window.confirm("Are you sure you want to remove this manager?")) return;
     try {
-      await api.delete(`/bhojanshala/${orgId}/managers/${userId}`);
+      await api.delete(`/pathshala/${orgId}/managers/${userId}`);
       toast.success("Manager removed successfully.");
       fetchManagers();
     } catch (err) {
@@ -792,7 +792,7 @@ const ManagersTab = ({ orgId }) => {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-        <h3 className="text-lg font-semibold text-slate-800 border-b pb-4">Bhojanshala Managers</h3>
+        <h3 className="text-lg font-semibold text-slate-800 border-b pb-4">Pathshala Managers</h3>
         
         <form onSubmit={handleAddManager} className="flex gap-4 items-end">
           <div className="flex-1">
@@ -858,20 +858,20 @@ const ManagersTab = ({ orgId }) => {
 
 const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
   const [loading, setLoading] = useState(false);
-  const [bhojanshalaName, setBhojanshalaName] = useState("");
+  const [pathshalaName, setPathshalaName] = useState("");
 
   useEffect(() => {
     if (selectedOrg) {
-      setBhojanshalaName(selectedOrg.bhojanshalaName || "");
+      setPathshalaName(selectedOrg.pathshalaName || "");
     }
   }, [selectedOrg]);
 
   const handleSaveSettings = async () => {
     try {
       setLoading(true);
-      await api.patch(`/temples/${orgId}`, { bhojanshalaName });
+      await api.patch(`/temples/${orgId}`, { pathshalaName });
       toast.success("Settings saved successfully!");
-      setOrganizations(orgs => orgs.map(o => o.id === orgId ? { ...o, bhojanshalaName } : o));
+      setOrganizations(orgs => orgs.map(o => o.id === orgId ? { ...o, pathshalaName } : o));
     } catch (err) {
       toast.error("Error saving settings: " + extractErrorMessage(err));
     } finally {
@@ -882,10 +882,10 @@ const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
   const handleTogglePublish = async () => {
     if (!selectedOrg) return;
     try {
-      const payload = { bhojanshalaPublished: !selectedOrg.bhojanshalaPublished };
+      const payload = { pathshalaPublished: !selectedOrg.pathshalaPublished };
       await api.patch(`/temples/${selectedOrg.id}`, payload);
-      toast.success(payload.bhojanshalaPublished ? "Bhojanshala published successfully!" : "Bhojanshala unpublished.");
-      setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, bhojanshalaPublished: payload.bhojanshalaPublished } : o));
+      toast.success(payload.pathshalaPublished ? "Pathshala published successfully!" : "Pathshala unpublished.");
+      setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, pathshalaPublished: payload.pathshalaPublished } : o));
     } catch (error) {
       toast.error(extractErrorMessage(error));
     }
@@ -894,31 +894,31 @@ const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-        <h3 className="text-lg font-semibold text-slate-800 border-b pb-4">Bhojanshala Settings</h3>
+        <h3 className="text-lg font-semibold text-slate-800 border-b pb-4">Pathshala Settings</h3>
         
         <div className="space-y-6">
           <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-lg">
             <div>
-              <h4 className="font-medium text-slate-800">Publish Bhojanshala</h4>
-              <p className="text-sm text-slate-500 mt-1">Make this Bhojanshala visible to members on the mobile app.</p>
+              <h4 className="font-medium text-slate-800">Publish Pathshala</h4>
+              <p className="text-sm text-slate-500 mt-1">Make this Pathshala visible to members on the mobile app.</p>
             </div>
             <button
               onClick={handleTogglePublish}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedOrg?.bhojanshalaPublished ? 'bg-green-500' : 'bg-slate-300'}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${selectedOrg?.pathshalaPublished ? 'bg-green-500' : 'bg-slate-300'}`}
             >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedOrg?.bhojanshalaPublished ? 'translate-x-6' : 'translate-x-1'}`} />
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${selectedOrg?.pathshalaPublished ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Bhojanshala Name (Optional)</label>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Pathshala Name (Optional)</label>
             <p className="text-xs text-slate-500 mb-3">If left blank, the temple or organization name will be used.</p>
             <input 
               type="text" 
-              placeholder="e.g. Shri Mahavir Bhojanshala" 
+              placeholder="e.g. Shri Mahavir Pathshala" 
               className="w-full p-2.5 border rounded-lg outline-none focus:ring-2 focus:ring-orange-500 text-sm max-w-md" 
-              value={bhojanshalaName} 
-              onChange={(e) => setBhojanshalaName(e.target.value)} 
+              value={pathshalaName} 
+              onChange={(e) => setPathshalaName(e.target.value)} 
             />
           </div>
 

@@ -22,6 +22,7 @@ export default function SupportTicketsPage() {
   const [openCreate, setOpenCreate] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filterType, setFilterType] = useState("ALL");
   
   // Selected ticket for details modal
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -92,22 +93,39 @@ export default function SupportTicketsPage() {
 
   const customFilterFn = (ticket) => {
     if (filterStatus !== "ALL" && ticket.status !== filterStatus) return false;
+    if (filterType !== "ALL" && ticket.type !== filterType) return false;
     return true;
   };
 
   const extraFilters = (
-    <Select value={filterStatus} onValueChange={setFilterStatus}>
-      <SelectTrigger className="w-[150px] bg-white h-9">
-        <SelectValue placeholder={t("Filter by Status")} />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="ALL">{t("All Statuses")}</SelectItem>
-        <SelectItem value="OPEN">{t("Open")}</SelectItem>
-        <SelectItem value="IN_PROGRESS">{t("In Progress")}</SelectItem>
-        <SelectItem value="RESOLVED">{t("Resolved")}</SelectItem>
-        <SelectItem value="CLOSED">{t("Closed")}</SelectItem>
-      </SelectContent>
-    </Select>
+    <div className="flex items-center gap-2">
+      <Select value={filterType} onValueChange={setFilterType}>
+        <SelectTrigger className="w-[150px] bg-white h-9">
+          <SelectValue placeholder={t("Filter by Type")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">{t("All Types")}</SelectItem>
+          <SelectItem value="PAID_EVENT_REQUEST">{t("Paid Event Request")}</SelectItem>
+          <SelectItem value="EVENT_DELETE_REQUEST">{t("Event Delete Request")}</SelectItem>
+          <SelectItem value="CALENDAR_CORRECTION">{t("Calendar Correction")}</SelectItem>
+          <SelectItem value="INCORRECT_INFO">{t("Incorrect Info")}</SelectItem>
+          <SelectItem value="FEEDBACK">{t("Feedback")}</SelectItem>
+          <SelectItem value="OTHER">{t("Other")}</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <SelectTrigger className="w-[150px] bg-white h-9">
+          <SelectValue placeholder={t("Filter by Status")} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">{t("All Statuses")}</SelectItem>
+          <SelectItem value="OPEN">{t("Open")}</SelectItem>
+          <SelectItem value="IN_PROGRESS">{t("In Progress")}</SelectItem>
+          <SelectItem value="RESOLVED">{t("Resolved")}</SelectItem>
+          <SelectItem value="CLOSED">{t("Closed")}</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
   );
 
   return (
