@@ -204,7 +204,8 @@ export default function OrgListPage(props) {
     primaryContactMemberId: "", secondaryContactNumber: "",
     contactMobileVerified: false, contactWhatsAppVerified: false, contactEmailVerified: false,
     primaryContactPreference: "Mobile", trusteesList: [], volunteersList: [],
-    instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: ""
+    instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: "",
+    parentOrganizationId: "", linkedBhojanshalaId: "", linkedDharamshalaId: "", linkedPathshalaId: ""
   });
 
   useEffect(() => {
@@ -280,7 +281,19 @@ export default function OrgListPage(props) {
     setCreating(true);
     try {
       const payload = { ...form };
+      if (payload.hasTempleInside && !payload.parentOrganizationId) {
+        toast.error(t("Please select a Parent Temple / Organization since 'Temple Available Inside?' is checked."));
+        setCreating(false);
+        return;
+      }
       if (!payload.mulNayakBhagwanId) delete payload.mulNayakBhagwanId;
+      if (!payload.parentOrganizationId) delete payload.parentOrganizationId;
+      
+      const childOrgIds = [];
+      if (payload.hasBhojanshala && payload.linkedBhojanshalaId) childOrgIds.push(payload.linkedBhojanshalaId);
+      if (payload.hasDharamshala && payload.linkedDharamshalaId) childOrgIds.push(payload.linkedDharamshalaId);
+      if (payload.hasPathshala && payload.linkedPathshalaId) childOrgIds.push(payload.linkedPathshalaId);
+      if (childOrgIds.length > 0) payload.childOrganizationIds = childOrgIds;
       if (payload.buildings && Array.isArray(payload.buildings)) {
         payload.buildings = payload.buildings.map((b) => ({
           ...b,
@@ -334,7 +347,8 @@ export default function OrgListPage(props) {
         primaryContactMemberId: "", secondaryContactNumber: "",
         contactMobileVerified: false, contactWhatsAppVerified: false, contactEmailVerified: false,
         primaryContactPreference: "Mobile", trusteesList: [], volunteersList: [],
-        instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: ""
+        instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: "",
+        parentOrganizationId: "", linkedBhojanshalaId: "", linkedDharamshalaId: "", linkedPathshalaId: ""
       });
       setReloadKey((k) => k + 1);
     } catch (e) {
@@ -586,8 +600,13 @@ export default function OrgListPage(props) {
     return 0;
   });
 
+  const isTemple = entity === "temple";
   const isDharamshala = entity === "dharamshala";
   const isBhojanshala = entity === "bhojanshala";
+  const isPathshala = entity === "pathshala";
+  const isGaushala = entity === "gaushala";
+  const isSthanak = entity === "sthanak";
+  const isJainCenter = entity === "jain-center";
 
   const configTabs = isDharamshala ? [
     { id: "basic", label: t("🏨 Basic Info") },
@@ -661,7 +680,7 @@ export default function OrgListPage(props) {
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
                             <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : t("Name *"), "name")}</div>
-                            {isBhojanshala && (
+                            {(isBhojanshala || isPathshala || isGaushala || isSthanak) && (
                               <div className="col-span-2">
                                 <OrgSelect
                                   label={t("Parent Temple / Organization (Optional)")}
@@ -701,7 +720,7 @@ export default function OrgListPage(props) {
                             </div>
                           )}
 
-                          {!isDharamshala && label !== "Stanak" && entity !== "STANAK" && form.subSect !== "Sthanakvasi" && (
+                          {(isTemple || isJainCenter) && form.subSect !== "Sthanakvasi" && (
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs">{t("Mul Nayak Bhagwan")}</Label>
@@ -734,7 +753,7 @@ export default function OrgListPage(props) {
                             </div>
                           )}
 
-                          {!isDharamshala && (
+                          {(isTemple || isJainCenter) && (
                             <div className="grid grid-cols-2 gap-3">
                               <div>
                                 <Label className="text-xs">{t("Temple / JC Type")}</Label>
@@ -768,12 +787,19 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "temple" && (
+                      {tab === "temple" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🛕 Temple Inside Dharamshala Premises")}</h3>
                           {toggle("Temple Available Inside?", "hasTempleInside")}
                           {form.hasTempleInside && (
                             <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
+                              <div className="col-span-2">
+                                <OrgSelect
+                                  label={t("Parent Temple / Organization *")}
+                                  value={form.parentOrganizationId}
+                                  onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
+                                />
+                              </div>
                               <div>
                                 <div className="flex items-center justify-between">
                                   <Label className="text-xs font-semibold text-slate-700">{t("Mul Nayak Bhagwan")}</Label>
@@ -923,7 +949,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "accommodations" && (
+                      {tab === "accommodations" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🏢 Accommodations & Building Management")}</h3>
                           
@@ -1288,16 +1314,11 @@ export default function OrgListPage(props) {
                               {toggle("Bhojanshala (Food) Available", "hasBhojanshala")}
                               {form.hasBhojanshala && (
                                 <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    <div>
-                                      <Label className="text-xs">{t("Availability")}</Label>
-                                      <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                        value={form.bhojanshalaAvailability || "Daily"} onChange={(e) => setForm({ ...form, bhojanshalaAvailability: e.target.value })}>
-                                        <option value="Daily">{t("Daily")}</option>
-                                        <option value="Available on Request">{t("Available on Request")}</option>
-                                      </select>
-                                    </div>
-                                  </div>
+                                  <OrgSelect
+                                    label={t("Link Existing Bhojanshala")}
+                                    value={form.linkedBhojanshalaId}
+                                    onChange={(val) => setForm({ ...form, linkedBhojanshalaId: val })}
+                                  />
                                 </div>
                               )}
                             </div>
@@ -1309,53 +1330,11 @@ export default function OrgListPage(props) {
                               {toggle("Dharamshala Available", "hasDharamshala")}
                               {form.hasDharamshala && (
                                 <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                                  <div className="grid grid-cols-3 gap-3">
-                                    <div>
-                                      <Label className="text-xs">{t("Room Configuration")}</Label>
-                                      <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                        value={form.dharamshalaRooms || "Both"} onChange={(e) => setForm({ ...form, dharamshalaRooms: e.target.value })}>
-                                        <option value="AC">{t("AC Rooms only")}</option>
-                                        <option value="Non-AC">{t("Non-AC Rooms only")}</option>
-                                        <option value="Both">{t("Both AC and Non-AC")}</option>
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <Label className="text-xs mb-1 block">{t("Office Timings")}</Label>
-                                      {(() => {
-                                        const parts = (form.dharamshalaOffice || "").split("-").map(s => s.trim());
-                                        return (
-                                          <TimeRangePicker
-                                            fromValue={parts[0] || ""}
-                                            toValue={parts[1] || ""}
-                                            onFromChange={(val) => setForm({ ...form, dharamshalaOffice: `${val} - ${parts[1] || ""}` })}
-                                            onToChange={(val) => setForm({ ...form, dharamshalaOffice: `${parts[0] || ""} - ${val}` })}
-                                          />
-                                        );
-                                      })()}
-                                    </div>
-                                    {field("Contact Phone", "dharamshalaPhone", "tel", "+91...")}
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                      <Label className="text-xs font-semibold">{t("Contact Person / Manager (Link Member)")}</Label>
-                                      <MemberLinkSelect
-                                        value={form.dharamshalaContact}
-                                        onChange={(v) => setForm({ ...form, dharamshalaContact: v })}
-                                        placeholder={t("Search manager by ID or name...")}
-                                        showPhone
-                                        className="mt-1"
-                                      />
-                                      <span className="text-[10px] text-emerald-600 font-medium mt-0.5 block">{t("Mobile number will be visible to members")}</span>
-                                    </div>
-                                    <div>
-                                      <Label className="text-xs">{t("Online Booking Available?")}</Label>
-                                      <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                        value={form.dharamshalaOnline || "No"} onChange={(e) => setForm({ ...form, dharamshalaOnline: e.target.value })}>
-                                        <option value="Yes">{t("Yes")}</option>
-                                        <option value="No">{t("No")}</option>
-                                      </select>
-                                    </div>
-                                  </div>
+                                  <OrgSelect
+                                    label={t("Link Existing Dharamshala")}
+                                    value={form.linkedDharamshalaId}
+                                    onChange={(val) => setForm({ ...form, linkedDharamshalaId: val })}
+                                  />
                                 </div>
                               )}
                             </div>
@@ -1366,33 +1345,12 @@ export default function OrgListPage(props) {
                             <div className="border p-4 rounded-xl bg-white space-y-3">
                               {toggle("Pathshala Available", "hasPathshala")}
                               {form.hasPathshala && (
-                                <div className="grid grid-cols-3 gap-3 pl-6 border-l-2 border-l-orange-500">
-                                  <div>
-                                    <Label className="text-xs mb-1 block">{t("Pathshala Timings")}</Label>
-                                    {(() => {
-                                      const parts = (form.pathshalaTimings || "").split("-").map(s => s.trim());
-                                      return (
-                                        <TimeRangePicker
-                                          fromValue={parts[0] || ""}
-                                          toValue={parts[1] || ""}
-                                          onFromChange={(val) => setForm({ ...form, pathshalaTimings: `${val} - ${parts[1] || ""}` })}
-                                          onToChange={(val) => setForm({ ...form, pathshalaTimings: `${parts[0] || ""} - ${val}` })}
-                                        />
-                                      );
-                                    })()}
-                                  </div>
-                                  {field("Pathshala Days", "pathshalaDays", "text", "Sat, Sun")}
-                                  <div>
-                                    <Label className="text-xs font-semibold">{t("Teacher Name (Link Member)")}</Label>
-                                    <MemberLinkSelect
-                                      value={form.pathshalaTeacher}
-                                      onChange={(v) => setForm({ ...form, pathshalaTeacher: v })}
-                                      placeholder={t("Search teacher by ID or name...")}
-                                      showPhone
-                                      className="mt-1"
-                                    />
-                                    <span className="text-[10px] text-emerald-600 font-medium mt-0.5 block">{t("Teacher mobile number will be visible to members")}</span>
-                                  </div>
+                                <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
+                                  <OrgSelect
+                                    label={t("Link Existing Pathshala")}
+                                    value={form.linkedPathshalaId}
+                                    onChange={(val) => setForm({ ...form, linkedPathshalaId: val })}
+                                  />
                                 </div>
                               )}
                             </div>
@@ -1401,7 +1359,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {(isDharamshala || isBhojanshala) && tab === "food" && (
+                      {tab === "food" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🥗 Bhojanalay / Food Facility")}</h3>
                           {!isBhojanshala && toggle("Bhojanalay Available Inside?", "hasBhojanshala")}
@@ -1531,7 +1489,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "contacts" && (
+                      {tab === "contacts" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("👥 Contacts & Verification")}</h3>
                           <div className="space-y-3">
@@ -1597,7 +1555,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "trustees" && (
+                      {tab === "trustees" && (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center border-b pb-1.5">
                             <h3 className="text-sm font-bold text-slate-800">{t("👥 Trustees & Committee Members (Max 20)")}</h3>
@@ -1654,7 +1612,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "volunteers" && (
+                      {tab === "volunteers" && (
                         <div className="space-y-4">
                           <div className="flex justify-between items-center border-b pb-1.5">
                             <h3 className="text-sm font-bold text-slate-800">{t("🤝 Volunteer Members")}</h3>
@@ -1678,7 +1636,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "rules" && (
+                      {tab === "rules" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("📜 Guidelines & Safety Controls")}</h3>
                           <div className="space-y-3">
@@ -1692,7 +1650,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "bank" && (
+                      {tab === "bank" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("💰 Bank & Donation Details")}</h3>
                           <div className="grid grid-cols-2 gap-3">
@@ -1727,7 +1685,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {isDharamshala && tab === "links" && (
+                      {tab === "links" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🔗 Social Media & UX Links")}</h3>
                           <div className="grid grid-cols-2 gap-3">
@@ -1743,7 +1701,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {!isDharamshala && tab === "timings" && (
+                      {tab === "timings" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🕒 Slot & Ritual Timings")}</h3>
                           <div className="grid grid-cols-2 gap-3">
@@ -1835,7 +1793,7 @@ export default function OrgListPage(props) {
                         </div>
                       )}
 
-                      {!isDharamshala && tab === "finance" && (
+                      {tab === "finance" && (
                         <div className="space-y-4">
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("💰 Bank & Donation Details")}</h3>
                           <div className="grid grid-cols-2 gap-3">

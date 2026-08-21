@@ -57,6 +57,7 @@ export const SUPER_ROLES = ["SUPER_ADMIN"];
 /** Roles that may onboard other accounts and delegate their own tabs onward. */
 export const DELEGATOR_ROLES = [
   "SUPER_ADMIN",
+  "ORG_ADMIN",
   "TEMPLE_ADMIN",
   "DHARAMSHALA_ADMIN",
   "JAIN_CENTER_ADMIN",

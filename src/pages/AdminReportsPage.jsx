@@ -35,7 +35,7 @@ export default function AdminReportsPage() {
 
       const total = list.length;
       const superAdmins = list.filter((a) => a.role === "SUPER_ADMIN" || a.isSuperAdmin).length;
-      const templeAdmins = list.filter((a) => a.role === "TEMPLE_ADMIN" || a.role === "JAIN_CENTER_ADMIN").length;
+      const templeAdmins = list.filter((a) => a.role === "TEMPLE_ADMIN" || a.role === "JAIN_CENTER_ADMIN" || a.role === "ORG_ADMIN").length;
       const dharamshalaAdmins = list.filter((a) => a.role === "DHARAMSHALA_ADMIN").length;
       const activeCount = list.filter((a) => a.status === "ACTIVE" || a.isActive !== false).length;
       const activePercent = total > 0 ? Math.round((activeCount / total) * 100) : 100;
@@ -83,7 +83,7 @@ export default function AdminReportsPage() {
           className={
             r.role === "SUPER_ADMIN" || r.isSuperAdmin
               ? "bg-purple-100 text-purple-800 border-purple-200"
-              : r.role === "TEMPLE_ADMIN"
+              : (r.role === "TEMPLE_ADMIN" || r.role === "ORG_ADMIN")
               ? "bg-amber-100 text-amber-800 border-amber-200"
               : "bg-blue-100 text-blue-800 border-blue-200"
           }

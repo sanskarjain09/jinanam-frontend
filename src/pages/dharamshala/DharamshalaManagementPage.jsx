@@ -33,7 +33,7 @@ export default function DharamshalaManagementPage() {
   // Load organizations like Bhojanshala does
   useEffect(() => {
     setLoadingOrgs(true);
-    api.get("/temples?limit=1000") // Fetch organizations
+    api.get("/dharamshalas?limit=1000") // Fetch organizations
       .then((res) => {
         let orgs = res.data?.data?.items || res.data?.data || [];
         

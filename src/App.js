@@ -272,7 +272,7 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
+                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ORG_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
                     <AdminLayout />
                   </ProtectedRoute>
                 }

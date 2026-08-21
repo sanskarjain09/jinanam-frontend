@@ -40,6 +40,7 @@ import { toOptions, ALL_COUNTRIES, COUNTRY_OPTIONS } from "@/constants/dropdownO
 import TimePicker, { TimeRangePicker } from "@/components/common/TimePicker";
 import MemberLinkSelect from "@/components/common/MemberLinkSelect";
 import { PermissionGate, ReadEditOnlyNotice } from "@/components/common/PermissionGate";
+import { OrgSelect } from "@/components/common/OrgSelect";
 import { useVisibilityEngine } from "@/contexts/VisibilityEngineContext";
 
 const STATUSES = ["AVAILABLE", "BOOKED", "PENDING"];
@@ -2216,6 +2217,10 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
         pathshalaPublished: org.pathshalaPublished ?? false,
         bhojanshalaPublished: org.bhojanshalaPublished ?? false,
         dharamshalaPublished: org.dharamshalaPublished ?? false,
+        parentOrganizationId: org.parentOrganizationId || "",
+        linkedBhojanshalaId: org.childOrganizations?.find(c => c.type === "BHOJANSHALA")?.id || "",
+        linkedDharamshalaId: org.childOrganizations?.find(c => c.type === "DHARAMSHALA")?.id || "",
+        linkedPathshalaId: org.childOrganizations?.find(c => c.type === "PATHSHALA")?.id || "",
         upashrayLocation: org.upashrayLocation || "Within Property",
         eventHallPurpose: org.eventHallPurpose || "Available for Booking",
         eventHallBookingLink: org.eventHallBookingLink || "",
@@ -2411,12 +2416,27 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
     setLoading(true);
     try {
       const payload = { ...form };
+      if (payload.hasTempleInside && !payload.parentOrganizationId) {
+        toast.error(t("Please select a Parent Temple / Organization since 'Temple Available Inside?' is checked."));
+        setLoading(false);
+        return;
+      }
       if (!payload.mulNayakBhagwanId) {
         delete payload.mulNayakBhagwanId;
+      }
+      if (!payload.parentOrganizationId) {
+        delete payload.parentOrganizationId;
       }
       if (entityLabel === "Dharamshala" || entityLabel === "Sthanak") {
         delete payload.mulNayakBhagwanId;
       }
+      
+      const childOrgIds = [];
+      if (payload.hasBhojanshala && payload.linkedBhojanshalaId) childOrgIds.push(payload.linkedBhojanshalaId);
+      if (payload.hasDharamshala && payload.linkedDharamshalaId) childOrgIds.push(payload.linkedDharamshalaId);
+      if (payload.hasPathshala && payload.linkedPathshalaId) childOrgIds.push(payload.linkedPathshalaId);
+      if (childOrgIds.length > 0) payload.childOrganizationIds = childOrgIds;
+      
       if (payload.buildings && Array.isArray(payload.buildings)) {
         payload.buildings = payload.buildings.map((b) => ({
           ...b,
@@ -2444,7 +2464,13 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
     finally { setLoading(false); }
   };
 
+  const isTemple = entityLabel === "Temple";
   const isDharamshala = entityLabel === "Dharamshala";
+  const isBhojanshala = entityLabel === "Bhojanshala";
+  const isPathshala = entityLabel === "Pathshala";
+  const isGaushala = entityLabel === "Gaushala";
+  const isSthanak = entityLabel === "Sthanak";
+  const isJainCenter = entityLabel === "Jain Center";
 
   const configTabs = isDharamshala ? [
     { id: "basic", label: t("🏨 Basic Info") },
@@ -2459,6 +2485,16 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
     { id: "rules", label: t("📋 Rules & Safety") },
     { id: "bank", label: t("💰 Banking Details") },
     { id: "links", label: t("🔗 Social & UX Links") }
+  ] : isBhojanshala ? [
+    { id: "basic", label: t("🥗 Basic & Trust") },
+    { id: "location", label: t("📍 Location & Maps") },
+    { id: "facilities", label: t("🏢 Facilities & Units") },
+    { id: "finance", label: t("💰 Banking Details") }
+  ] : isPathshala || isGaushala ? [
+    { id: "basic", label: t("📝 Basic & Trust") },
+    { id: "location", label: t("📍 Location & Maps") },
+    { id: "facilities", label: t("🏢 Facilities & Units") },
+    { id: "finance", label: t("💰 Banking Details") }
   ] : [
     { id: "basic", label: t("🛕 Basic & Trust") },
     { id: "location", label: t("📍 Location & Maps") },
@@ -2496,10 +2532,19 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                 {tab === "basic" && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">
-                      {isDharamshala ? t("🏨 Basic Dharamshala Info") : t("🛕 Basic & Trust Details")}
+                      {isDharamshala ? t("🏨 Basic Dharamshala Info") : isBhojanshala ? t("🥗 Basic Bhojanshala Info") : isPathshala ? t("📖 Basic Pathshala Info") : isGaushala ? t("🐄 Basic Gaushala Info") : t("🛕 Basic & Trust Details")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : t("Name *"), "name")}</div>
+                      <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : isPathshala ? t("Pathshala Name *") : isGaushala ? t("Gaushala Name *") : t("Name *"), "name")}</div>
+                      {(isBhojanshala || isPathshala || isGaushala || isSthanak) && (
+                        <div className="col-span-2">
+                          <OrgSelect
+                            label={t("Parent Temple / Organization (Optional)")}
+                            value={form.parentOrganizationId}
+                            onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
+                          />
+                        </div>
+                      )}
                       {field("Short Name", "shortName")}
                       {field("Established Date", "establishedDate", "date")}
                     </div>
@@ -2537,7 +2582,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       </div>
                     )}
 
-                    {!isDharamshala && entityLabel !== "Sthanak" && form.subSect !== "Sthanakvasi" && (
+                    {(isTemple || isJainCenter) && form.subSect !== "Sthanakvasi" && (
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center justify-between">
@@ -2572,7 +2617,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       </div>
                     )}
 
-                    {!isDharamshala && (
+                    {(isTemple || isJainCenter) && (
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <Label className="text-xs">{t("Temple / JC Type")}</Label>
@@ -2606,12 +2651,19 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "temple" && (
+                {tab === "temple" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🛕 Temple Inside Dharamshala Premises")}</h3>
                     {toggle("Temple Available Inside?", "hasTempleInside")}
                     {form.hasTempleInside && (
                       <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
+                        <div className="col-span-2">
+                          <OrgSelect
+                            label={t("Parent Temple / Organization *")}
+                            value={form.parentOrganizationId}
+                            onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
+                          />
+                        </div>
                         <div>
                           <div className="flex items-center justify-between">
                             <Label className="text-xs font-semibold text-slate-700">{t("Mul Nayak Bhagwan")}</Label>
@@ -2761,7 +2813,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "accommodations" && (
+                {tab === "accommodations" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🏢 Accommodations & Building Management")}</h3>
 
@@ -3079,28 +3131,12 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       <div className="border p-4 rounded-xl bg-white space-y-3">
                         {toggle("Bhojanshala (Food) Available", "hasBhojanshala")}
                         {form.hasBhojanshala && (
-                          <div className="mb-3 px-6">
-                            <label className="flex items-center space-x-2 p-3 bg-orange-50 rounded-xl border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors">
-                              <Checkbox 
-                                checked={form.bhojanshalaPublished} 
-                                onCheckedChange={(c) => setForm({ ...form, bhojanshalaPublished: !!c })}
-                              />
-                              <span className="text-sm font-semibold text-orange-900">Publish Bhojanshala Profile</span>
-                            </label>
-                          </div>
-                        )}
-                        {form.hasBhojanshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                              <div>
-                                <Label className="text-xs">{t("Availability")}</Label>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.bhojanshalaAvailability || "Daily"} onChange={(e) => setForm({ ...form, bhojanshalaAvailability: e.target.value })}>
-                                  <option value="Daily">{t("Daily")}</option>
-                                  <option value="Available on Request">{t("Available on Request")}</option>
-                                </select>
-                              </div>
-                            </div>
+                            <OrgSelect
+                              label={t("Link Existing Bhojanshala")}
+                              value={form.linkedBhojanshalaId}
+                              onChange={(val) => setForm({ ...form, linkedBhojanshalaId: val })}
+                            />
                           </div>
                         )}
                       </div>
@@ -3111,65 +3147,12 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       <div className="border p-4 rounded-xl bg-white space-y-3">
                         {toggle("Dharamshala Available", "hasDharamshala")}
                         {form.hasDharamshala && (
-                          <div className="mb-3 px-6">
-                            <label className="flex items-center space-x-2 p-3 bg-blue-50 rounded-xl border border-blue-100 cursor-pointer hover:bg-blue-100 transition-colors">
-                              <Checkbox 
-                                checked={form.dharamshalaPublished} 
-                                onCheckedChange={(c) => setForm({ ...form, dharamshalaPublished: !!c })}
-                              />
-                              <span className="text-sm font-semibold text-blue-900">Publish Dharamshala Profile</span>
-                            </label>
-                          </div>
-                        )}
-                        {form.hasDharamshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                            <div className="grid grid-cols-3 gap-3">
-                              <div>
-                                <Label className="text-xs">{t("Room Configuration")}</Label>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.dharamshalaRooms || "Both"} onChange={(e) => setForm({ ...form, dharamshalaRooms: e.target.value })}>
-                                  <option value="AC">{t("AC Rooms only")}</option>
-                                  <option value="Non-AC">{t("Non-AC Rooms only")}</option>
-                                  <option value="Both">{t("Both AC and Non-AC")}</option>
-                                </select>
-                              </div>
-                              <div>
-                                <Label className="text-xs mb-1 block">{t("Office Timings")}</Label>
-                                {(() => {
-                                  const range = parseRange(form.dharamshalaOffice);
-                                  return (
-                                    <TimeRangePicker
-                                      fromValue={range.from}
-                                      toValue={range.to}
-                                      onFromChange={(val) => setTimeRangeVal("dharamshalaOffice", "from", val)}
-                                      onToChange={(val) => setTimeRangeVal("dharamshalaOffice", "to", val)}
-                                    />
-                                  );
-                                })()}
-                              </div>
-                              {field("Contact Phone", "dharamshalaPhone", "tel", "+91...")}
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-xs font-semibold">{t("Contact Person / Manager (Link Member)")}</Label>
-                                <MemberLinkSelect
-                                  value={form.dharamshalaContact}
-                                  onChange={(v) => setForm({ ...form, dharamshalaContact: v })}
-                                  placeholder={t("Search manager by ID or name...")}
-                                  showPhone
-                                  className="mt-1"
-                                />
-                                <span className="text-[10px] text-emerald-600 font-medium mt-0.5 block">{t("Mobile number will be visible to members")}</span>
-                              </div>
-                              <div>
-                                <Label className="text-xs">{t("Online Booking Available?")}</Label>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.dharamshalaOnline || "No"} onChange={(e) => setForm({ ...form, dharamshalaOnline: e.target.value })}>
-                                  <option value="Yes">{t("Yes")}</option>
-                                  <option value="No">{t("No")}</option>
-                                </select>
-                              </div>
-                            </div>
+                            <OrgSelect
+                              label={t("Link Existing Dharamshala")}
+                              value={form.linkedDharamshalaId}
+                              onChange={(val) => setForm({ ...form, linkedDharamshalaId: val })}
+                            />
                           </div>
                         )}
                       </div>
@@ -3180,34 +3163,12 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       <div className="border p-4 rounded-xl bg-white space-y-3">
                         {toggle("Pathshala Available", "hasPathshala")}
                         {form.hasPathshala && (
-                          <div className="mb-3 px-6">
-                            <label className="flex items-center space-x-2 p-3 bg-purple-50 rounded-xl border border-purple-100 cursor-pointer hover:bg-purple-100 transition-colors">
-                              <Checkbox 
-                                checked={form.pathshalaPublished} 
-                                onCheckedChange={(c) => setForm({ ...form, pathshalaPublished: !!c })}
-                              />
-                              <span className="text-sm font-semibold text-purple-900">Publish Pathshala Profile</span>
-                            </label>
-                          </div>
-                        )}
-                        {form.hasPathshala && (
-                          <div className="grid grid-cols-3 gap-3 pl-6 border-l-2 border-l-orange-500">
-                            <div>
-                              <Label className="text-xs mb-1 block">{t("Pathshala Timings")}</Label>
-                              {(() => {
-                                const range = parseRange(form.pathshalaTimings);
-                                return (
-                                  <TimeRangePicker
-                                    fromValue={range.from}
-                                    toValue={range.to}
-                                    onFromChange={(val) => setTimeRangeVal("pathshalaTimings", "from", val)}
-                                    onToChange={(val) => setTimeRangeVal("pathshalaTimings", "to", val)}
-                                  />
-                                );
-                              })()}
-                            </div>
-                            {field("Pathshala Days", "pathshalaDays", "text", "Sat, Sun")}
-                            {field("Teacher Name", "pathshalaTeacher", "text", "Shastriji / Teacher")}
+                          <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
+                            <OrgSelect
+                              label={t("Link Existing Pathshala")}
+                              value={form.linkedPathshalaId}
+                              onChange={(val) => setForm({ ...form, linkedPathshalaId: val })}
+                            />
                           </div>
                         )}
                       </div>
@@ -3216,7 +3177,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "food" && (
+                {tab === "food" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🥗 Bhojanalay / Food Facility")}</h3>
                     {toggle("Bhojanalay Available Inside?", "hasBhojanshala")}
@@ -3357,7 +3318,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "contacts" && (
+                {tab === "contacts" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("👥 Contacts & Verification")}</h3>
                     <div className="space-y-3">
@@ -3426,7 +3387,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "trustees" && (
+                {tab === "trustees" && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b pb-1.5">
                       <h3 className="text-sm font-bold text-slate-800">{t("👥 Trustees & Committee Members (Max 20)")}</h3>
@@ -3483,7 +3444,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "volunteers" && (
+                {tab === "volunteers" && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center border-b pb-1.5">
                       <h3 className="text-sm font-bold text-slate-800">{t("🤝 Volunteer Members")}</h3>
@@ -3510,7 +3471,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "rules" && (
+                {tab === "rules" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("📜 Guidelines & Safety Controls")}</h3>
                     <div className="space-y-3">
@@ -3524,7 +3485,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "bank" && (
+                {tab === "bank" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("💰 Bank & Donation Details")}</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -3559,7 +3520,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {isDharamshala && tab === "links" && (
+                {tab === "links" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🔗 Social Media & UX Links")}</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -3575,7 +3536,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {!isDharamshala && tab === "timings" && (
+                {tab === "timings" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🕒 Slot & Ritual Timings")}</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -3648,7 +3609,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                     </div>
                     <div className="grid grid-cols-2 gap-3 border-t pt-3">
                       <div>
-                        <Label className="text-xs font-semibold text-slate-700">{t("Morning Aarti From")}</Label>
+                        <Label className="text-xs font-semibold text-slate-700">{t("Morning Aarti")}</Label>
                         <TimePicker
                           value={form.aartiMorning || "08:30 AM"}
                           onChange={(t) => setForm({ ...form, aartiMorning: t })}
@@ -3656,7 +3617,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                         />
                       </div>
                       <div>
-                        <Label className="text-xs font-semibold text-slate-700">{t("Evening Aarti To")}</Label>
+                        <Label className="text-xs font-semibold text-slate-700">{t("Evening Aarti")}</Label>
                         <TimePicker
                           value={form.aartiEvening || "07:30 PM"}
                           onChange={(t) => setForm({ ...form, aartiEvening: t })}
@@ -3667,7 +3628,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                   </div>
                 )}
 
-                {!isDharamshala && tab === "finance" && (
+                {tab === "finance" && (
                   <div className="space-y-4">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("💰 Bank & Donation Details")}</h3>
                     <div className="grid grid-cols-2 gap-3">
@@ -3749,6 +3710,9 @@ const ORG_ROUTE_CONFIG = [
   { match: /(^|\/)(dharamshalas?|dharamshala-management)(\/|$)/, entityLabel: "Dharamshala", apiPrefix: "/dharamshalas", basePath: "/admin/dharamshalas" },
   { match: /(^|\/)(jain-cent(er|re)s?|jain-center-management)(\/|$)/, entityLabel: "Jain Center", apiPrefix: "/jain-centers", basePath: "/admin/jain-centers" },
   { match: /(^|\/)(sthanaks?|stanaks?|sthanak-management)(\/|$)/, entityLabel: "Sthanak", apiPrefix: "/sthanaks", basePath: "/admin/sthanaks" },
+  { match: /(^|\/)(bhojanshalas?|bhojanshala-management)(\/|$)/, entityLabel: "Bhojanshala", apiPrefix: "/bhojanshalas", basePath: "/admin/bhojanshalas" },
+  { match: /(^|\/)(pathshalas?|pathshala-management)(\/|$)/, entityLabel: "Pathshala", apiPrefix: "/pathshalas", basePath: "/admin/pathshalas" },
+  { match: /(^|\/)(gaushalas?|gaushala-management)(\/|$)/, entityLabel: "Gaushala", apiPrefix: "/gaushalas", basePath: "/admin/gaushalas" },
 ];
 
 /**
@@ -4219,6 +4183,10 @@ export default function OrgDetailPage(props) {
   const isTemple = entityLabel === "Temple" || org?.type === "TEMPLE";
   const isDharamshala = entityLabel === "Dharamshala" || org?.type === "DHARAMSHALA";
   const isBhojanshala = entityLabel === "Bhojanshala" || org?.type === "BHOJANSHALA";
+  const isPathshala = entityLabel === "Pathshala" || org?.type === "PATHSHALA";
+  const isGaushala = entityLabel === "Gaushala" || org?.type === "GAUSHALA";
+  const isSthanak = entityLabel === "Sthanak" || org?.type === "STHANAK";
+  const isJainCenter = entityLabel === "Jain Center" || org?.type === "JAIN_CENTER";
   const accentClass = isTemple ? "from-orange-500 to-amber-400" : isDharamshala ? "from-teal-600 to-emerald-500" : isBhojanshala ? "from-amber-600 to-orange-500" : "from-blue-600 to-indigo-500";
   const accentColor = isTemple ? "#E64E0A" : isDharamshala ? "#0D9488" : isBhojanshala ? "#D97706" : "#2563EB";
 
@@ -4235,7 +4203,7 @@ export default function OrgDetailPage(props) {
    */
   const orgModuleKey = isTemple ? "TEMPLES" : isDharamshala ? "DHARAMSHALAS" : isBhojanshala ? "BHOJANSHALAS" : "JAIN_CENTERS";
   const inScope = canManageOrg(org?.id || id, org?.publicId);
-  const canEdit = canDo(orgModuleKey, "EDIT") && inScope;
+  const canEdit = canDo(orgModuleKey, "EDIT") && inScope && !isMemberView;
 
   const getEstablishedText = () => {
     const val = org.establishedDate || org.establishmentDate || org.establishedYear || org.establishmentYear || org.foundedYear || org.foundedDate;
@@ -4293,7 +4261,7 @@ export default function OrgDetailPage(props) {
                   ) : (
                     <>
                       <div className="flex flex-col items-center gap-1 absolute inset-0 m-auto h-full w-full justify-center pointer-events-none">
-                        <Landmark className="h-8 w-8 text-slate-400" />
+                        {isBhojanshala ? <Coffee className="h-8 w-8 text-slate-400" /> : isDharamshala ? <Home className="h-8 w-8 text-slate-400" /> : isPathshala ? <BookOpen className="h-8 w-8 text-slate-400" /> : isGaushala ? <Heart className="h-8 w-8 text-slate-400" /> : <Landmark className="h-8 w-8 text-slate-400" />}
                         {!org.logoUrl && canEdit && <span className="text-[9px] text-slate-400">{t("Upload logo")}</span>}
                       </div>
                       {org.logoUrl && (
@@ -4334,10 +4302,10 @@ export default function OrgDetailPage(props) {
             <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 border-t pt-5 border-slate-100">
               {[
                 ["Followers", displayCount, "❤️"],
-                ["Dhaja Records", org.dhajaRecords?.length || 0, "🚩"],
+                isTemple || isJainCenter ? ["Dhaja Records", org.dhajaRecords?.length || 0, "🚩"] : null,
                 ["Average Rating", org.avgRating ? Number(org.avgRating).toFixed(1) : "—", "⭐"],
                 ["Volunteers", org.volunteerCount || 0, "🤝"]
-              ].map(([label, count, emoji]) => (
+              ].filter(Boolean).map(([label, count, emoji]) => (
                 <div key={label} className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                   <div className="text-lg font-black text-slate-800">{emoji} {count}</div>
                   <div className="text-[9px] text-muted-foreground uppercase tracking-widest font-extrabold mt-0.5">{label}</div>
@@ -4366,7 +4334,9 @@ export default function OrgDetailPage(props) {
             {(isDharamshala
               ? ["info", "accommodations", "food", "trustees", "volunteers", "rules", "bank", "gallery", "reviews", "timeline", "events"]
               : isBhojanshala
-              ? ["info", "bhojanshala", "trustees", "volunteers", "rules", "gallery", "reviews", "timeline", "events"]
+              ? ["info", "bhojanshala", "contacts", "reviews"]
+              : isGaushala || isPathshala
+              ? ["info", "gallery", "trustees", "contacts", "volunteers", "rules", "reviews", "timeline", "events"]
               : ["info", "gallery", "trustees", "contacts", "notices", "announcements", "reviews", "dhaja", "chaturmas", "bhojanshala", "timeline", "events"]
             ).map((tab) => {
               if ((!isTemple && !isDharamshala && !isBhojanshala && entityLabel !== "Jain Center") && tab === "chaturmas") return null;
@@ -4422,9 +4392,9 @@ export default function OrgDetailPage(props) {
                   ) : (
                     [
                       ["Public ID", org.publicId],
-                      ["Sect", org.sect || "Shwetambar"],
-                      ["Sub-Sect", org.subSect || "Murtipujak"],
-                      ["Mul Nayak", org.mulNayakBhagwan?.name || bhagwanNameById[org.mulNayakBhagwanId] || org.mulNayakName || org.mulNayakBhagwanName || org.deity || org.mulNayak || "—"],
+                      isTemple || isJainCenter || isSthanak ? ["Sect", org.sect || "Shwetambar"] : null,
+                      isTemple || isJainCenter || isSthanak ? ["Sub-Sect", org.subSect || "Murtipujak"] : null,
+                      isTemple || isJainCenter ? ["Mul Nayak", org.mulNayakBhagwan?.name || bhagwanNameById[org.mulNayakBhagwanId] || org.mulNayakName || org.mulNayakBhagwanName || org.deity || org.mulNayak || "—"] : null,
                       ["Established", getEstablishedText()],
                       ["City", org.city],
                       ["State", org.state],
@@ -4432,17 +4402,17 @@ export default function OrgDetailPage(props) {
                       ["Pincode", org.pincode],
                       ["Phone", org.phone],
                       ["Website", org.website],
-                      ["Bhojanshala", ((isMemberView ? org.bhojanshalaPublished : org.hasBhojanshala) || org.childOrganizations?.some(c => c.type === "BHOJANSHALA")) ? t("Yes ✓") : t("No")],
-                      ["Upashray", org.hasUpashray ? t("Yes ✓") : t("No")],
-                      ["Event Hall", org.hasEventHall ? t("Yes ✓") : t("No")],
+                      isTemple || isJainCenter || isSthanak ? ["Bhojanshala", ((isMemberView ? org.bhojanshalaPublished : org.hasBhojanshala) || org.childOrganizations?.some(c => c.type === "BHOJANSHALA")) ? t("Yes ✓") : t("No")] : null,
+                      isTemple || isJainCenter || isSthanak ? ["Upashray", org.hasUpashray ? t("Yes ✓") : t("No")] : null,
+                      isTemple || isJainCenter || isSthanak ? ["Event Hall", org.hasEventHall ? t("Yes ✓") : t("No")] : null,
                       ["80G Tax-Exempt", org.is80gEligible ? t("Yes ✓") : t("No")],
                       ["CSR Eligible", org.csrEligible ? t("Yes ✓") : t("No")],
                       ["Trust Name", org.trustName],
                       ["Trust Reg. No.", org.trustRegistrationNumber],
                       ["UPI ID", org.upiId],
                       ["Display Currency", org.preferredCurrency || "INR (₹)"],
-                      ["Temple Type", org.templeType?.replace(/_/g, " ")],
-                    ].filter(([, v]) => v != null && v !== "").map(([k, v]) => (
+                      isTemple || isJainCenter ? ["Temple Type", org.templeType?.replace(/_/g, " ")] : null,
+                    ].filter(Boolean).filter(([, v]) => v != null && v !== "").map(([k, v]) => (
                       <div key={k} className="flex flex-col">
                         <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-semibold">{k}</div>
                         <div className="text-sm mt-0.5 font-medium text-slate-800">{v}</div>
@@ -4540,61 +4510,146 @@ export default function OrgDetailPage(props) {
                         <span className="text-sm font-semibold text-slate-800 block mt-1">{org.pakshalStart || "06:30 AM"} – {org.pakshalEnd || "08:00 AM"}</span>
                       </div>
                       <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">{t("Morning Pooja")}</span>
+                        <span className="text-sm font-semibold text-slate-800 block mt-1">{org.poojaStart || "07:00 AM"} – {org.poojaEnd || "08:30 AM"}</span>
+                      </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <span className="text-[10px] uppercase font-bold text-slate-400 block">{t("Morning Aarti")}</span>
                         <span className="text-sm font-semibold text-slate-800 block mt-1">{org.aartiMorning || "08:30 AM"}</span>
                       </div>
+                      <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block">{t("Evening Aarti")}</span>
+                        <span className="text-sm font-semibold text-slate-800 block mt-1">{org.aartiEvening || "07:30 PM"}</span>
+                      </div>
                     </div>
 
-                    {(isMemberView ? org.bhojanshalaPublished : org.hasBhojanshala) && (
-                      <div className="bg-orange-50/50 p-4 border border-orange-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                        <div>
-                          <span className="text-xs font-bold text-orange-850 flex items-center gap-1.5"><Coffee className="h-4 w-4" /> {t("Bhojanshala Details")}</span>
-                          <div className="text-xs text-orange-700 leading-relaxed space-y-1 mt-1">
-                            <p>{t("• Lunch:")} {org.bhojanshalaLunch || "11:30 AM to 01:30 PM"}</p>
-                            <p>{t("• Choviyar:")} {org.bhojanshalaDinner || "Up to 20 minutes before Sunset"}</p>
-                            <p className="font-bold text-[10px] uppercase tracking-wider text-orange-600 mt-2">{t("✓ Rule: \"Please call and confirm your visit at least one day prior.\"")}</p>
+                    {/* Bhojanshala Details Section */}
+                    {(() => {
+                      const linked = org.childOrganizations?.find(c => c.type === "BHOJANSHALA");
+                      const showInline = (isMemberView ? org.bhojanshalaPublished : org.hasBhojanshala) && !linked;
+                      
+                      if (linked) {
+                        return (
+                          <div className="bg-orange-50/50 p-4 border border-orange-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-orange-850 flex items-center gap-1.5"><Coffee className="h-4 w-4" /> {t("Bhojanshala: ")} {linked.name}</span>
+                              <div className="text-xs text-orange-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("Independent Bhojanshala connected to this Temple.")}</p>
+                              </div>
+                            </div>
+                            <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/${isMemberView ? 'member' : 'admin'}/organizations/${linked.id}`)}>
+                              {t("View Details")}
+                            </Button>
                           </div>
-                        </div>
-                        {isMemberView && (
-                          <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/bhojanshalas/${org.id}`)}>
-                            {t("View Details")}
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                    {(isMemberView ? org.dharamshalaPublished : org.hasDharamshala) && (
-                      <div className="bg-blue-50/50 p-4 border border-blue-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                        <div>
-                          <span className="text-xs font-bold text-blue-850 flex items-center gap-1.5"><Home className="h-4 w-4" /> {t("Dharamshala Details")}</span>
-                          <div className="text-xs text-blue-700 leading-relaxed space-y-1 mt-1">
-                            <p>{t("• Office Timings:")} {org.dharamshalaOffice || "09:00 AM – 08:00 PM"}</p>
-                            <p>{t("• Contact:")} {org.dharamshalaPhone || "N/A"}</p>
-                            <p className="font-bold text-[10px] uppercase tracking-wider text-blue-600 mt-2">{t("✓ Rule: \"Advance booking may be required.\"")}</p>
+                        );
+                      }
+                      
+                      if (showInline) {
+                        return (
+                          <div className="bg-orange-50/50 p-4 border border-orange-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-orange-850 flex items-center gap-1.5"><Coffee className="h-4 w-4" /> {t("Bhojanshala Details")}</span>
+                              <div className="text-xs text-orange-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("• Lunch:")} {org.bhojanshalaLunch || "11:30 AM to 01:30 PM"}</p>
+                                <p>{t("• Choviyar:")} {org.bhojanshalaDinner || "Up to 20 minutes before Sunset"}</p>
+                                <p className="font-bold text-[10px] uppercase tracking-wider text-orange-600 mt-2">{t("✓ Rule: \"Please call and confirm your visit at least one day prior.\"")}</p>
+                              </div>
+                            </div>
+                            {isMemberView && (
+                              <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/bhojanshalas/${org.id}`)}>
+                                {t("View Details")}
+                              </Button>
+                            )}
                           </div>
-                        </div>
-                        {isMemberView && (
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/dharamshalas/${org.id}`)}>
-                            {t("View Details")}
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                    {(isMemberView ? org.pathshalaPublished : org.hasPathshala) && (
-                      <div className="bg-green-50/50 p-4 border border-green-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                        <div>
-                          <span className="text-xs font-bold text-green-850 flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {t("Pathshala Details")}</span>
-                          <div className="text-xs text-green-700 leading-relaxed space-y-1 mt-1">
-                            <p>{t("• Timings:")} {org.pathshalaTimings || "04:00 PM – 06:00 PM"}</p>
-                            <p>{t("• Days:")} {org.pathshalaDays || "Weekends"}</p>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Dharamshala Details Section */}
+                    {(() => {
+                      const linked = org.childOrganizations?.find(c => c.type === "DHARAMSHALA");
+                      const showInline = (isMemberView ? org.dharamshalaPublished : org.hasDharamshala) && !linked;
+                      
+                      if (linked) {
+                        return (
+                          <div className="bg-blue-50/50 p-4 border border-blue-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-blue-850 flex items-center gap-1.5"><Home className="h-4 w-4" /> {t("Dharamshala: ")} {linked.name}</span>
+                              <div className="text-xs text-blue-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("Independent Dharamshala connected to this Temple.")}</p>
+                              </div>
+                            </div>
+                            <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/${isMemberView ? 'member' : 'admin'}/organizations/${linked.id}`)}>
+                              {t("View Details")}
+                            </Button>
                           </div>
-                        </div>
-                        {isMemberView && (
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/pathshalas/${org.id}`)}>
-                            {t("View Details")}
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                        );
+                      }
+                      
+                      if (showInline) {
+                        return (
+                          <div className="bg-blue-50/50 p-4 border border-blue-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-blue-850 flex items-center gap-1.5"><Home className="h-4 w-4" /> {t("Dharamshala Details")}</span>
+                              <div className="text-xs text-blue-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("• Office Timings:")} {org.dharamshalaOffice || "09:00 AM – 08:00 PM"}</p>
+                                <p>{t("• Contact:")} {org.dharamshalaPhone || "N/A"}</p>
+                                <p className="font-bold text-[10px] uppercase tracking-wider text-blue-600 mt-2">{t("✓ Rule: \"Advance booking may be required.\"")}</p>
+                              </div>
+                            </div>
+                            {isMemberView && (
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/dharamshalas/${org.id}`)}>
+                                {t("View Details")}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
+                    {/* Pathshala Details Section */}
+                    {(() => {
+                      const linked = org.childOrganizations?.find(c => c.type === "PATHSHALA");
+                      const showInline = (isMemberView ? org.pathshalaPublished : org.hasPathshala) && !linked;
+                      
+                      if (linked) {
+                        return (
+                          <div className="bg-green-50/50 p-4 border border-green-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-green-850 flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {t("Pathshala: ")} {linked.name}</span>
+                              <div className="text-xs text-green-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("Independent Pathshala connected to this Temple.")}</p>
+                              </div>
+                            </div>
+                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/${isMemberView ? 'member' : 'admin'}/organizations/${linked.id}`)}>
+                              {t("View Details")}
+                            </Button>
+                          </div>
+                        );
+                      }
+                      
+                      if (showInline) {
+                        return (
+                          <div className="bg-green-50/50 p-4 border border-green-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-green-850 flex items-center gap-1.5"><BookOpen className="h-4 w-4" /> {t("Pathshala Details")}</span>
+                              <div className="text-xs text-green-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("• Timings:")} {org.pathshalaTimings || "04:00 PM – 06:00 PM"}</p>
+                                <p>{t("• Days:")} {org.pathshalaDays || "Weekends"}</p>
+                              </div>
+                            </div>
+                            {isMemberView && (
+                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-sm shrink-0" onClick={() => navigate(`/member/pathshalas/${org.id}`)}>
+                                {t("View Details")}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
                   </div>
                 )}
               </Card>

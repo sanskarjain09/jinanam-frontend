@@ -18,13 +18,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ROLES = [
-  "SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN",
+  "SUPER_ADMIN", "ORG_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN",
   "MONK_ADMIN", "STAFF", "SECURITY_GUARD", "EVENT_SCANNER", "PAGE_OWNER",
 ];
 
 function RolePermissionMatrix() {
   const { t } = useLanguage();
-  const [selectedRole, setSelectedRole] = useState("TEMPLE_ADMIN");
+  const [selectedRole, setSelectedRole] = useState("ORG_ADMIN");
   const [matrix, setMatrix] = useState({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);

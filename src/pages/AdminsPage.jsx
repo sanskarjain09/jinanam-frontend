@@ -27,9 +27,7 @@ import {
 } from "@/components/ui/dialog";
 
 const ADMIN_ROLES = [
-  { key: "TEMPLE_ADMIN", label: "Temple Admin" },
-  { key: "DHARAMSHALA_ADMIN", label: "Dharamshala Admin" },
-  { key: "JAIN_CENTER_ADMIN", label: "Jain Center Admin" },
+  { key: "ORG_ADMIN", label: "Organization Admin" },
   { key: "MONK_ADMIN", label: "Monk Admin" },
 ];
 
@@ -47,7 +45,7 @@ export default function AdminsPage() {
     email: "",
     firstName: "",
     lastName: "",
-    role: "TEMPLE_ADMIN",
+    role: "ORG_ADMIN",
     organizationIds: [],
     // Seed with every top-level module at Read+Write. Super Admin can then
     // pare down or reduce specific modules to Read-only in the picker.
@@ -99,21 +97,50 @@ export default function AdminsPage() {
     }
   }, [isSuperAdmin]);
 
-  // Fetch corresponding organizations based on selected role
   const fetchOrganizations = async (roleKey) => {
     if (roleKey === "MONK_ADMIN") {
       setOrganizations([]);
       return;
     }
     setLoadingOrgs(true);
-    let endpoint = "";
-    if (roleKey === "TEMPLE_ADMIN") endpoint = "/temples";
-    else if (roleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
-    else if (roleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
-
+    
     try {
-      const res = await api.get(endpoint);
-      setOrganizations(res.data?.data || []);
+      if (roleKey === "ORG_ADMIN") {
+        const [tRes, dRes, jRes, bRes, pRes, gRes] = await Promise.allSettled([
+          api.get("/temples"),
+          api.get("/dharamshalas"),
+          api.get("/jain-centers"),
+          api.get("/bhojanshalas"),
+          api.get("/pathshalas"),
+          api.get("/gaushalas")
+        ]);
+        const allOrgs = [];
+        if (tRes.status === "fulfilled") allOrgs.push(...(tRes.value.data?.data || []));
+        if (dRes.status === "fulfilled") allOrgs.push(...(dRes.value.data?.data || []));
+        if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
+        if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
+        if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
+        if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
+        
+        // Deduplicate by ID
+        const uniqueOrgsMap = new Map();
+        allOrgs.forEach(org => {
+          if (org?.id) uniqueOrgsMap.set(org.id, org);
+        });
+        setOrganizations(Array.from(uniqueOrgsMap.values()));
+      } else {
+        let endpoint = "";
+        if (roleKey === "TEMPLE_ADMIN") endpoint = "/temples";
+        else if (roleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
+        else if (roleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
+        
+        if (endpoint) {
+          const res = await api.get(endpoint);
+          setOrganizations(res.data?.data || []);
+        } else {
+          setOrganizations([]);
+        }
+      }
     } catch (e) {
       toast.error(`Failed to load organizations for ${roleKey}`);
     } finally {
@@ -171,7 +198,7 @@ export default function AdminsPage() {
         email: "",
         firstName: "",
         lastName: "",
-        role: "TEMPLE_ADMIN",
+        role: "ORG_ADMIN",
         organizationIds: [],
         // Seed with every top-level module at Read+Write. Super Admin can then
     // pare down or reduce specific modules to Read-only in the picker.
@@ -222,23 +249,55 @@ export default function AdminsPage() {
     
     // Fetch options for modal
     setLoadingOrgs(true);
-    let endpoint = "";
-    if (admin.primaryRoleKey === "TEMPLE_ADMIN") endpoint = "/temples";
-    else if (admin.primaryRoleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
-    else if (admin.primaryRoleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
     
-    if (endpoint) {
+    if (admin.primaryRoleKey === "ORG_ADMIN") {
       try {
-        const res = await api.get(endpoint);
-        setOrganizations(res.data?.data || []);
+        const [tRes, dRes, jRes, bRes, pRes, gRes] = await Promise.allSettled([
+          api.get("/temples"),
+          api.get("/dharamshalas"),
+          api.get("/jain-centers"),
+          api.get("/bhojanshalas"),
+          api.get("/pathshalas"),
+          api.get("/gaushalas")
+        ]);
+        const allOrgs = [];
+        if (tRes.status === "fulfilled") allOrgs.push(...(tRes.value.data?.data || []));
+        if (dRes.status === "fulfilled") allOrgs.push(...(dRes.value.data?.data || []));
+        if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
+        if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
+        if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
+        if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
+        
+        // Deduplicate by ID
+        const uniqueOrgsMap = new Map();
+        allOrgs.forEach(org => {
+          if (org?.id) uniqueOrgsMap.set(org.id, org);
+        });
+        setOrganizations(Array.from(uniqueOrgsMap.values()));
       } catch (e) {
         toast.error(t("Failed to load organizations for mapping."));
       } finally {
         setLoadingOrgs(false);
       }
     } else {
-      setOrganizations([]);
-      setLoadingOrgs(false);
+      let endpoint = "";
+      if (admin.primaryRoleKey === "TEMPLE_ADMIN") endpoint = "/temples";
+      else if (admin.primaryRoleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
+      else if (admin.primaryRoleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
+      
+      if (endpoint) {
+        try {
+          const res = await api.get(endpoint);
+          setOrganizations(res.data?.data || []);
+        } catch (e) {
+          toast.error(t("Failed to load organizations for mapping."));
+        } finally {
+          setLoadingOrgs(false);
+        }
+      } else {
+        setOrganizations([]);
+        setLoadingOrgs(false);
+      }
     }
   };
 
