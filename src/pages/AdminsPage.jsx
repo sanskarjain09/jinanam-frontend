@@ -43,6 +43,7 @@ export default function AdminsPage() {
   const [form, setForm] = useState({
     mobile: "",
     email: "",
+    password: "",
     firstName: "",
     lastName: "",
     role: "ORG_ADMIN",
@@ -105,44 +106,32 @@ export default function AdminsPage() {
     setLoadingOrgs(true);
     
     try {
-      if (roleKey === "ORG_ADMIN") {
-        const [tRes, dRes, jRes, bRes, pRes, gRes] = await Promise.allSettled([
-          api.get("/temples"),
-          api.get("/dharamshalas"),
-          api.get("/jain-centers"),
-          api.get("/bhojanshalas"),
-          api.get("/pathshalas"),
-          api.get("/gaushalas")
-        ]);
-        const allOrgs = [];
-        if (tRes.status === "fulfilled") allOrgs.push(...(tRes.value.data?.data || []));
-        if (dRes.status === "fulfilled") allOrgs.push(...(dRes.value.data?.data || []));
-        if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
-        if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
-        if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
-        if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
-        
-        // Deduplicate by ID
-        const uniqueOrgsMap = new Map();
-        allOrgs.forEach(org => {
-          if (org?.id) uniqueOrgsMap.set(org.id, org);
-        });
-        setOrganizations(Array.from(uniqueOrgsMap.values()));
-      } else {
-        let endpoint = "";
-        if (roleKey === "TEMPLE_ADMIN") endpoint = "/temples";
-        else if (roleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
-        else if (roleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
-        
-        if (endpoint) {
-          const res = await api.get(endpoint);
-          setOrganizations(res.data?.data || []);
-        } else {
-          setOrganizations([]);
-        }
-      }
+      const [tRes, dRes, jRes, bRes, pRes, gRes, sRes] = await Promise.allSettled([
+        api.get("/temples"),
+        api.get("/dharamshalas"),
+        api.get("/jain-centers"),
+        api.get("/bhojanshalas"),
+        api.get("/pathshalas"),
+        api.get("/gaushalas"),
+        api.get("/sthanaks")
+      ]);
+      const allOrgs = [];
+      if (tRes.status === "fulfilled") allOrgs.push(...(tRes.value.data?.data || []));
+      if (dRes.status === "fulfilled") allOrgs.push(...(dRes.value.data?.data || []));
+      if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
+      if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
+      if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
+      if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
+      if (sRes?.status === "fulfilled") allOrgs.push(...(sRes.value.data?.data || []));
+      
+      // Deduplicate by ID
+      const uniqueOrgsMap = new Map();
+      allOrgs.forEach(org => {
+        if (org?.id) uniqueOrgsMap.set(org.id, org);
+      });
+      setOrganizations(Array.from(uniqueOrgsMap.values()));
     } catch (e) {
-      toast.error(`Failed to load organizations for ${roleKey}`);
+      toast.error(`Failed to load organizations`);
     } finally {
       setLoadingOrgs(false);
     }
@@ -186,7 +175,7 @@ export default function AdminsPage() {
       // Open credentials popup
       setCredentialPopup({
         username: form.mobile,
-        password: data.tempPassword || "Sent via WhatsApp/SMS",
+        password: form.password ? "Custom password set" : (data.tempPassword || "Sent via WhatsApp/SMS"),
         role: form.role,
       });
 
@@ -196,6 +185,7 @@ export default function AdminsPage() {
       setForm({
         mobile: "",
         email: "",
+        password: "",
         firstName: "",
         lastName: "",
         role: "ORG_ADMIN",
@@ -248,57 +238,7 @@ export default function AdminsPage() {
     setEditingOrgs(mappedOrgIds);
     
     // Fetch options for modal
-    setLoadingOrgs(true);
-    
-    if (admin.primaryRoleKey === "ORG_ADMIN") {
-      try {
-        const [tRes, dRes, jRes, bRes, pRes, gRes] = await Promise.allSettled([
-          api.get("/temples"),
-          api.get("/dharamshalas"),
-          api.get("/jain-centers"),
-          api.get("/bhojanshalas"),
-          api.get("/pathshalas"),
-          api.get("/gaushalas")
-        ]);
-        const allOrgs = [];
-        if (tRes.status === "fulfilled") allOrgs.push(...(tRes.value.data?.data || []));
-        if (dRes.status === "fulfilled") allOrgs.push(...(dRes.value.data?.data || []));
-        if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
-        if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
-        if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
-        if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
-        
-        // Deduplicate by ID
-        const uniqueOrgsMap = new Map();
-        allOrgs.forEach(org => {
-          if (org?.id) uniqueOrgsMap.set(org.id, org);
-        });
-        setOrganizations(Array.from(uniqueOrgsMap.values()));
-      } catch (e) {
-        toast.error(t("Failed to load organizations for mapping."));
-      } finally {
-        setLoadingOrgs(false);
-      }
-    } else {
-      let endpoint = "";
-      if (admin.primaryRoleKey === "TEMPLE_ADMIN") endpoint = "/temples";
-      else if (admin.primaryRoleKey === "DHARAMSHALA_ADMIN") endpoint = "/dharamshalas";
-      else if (admin.primaryRoleKey === "JAIN_CENTER_ADMIN") endpoint = "/jain-centers";
-      
-      if (endpoint) {
-        try {
-          const res = await api.get(endpoint);
-          setOrganizations(res.data?.data || []);
-        } catch (e) {
-          toast.error(t("Failed to load organizations for mapping."));
-        } finally {
-          setLoadingOrgs(false);
-        }
-      } else {
-        setOrganizations([]);
-        setLoadingOrgs(false);
-      }
-    }
+    fetchOrganizations(admin.primaryRoleKey);
   };
 
   // Save updated scopes
@@ -634,6 +574,20 @@ export default function AdminsPage() {
                   />
                   <p className="text-[10px] text-slate-500 mt-1">
                     {t("Country code is set from the dropdown — no need to type +91.")}
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700">{t("Password (Optional)")}</Label>
+                  <Input 
+                    type="password"
+                    value={form.password || ""} 
+                    onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                    placeholder={t("Leave empty for auto-generated")} 
+                    className="mt-1"
+                  />
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {t("If left blank, a temporary password will be generated and sent.")}
                   </p>
                 </div>
 

@@ -47,6 +47,7 @@ function mapOrg(o, i) {
     currentChaturmas: o.chaturmasStays?.[0]?.monk?.fullName || o.currentChaturmas || null,
     bhojanshala: o.hasBhojanshala ?? o.bhojanshala ?? false,
     dharamshala: o.hasDharamshala ?? o.dharamshala ?? false,
+    facilities: Array.isArray(o.facilities) ? o.facilities : [],
   };
 }
 
@@ -194,6 +195,17 @@ export default function MemberTempleListPage() {
                     <span>{tmpl.distance} away</span>
                   </span>
                 </div>
+
+                {/* Facilities */}
+                {tmpl.facilities && tmpl.facilities.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {tmpl.facilities.map((fac) => (
+                      <span key={fac} className="px-2 py-0.5 text-[10px] font-bold rounded bg-sky-50 text-sky-700 border border-sky-100">
+                        {fac}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
                 {/* Timings & Highlights */}
                 <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/60 text-xs space-y-1">

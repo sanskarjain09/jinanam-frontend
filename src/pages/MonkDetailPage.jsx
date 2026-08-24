@@ -559,13 +559,45 @@ export default function MonkDetailPage() {
 
     if (monk.chaturmasHistory && monk.chaturmasHistory.length > 0) {
       monk.chaturmasHistory.forEach((c, idx) => {
+        const year = c.year || (c.startDate ? new Date(c.startDate).getFullYear() : null);
+        const dateObj = year ? new Date(`${year}-07-01`) : new Date(c.createdAt || Date.now()); // fallback
         events.push({
           id: `chaturmas-${idx}`,
-          date: new Date(`${c.year}-07-01`),
-          displayDate: `${t("Chaturmas")} ${c.year}`,
+          date: dateObj,
+          displayDate: year ? `${t("Chaturmas")} ${year}` : t("Chaturmas"),
           title: `${c.templeName || c.temple?.name || t("Unknown Place")} ${c.city ? `- ${c.city}` : ""}`,
           color: "bg-orange-500"
         });
+      });
+    }
+
+    if (monk.tapasya && monk.tapasya.length > 0) {
+      monk.tapasya.forEach((tItem, idx) => {
+        if (tItem.date) {
+          events.push({
+            id: `tapasya-${idx}`,
+            date: new Date(tItem.date),
+            displayDate: new Date(tItem.date).toLocaleDateString(),
+            title: `${t("Tapasya")}: ${tItem.name} ${tItem.count > 1 ? `(${tItem.count})` : ""}`,
+            subtitle: tItem.place ? `${t("Place")}: ${tItem.place}` : "",
+            color: "bg-pink-500"
+          });
+        }
+      });
+    }
+
+    if (monk.timeline && monk.timeline.length > 0) {
+      monk.timeline.forEach((tItem, idx) => {
+        if (tItem.date) {
+          events.push({
+            id: `custom-timeline-${idx}`,
+            date: new Date(tItem.date),
+            displayDate: new Date(tItem.date).toLocaleDateString(),
+            title: tItem.eventName || t("Event"),
+            subtitle: tItem.place ? `${t("Place")}: ${tItem.place}` : "",
+            color: "bg-blue-500"
+          });
+        }
       });
     }
 
@@ -588,7 +620,11 @@ export default function MonkDetailPage() {
       });
     }
 
-    return events.sort((a, b) => a.date - b.date);
+    return events.sort((a, b) => {
+      const timeA = isNaN(a.date?.getTime()) ? 0 : a.date.getTime();
+      const timeB = isNaN(b.date?.getTime()) ? 0 : b.date.getTime();
+      return timeA - timeB;
+    });
   }, [monk, t]);
 
   if (loading) {
@@ -1130,14 +1166,36 @@ export default function MonkDetailPage() {
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b pb-1">{t("📅 Chaturmas History")}</h4>
                   {monk.chaturmasHistory?.length > 0 ? (
                     <div className="space-y-3">
-                      {monk.chaturmasHistory.sort((a,b) => b.year - a.year).map((c, i) => (
-                        <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-xl bg-slate-50">
-                          <div>
-                            <div className="font-bold text-sm text-slate-800">{c.year}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">{c.templeName || c.temple?.name || t("Unknown Place")} {c.city ? `- ${c.city}` : ""}</div>
+                      {monk.chaturmasHistory.sort((a,b) => (b.year || 0) - (a.year || 0)).map((c, i) => (
+                        <div key={i} className="flex flex-col sm:flex-row sm:items-start justify-between p-4 border rounded-xl bg-slate-50 gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-800">{c.year}</span>
+                              <Badge className={c.status === "ACTIVE" ? "bg-green-100 text-green-800 border-green-200" : "bg-purple-100 text-purple-800 border-purple-200"}>
+                                {c.status === "ACTIVE" ? t("Active") : c.status || t("Completed")}
+                              </Badge>
+                            </div>
+                            
+                            <div className="text-sm font-semibold text-purple-950 mt-1">
+                              {c.orgName || c.locationName || c.templeName || c.temple?.name || t("Unknown Place")} {c.city ? `- ${c.city}` : ""}
+                            </div>
+                            
+                            <div className="text-xs text-slate-500 grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                               <div>
+                                 <span className="font-semibold text-slate-600">{t("Start Date")}:</span> {c.startDate ? new Date(c.startDate).toLocaleDateString() : "N/A"}
+                               </div>
+                               <div>
+                                 <span className="font-semibold text-slate-600">{t("End Date")}:</span> {c.status === "ACTIVE" ? <span className="text-green-600 font-medium">{t("Currently Active")}</span> : (c.endDate ? new Date(c.endDate).toLocaleDateString() : "N/A")}
+                               </div>
+                               {(c.contactPerson || c.contactMobile) && (
+                                 <div className="col-span-1 sm:col-span-2">
+                                   <span className="font-semibold text-slate-600">{t("Contact")}:</span> {c.contactPerson || "N/A"} {c.contactMobile ? `(${c.contactMobile})` : ""}
+                                 </div>
+                               )}
+                            </div>
                           </div>
-                          {c.templeId && (
-                            <Button variant="outline" size="sm" className="mt-2 sm:mt-0 text-[10px] h-7" onClick={() => navigate(`/admin/temples/${c.templeId}`)}>
+                          {(c.orgId || c.templeId) && (
+                            <Button variant="outline" size="sm" className="mt-2 sm:mt-0 text-[10px] h-8 whitespace-nowrap" onClick={() => navigate(`/admin/temples/${c.orgId || c.templeId}`)}>
                               {t("View Location")}
                             </Button>
                           )}
@@ -1577,18 +1635,39 @@ export default function MonkDetailPage() {
                           </div>
                         ) : (
                           <div className="space-y-2">
-                            {editForm.chaturmasHistory.map((c, idx) => (
-                              <div key={idx} className="border p-3 rounded-lg bg-white space-y-1 text-xs relative shadow-sm">
-                                <div className="flex justify-between items-center font-bold text-purple-950">
-                                  <span>{t("📅 Year:")} {c.year}</span>
-                                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">{c.status || "Completed"}</Badge>
+                            {editForm.chaturmasHistory.sort((a,b) => (b.year || 0) - (a.year || 0)).map((c, idx) => (
+                              <div key={idx} className="flex flex-col sm:flex-row sm:items-start justify-between p-4 border rounded-xl bg-slate-50 gap-4">
+                                <div className="space-y-1 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-slate-800">{c.year}</span>
+                                    <Badge className={c.status === "ACTIVE" ? "bg-green-100 text-green-800 border-green-200" : "bg-purple-100 text-purple-800 border-purple-200"}>
+                                      {c.status === "ACTIVE" ? t("Active") : c.status || t("Completed")}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="text-sm font-semibold text-purple-950 mt-1">
+                                    {c.orgName || c.locationName || c.templeName || c.temple?.name || t("Unknown Place")} {c.city ? `- ${c.city}` : ""}
+                                  </div>
+                                  
+                                  <div className="text-xs text-slate-500 grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                                     <div>
+                                       <span className="font-semibold text-slate-600">{t("Start Date")}:</span> {c.startDate ? new Date(c.startDate).toLocaleDateString() : "N/A"}
+                                     </div>
+                                     <div>
+                                       <span className="font-semibold text-slate-600">{t("End Date")}:</span> {c.status === "ACTIVE" ? <span className="text-green-600 font-medium">{t("Currently Active")}</span> : (c.endDate ? new Date(c.endDate).toLocaleDateString() : "N/A")}
+                                     </div>
+                                     {(c.contactPerson || c.contactMobile) && (
+                                       <div className="col-span-1 sm:col-span-2">
+                                         <span className="font-semibold text-slate-600">{t("Contact")}:</span> {c.contactPerson || "N/A"} {c.contactMobile ? `(${c.contactMobile})` : ""}
+                                       </div>
+                                     )}
+                                  </div>
                                 </div>
-                                <div className="text-slate-600 mt-1 space-y-0.5">
-                                  <div>{t("📍 Location:")} <strong>{c.city}, {c.state}</strong></div>
-                                  {c.orgId && (
-                                    <div>{t("🛕 Temple:")} <strong>{temples.find(t => t.id === c.orgId)?.name || c.orgId}</strong></div>
-                                  )}
-                                </div>
+                                {(c.orgId || c.templeId) && (
+                                  <Button variant="outline" size="sm" className="mt-2 sm:mt-0 text-[10px] h-8 whitespace-nowrap" onClick={() => navigate(`/admin/temples/${c.orgId || c.templeId}`)}>
+                                    {t("View Location")}
+                                  </Button>
+                                )}
                               </div>
                             ))}
                           </div>

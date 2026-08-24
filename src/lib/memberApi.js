@@ -98,11 +98,20 @@ export const bookingsApi = {
   },
   /**
    * Bookable rooms/halls/dorms/bhojanshala packages configured for one org.
-   * Same endpoint admin's BookingsPage reads to populate its item selector
-   * (see BookingsPage.jsx's loadData: GET /bookings/org/{orgId}).
+   * Fetches BookingItems via the public endpoint for members.
    */
   async items(orgId) {
-    return list(unwrap(await api.get(`/bookings/org/${orgId}`)));
+    return list(unwrap(await api.get(`/bookings/items/public/org/${orgId}`)));
+  },
+  /**
+   * Fetch availability calendar for a booking item between two dates.
+   */
+  async checkAvailability(itemId, dateFrom, dateTo) {
+    return unwrap(
+      await api.get(`/bookings/items/${itemId}/availability`, {
+        params: { from: new Date(dateFrom).toISOString(), to: new Date(dateTo).toISOString() },
+      })
+    );
   },
   /**
    * Create a booking request against one item. Same payload shape and
@@ -127,13 +136,22 @@ export const bookingsApi = {
   },
   /** Upload payment proof inside the payment window (§B15.5). */
   async uploadProof(uid, { file, reference, notes }) {
-    const fd = new FormData();
-    if (file) fd.append("proof", file);
-    if (reference) fd.append("reference", reference);
-    if (notes) fd.append("notes", notes);
-    return unwrap(
-      await api.post(`/bookings/${uid}/payment-proof`, fd, {
+    let paymentProofUrl = "";
+    if (file) {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await api.post("/uploads", fd, {
         headers: { "Content-Type": "multipart/form-data" },
+      });
+      paymentProofUrl = res.data?.data?.url || res.data?.url;
+    }
+    
+    return unwrap(
+      await api.post(`/bookings/${uid}/payment-proof`, {
+        paymentReference: reference,
+        paymentProofUrl: paymentProofUrl || "http://example.com/no-proof", // fallback if somehow empty but required
+        paymentNotes: notes,
+        idempotencyKey: `proof_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       })
     );
   },

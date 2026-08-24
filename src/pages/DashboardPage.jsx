@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import PersonalizedDashboard from "@/components/dashboard/PersonalizedDashboard";
+
 
 // Rich mock data used to demonstrate the design at full fidelity.
 // Real data will drop-in from the backend calls below.
@@ -220,9 +220,7 @@ export default function DashboardPage() {
     [canDo]
   );
 
-  /** The organisations this account is actually assigned to manage. */
-  const [myOrgs, setMyOrgs] = useState([]);
-  const [loadingMyOrgs, setLoadingMyOrgs] = useState(false);
+
 
   /** Shortcuts, narrowed to the tabs this account holds. Hidden when empty. */
   const quickActions = [
@@ -342,7 +340,7 @@ export default function DashboardPage() {
         });
     }
     // eslint-disable-next-line
-  }, [isSuperAdmin, selectedType]);
+  }, [isSuperAdmin, selectedType, orgId]);
 
   useEffect(() => {
     if (!orgId) return;
@@ -390,45 +388,6 @@ export default function DashboardPage() {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId, reloadKey, allowedModules]);
-
-  /**
-   * Load the organisations assigned to this admin, limited to the org types
-   * their tabs cover. A temple-only admin resolves temples and nothing else.
-   */
-  useEffect(() => {
-    if (isSuperAdmin || organizationIds.length === 0) { setMyOrgs([]); return; }
-
-    const sources = [
-      { module: "TEMPLES", prefix: "/temples", label: "Temple", route: "/admin/temples" },
-      { module: "JAIN_CENTERS", prefix: "/jain-centers", label: "Jain Centre", route: "/admin/jain-centers" },
-      { module: "DHARAMSHALAS", prefix: "/dharamshalas", label: "Dharamshala", route: "/admin/dharamshalas" },
-    ].filter((s) => canDo(s.module, "VIEW"));
-
-    if (sources.length === 0) { setMyOrgs([]); return; }
-
-    let cancelled = false;
-    setLoadingMyOrgs(true);
-    Promise.all(
-      sources.flatMap((s) =>
-        organizationIds.map((oid) =>
-          api.get(`${s.prefix}/${oid}`)
-            .then((r) => {
-              const o = r.data?.data;
-              return o ? { ...o, _label: s.label, _route: `${s.route}/${o.id || oid}`, _module: s.module } : null;
-            })
-            .catch(() => null)
-        )
-      )
-    )
-      .then((rows) => {
-        if (cancelled) return;
-        setMyOrgs(rows.filter(Boolean));
-      })
-      .finally(() => { if (!cancelled) setLoadingMyOrgs(false); });
-
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin, organizationIds, allowedModules, reloadKey]);
 
   // Real-time dashboard stat updates
   const { connected: liveConnected, socket } = useSocket("/dashboards", {
@@ -655,12 +614,8 @@ export default function DashboardPage() {
       )}
 
       <>
-        {/* Delegated admins get a workspace built from their own tabs and
-            assigned organisations, instead of the platform-wide panel set. */}
-        {!isSuperAdmin && <PersonalizedDashboard orgs={myOrgs} loading={loadingMyOrgs} />}
-
           {/* Temple header banner */}
-          <div className={`mb-4 md:mb-6 flex-col md:flex-row md:items-center md:justify-between gap-3 ${isSuperAdmin ? "flex" : "hidden"}`}>
+          <div className="mb-4 md:mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div className="flex items-center gap-3 md:gap-4 min-w-0">
               <div className="h-12 w-12 md:h-14 md:w-14 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center shadow-md shrink-0">
                 <Landmark className="h-6 w-6 md:h-7 md:w-7 text-white" strokeWidth={2.2} />
@@ -672,7 +627,7 @@ export default function DashboardPage() {
                 <div className="text-xs text-primary mt-1 flex items-center gap-1.5">
                   <Sparkles className="h-3 w-3" /> {t("Jai Jinendra")}
                   {liveConnected ? (
-                    <LiveBadge label={t("Live Live")} />
+                    <LiveBadge connected={liveConnected} label={t("Live")} />
                   ) : (
                     <span className="text-[10px] bg-slate-100 text-slate-500 font-semibold px-2 py-0.5 rounded-full border">{t("Reconnecting")}</span>
                   )}
@@ -694,33 +649,6 @@ export default function DashboardPage() {
                 </div>
               </div>
             </Card>
-          )}
-
-          {/* Assigned organisations — the records this admin may actually edit */}
-          {!isSuperAdmin && myOrgs.length > 0 && (
-            <SectionCard number="•" title={t("My Assigned Organisations")} testId="section-my-orgs" className="mb-4 md:mb-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {myOrgs.map((o) => (
-                  <div key={`${o._module}-${o.id}`} className="p-3 rounded-xl border border-border bg-white flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400">{o._label}</div>
-                      <div className="text-sm font-bold text-slate-800 truncate">{o.name}</div>
-                      <div className="text-[11px] text-slate-500 truncate">
-                        {[o.city, o.state].filter(Boolean).join(", ") || o.publicId}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 text-[11px] font-bold shrink-0"
-                      onClick={() => navigate(o._route)}
-                    >
-                      {canDo(o._module, "EDIT") ? t("Manage") : t("View")}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
           )}
 
           {/* Metric stats row — each tile follows its module */}

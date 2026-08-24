@@ -16,6 +16,8 @@ import { formatDateTime } from "@/lib/utils";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
+import { KeyRound } from "lucide-react";
 
 const ROLES = [
   "SUPER_ADMIN", "ORG_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN",
@@ -505,7 +507,7 @@ function UserPermissionOverrides() {
 
 function OrgConfigForm({ orgId }) {
   const { t } = useLanguage();
-  const { canEdit } = useAuth();
+  const { canEdit , activeOrganizationId} = useAuth();
   const hasEditAccess = canEdit("SETTINGS");
   
   const [form, setForm] = useState({
@@ -625,17 +627,43 @@ function OrgAuditHistory({ orgId }) {
 
 export default function SettingsPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user , activeOrganizationId} = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
 
   const simulatedRole = localStorage.getItem("simulatedRole");
   const activeRole = simulatedRole || user?.primaryRoleKey || "MEMBER";
   const isSuperAdminUser = activeRole === "SUPER_ADMIN";
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
 
-  const validSuperTabs = ["rbac", "user-overrides", "app", "alerts", "login-history", "security"];
+  const validSuperTabs = ["rbac", "user-overrides", "app", "alerts", "login-history", "security", "password"];
   const currentTab = (tabParam === "security" ? "rbac" : tabParam) || (isSuperAdminUser ? "app" : "org-config");
+
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+
+  const PasswordTabContent = () => (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <Card className="p-5 rounded-md border-border bg-white shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+          <h4 className="font-bold text-slate-800">{t("Account Password")}</h4>
+          <p className="text-xs text-slate-500 mt-1">
+            {t("Set or change your password for logging into your admin account.")}
+          </p>
+        </div>
+        <Button type="button" onClick={() => setPasswordModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white shrink-0">
+          {t("Change Password")}
+        </Button>
+      </Card>
+      
+      {passwordModalOpen && (
+        <ChangePasswordModal
+          open={passwordModalOpen}
+          onClose={() => setPasswordModalOpen(false)}
+          apiClient={api}
+        />
+      )}
+    </div>
+  );
 
   const handleTabChange = (val) => {
     setSearchParams({ tab: val });
@@ -656,12 +684,18 @@ export default function SettingsPage() {
             <TabsTrigger value="audit">
               <History className="h-3.5 w-3.5 mr-1.5" /> {t("Activity History")}
             </TabsTrigger>
+            <TabsTrigger value="password">
+              <KeyRound className="h-3.5 w-3.5 mr-1.5" /> {t("Password & Security")}
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="org-config">
             <OrgConfigForm orgId={orgId} />
           </TabsContent>
           <TabsContent value="audit">
             <OrgAuditHistory orgId={orgId} />
+          </TabsContent>
+          <TabsContent value="password">
+            <PasswordTabContent />
           </TabsContent>
         </Tabs>
       </div>
@@ -691,12 +725,16 @@ export default function SettingsPage() {
           <TabsTrigger value="login-history" data-testid="settings-tab-login-history">
             <History className="h-3.5 w-3.5 mr-1.5" /> {t("Login History")}
           </TabsTrigger>
+          <TabsTrigger value="password" data-testid="settings-tab-password">
+            <KeyRound className="h-3.5 w-3.5 mr-1.5" /> {t("Password & Security")}
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="app"><AppSettings /></TabsContent>
         <TabsContent value="rbac"><RolePermissionMatrix /></TabsContent>
         <TabsContent value="user-overrides"><UserPermissionOverrides /></TabsContent>
         <TabsContent value="alerts"><AlertThresholds /></TabsContent>
         <TabsContent value="login-history"><LoginHistory /></TabsContent>
+        <TabsContent value="password"><PasswordTabContent /></TabsContent>
       </Tabs>
     </div>
   );

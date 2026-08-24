@@ -21,6 +21,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { BhojanshalaBookingModal } from "@/components/modals/BhojanshalaBookingModal";
 import { DharamshalaBookingModal } from "@/components/modals/DharamshalaBookingModal";
 import { PathshalaBookingModal } from "@/components/modals/PathshalaBookingModal";
+import EventHallTab from "./EventHallTab";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -2218,12 +2219,11 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
         bhojanshalaPublished: org.bhojanshalaPublished ?? false,
         dharamshalaPublished: org.dharamshalaPublished ?? false,
         parentOrganizationId: org.parentOrganizationId || "",
-        linkedBhojanshalaId: org.childOrganizations?.find(c => c.type === "BHOJANSHALA")?.id || "",
-        linkedDharamshalaId: org.childOrganizations?.find(c => c.type === "DHARAMSHALA")?.id || "",
+        linkedBhojanshalaIds: (org.childOrganizations?.filter(c => c.type === "BHOJANSHALA") || []).map(c => c.id),
+        linkedDharamshalaIds: (org.childOrganizations?.filter(c => c.type === "DHARAMSHALA") || []).map(c => c.id),
         linkedPathshalaId: org.childOrganizations?.find(c => c.type === "PATHSHALA")?.id || "",
         upashrayLocation: org.upashrayLocation || "Within Property",
         eventHallPurpose: org.eventHallPurpose || "Available for Booking",
-        eventHallBookingLink: org.eventHallBookingLink || "",
         bhojanshalaBreakfast: org.bhojanshalaBreakfast || "07:00 AM - 08:30 AM",
         bhojanshalaLunch: org.bhojanshalaLunch || "11:30 AM - 01:00 PM",
         bhojanshalaDinner: org.bhojanshalaDinner || "05:00 PM - 06:00 PM",
@@ -2432,10 +2432,14 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
       }
       
       const childOrgIds = [];
-      if (payload.hasBhojanshala && payload.linkedBhojanshalaId) childOrgIds.push(payload.linkedBhojanshalaId);
-      if (payload.hasDharamshala && payload.linkedDharamshalaId) childOrgIds.push(payload.linkedDharamshalaId);
+      if (payload.hasBhojanshala && payload.linkedBhojanshalaIds?.length > 0) {
+        childOrgIds.push(...payload.linkedBhojanshalaIds);
+      }
+      if (payload.hasDharamshala && payload.linkedDharamshalaIds?.length > 0) {
+        childOrgIds.push(...payload.linkedDharamshalaIds);
+      }
       if (payload.hasPathshala && payload.linkedPathshalaId) childOrgIds.push(payload.linkedPathshalaId);
-      if (childOrgIds.length > 0) payload.childOrganizationIds = childOrgIds;
+      payload.childOrganizationIds = childOrgIds;
       
       if (payload.buildings && Array.isArray(payload.buildings)) {
         payload.buildings = payload.buildings.map((b) => ({
@@ -2571,16 +2575,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                       </div>
                     </div>
 
-                    {form.sect === "Shwetambar" && form.subSect === "Murtipujak" && (
-                      <div>
-                        <Label className="text-xs">{t("Gaccha")}</Label>
-                        <select className="w-full mt-1 h-9 rounded-md border border-slate-205 bg-white px-3 text-sm focus:outline-none"
-                          value={form.gacchaName || ""} onChange={(e) => setForm({ ...form, gacchaName: e.target.value })}>
-                          <option value="">{t("Select Gaccha...")}</option>
-                          {MURTIPUJAK_GACCHAS.map(g => <option key={g} value={g}>{t(g)}</option>)}
-                        </select>
-                      </div>
-                    )}
+                    {/* Gaccha field hidden — gacchaName kept in form state for data integrity */}
 
                     {(isTemple || isJainCenter) && form.subSect !== "Sthanakvasi" && (
                       <div className="grid grid-cols-2 gap-3">
@@ -3110,14 +3105,17 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                         {toggle("Event Hall Available", "hasEventHall")}
                         {form.hasEventHall && (
                           <div className="grid grid-cols-2 gap-3 pl-6 border-l-2 border-l-orange-500">
-                            <div>
-                              <Label className="text-xs">{t("Event Hall Purpose")}</Label>
-                              <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                value={form.eventHallPurpose || "Available for Booking"} onChange={(e) => setForm({ ...form, eventHallPurpose: e.target.value })}>
-                                <option value="Available for Booking">{t("Available for Booking")}</option>
-                                <option value="Temple Use Only">{t("Temple Use Only")}</option>
-                              </select>
-                            </div>
+                            <div className="col-span-2">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">{t("Purpose of Event Hall")}</label>
+                                    <select
+                                      value={form.eventHallPurpose || "Available for Booking"}
+                                      onChange={(e) => setForm({ ...form, eventHallPurpose: e.target.value })}
+                                      className="w-full text-xs p-2 rounded-md border bg-slate-50 focus:bg-white transition-colors h-9"
+                                    >
+                                      <option value="Available for Booking">{t("Available for Booking")}</option>
+                                      <option value="Temple Use Only">{t("Temple Use Only")}</option>
+                                    </select>
+                                  </div>
                             {form.eventHallPurpose === "Available for Booking" && (
                               field("Event Hall Booking Link", "eventHallBookingLink", "url", "https://...")
                             )}
@@ -3133,9 +3131,13 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                         {form.hasBhojanshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                             <OrgSelect
-                              label={t("Link Existing Bhojanshala")}
-                              value={form.linkedBhojanshalaId}
-                              onChange={(val) => setForm({ ...form, linkedBhojanshalaId: val })}
+                              label={t("Link Existing Bhojanshala(s)")}
+                              value={form.linkedBhojanshalaIds}
+                              onChange={(val) => setForm({ ...form, linkedBhojanshalaIds: val })}
+                              filterType="BHOJANSHALA"
+                              multiple={true}
+                              required={true}
+                              testId="bhojanshala-select"
                             />
                           </div>
                         )}
@@ -3149,9 +3151,13 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                         {form.hasDharamshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                             <OrgSelect
-                              label={t("Link Existing Dharamshala")}
-                              value={form.linkedDharamshalaId}
-                              onChange={(val) => setForm({ ...form, linkedDharamshalaId: val })}
+                              label={t("Link Existing Dharamshala(s)")}
+                              value={form.linkedDharamshalaIds}
+                              onChange={(val) => setForm({ ...form, linkedDharamshalaIds: val })}
+                              filterType="DHARAMSHALA"
+                              multiple={true}
+                              required={true}
+                              testId="dharamshala-select"
                             />
                           </div>
                         )}
@@ -3164,11 +3170,38 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                         {toggle("Pathshala Available", "hasPathshala")}
                         {form.hasPathshala && (
                           <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                            <OrgSelect
-                              label={t("Link Existing Pathshala")}
-                              value={form.linkedPathshalaId}
-                              onChange={(val) => setForm({ ...form, linkedPathshalaId: val })}
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-xs">{t("Timings")}</Label>
+                                <Input
+                                  value={form.pathshalaTimings || ""}
+                                  onChange={(e) => setForm({ ...form, pathshalaTimings: e.target.value })}
+                                  placeholder="04:30 PM - 06:00 PM"
+                                  className="mt-1 bg-white"
+                                />
+                              </div>
+                              <div>
+                                <Label className="text-xs">{t("Days")}</Label>
+                                <Input
+                                  value={form.pathshalaDays || ""}
+                                  onChange={(e) => setForm({ ...form, pathshalaDays: e.target.value })}
+                                  placeholder="Sat, Sun"
+                                  className="mt-1 bg-white"
+                                />
+                              </div>
+                            </div>
+                              <MemberSelect
+                                label={t("Contact Person / Teacher")}
+                                value={form.pathshalaTeacher || ""}
+                                onChange={(val, member) => {
+                                  if (member) {
+                                    setForm({ ...form, pathshalaTeacher: `${member.fullName || member.name}${member.mobile ? ` - ${member.mobile}` : ''}` });
+                                  } else {
+                                    setForm({ ...form, pathshalaTeacher: "" });
+                                  }
+                                }}
+                                placeholder={t("Search & link teacher...")}
+                              />
                           </div>
                         )}
                       </div>
@@ -4337,10 +4370,11 @@ export default function OrgDetailPage(props) {
               ? ["info", "bhojanshala", "contacts", "reviews"]
               : isGaushala || isPathshala
               ? ["info", "gallery", "trustees", "contacts", "volunteers", "rules", "reviews", "timeline", "events"]
-              : ["info", "gallery", "trustees", "contacts", "notices", "announcements", "reviews", "dhaja", "chaturmas", "bhojanshala", "timeline", "events"]
+              : ["info", "gallery", "trustees", "contacts", "notices", "announcements", "reviews", "dhaja", "chaturmas", "bhojanshala", "event_hall", "timeline", "events"]
             ).map((tab) => {
               if ((!isTemple && !isDharamshala && !isBhojanshala && entityLabel !== "Jain Center") && tab === "chaturmas") return null;
               if (tab === "bhojanshala" && (!isBhojanshala && (!(isMemberView ? org.bhojanshalaPublished : org.hasBhojanshala) || org.bhojanshalaAvailability?.toLowerCase() == "daily"))) return null;
+              if (tab === "event_hall" && (!org.hasEventHall || org.eventHallPurpose !== "Available for Booking")) return null;
               return (
                 <TabsTrigger key={tab} value={tab} data-testid={`tab-${tab}`}
                   className="capitalize rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs font-bold py-2 px-3">
@@ -4349,6 +4383,7 @@ export default function OrgDetailPage(props) {
                       tab === "chaturmas" ? t("❄️ Chaturmas") : tab === "accommodations" ? t("🏨 Rooms & Rates") :
                         tab === "food" ? t("🥗 Bhojanalay") : tab === "volunteers" ? t("🤝 Volunteers") :
                           tab === "bhojanshala" ? t("🥗 Bhojanshala") :
+                            tab === "event_hall" ? t("🏛️ Event Hall") :
                             tab === "timeline" ? t("📅 Timeline") : tab === "events" ? t("🎉 Events") :
                               tab === "rules" ? t("📋 Safety & Rules") : tab === "bank" ? t("💰 Banking") : t("ℹ Info")}
                 </TabsTrigger>
@@ -4609,6 +4644,31 @@ export default function OrgDetailPage(props) {
                       return null;
                     })()}
 
+                    {/* Event Hall Details Section */}
+                    {(() => {
+                      const hasEventHall = isMemberView ? org.eventHallPublished : org.hasEventHall;
+                      
+                      if (hasEventHall) {
+                        return (
+                          <div className="bg-purple-50/50 p-4 border border-purple-100 rounded-xl space-y-2 mt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <div>
+                              <span className="text-xs font-bold text-purple-850 flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {t("Event Hall Details")}</span>
+                              <div className="text-xs text-purple-700 leading-relaxed space-y-1 mt-1">
+                                <p>{t("Event Hall is available for booking and events.")}</p>
+                              </div>
+                            </div>
+                            <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white shadow-sm shrink-0" onClick={() => {
+                              const tabTrigger = document.querySelector('[data-testid="tab-event_hall"]');
+                              if (tabTrigger) tabTrigger.click();
+                            }}>
+                              {t("View Details")}
+                            </Button>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+
                     {/* Pathshala Details Section */}
                     {(() => {
                       const linked = org.childOrganizations?.find(c => c.type === "PATHSHALA");
@@ -4638,6 +4698,9 @@ export default function OrgDetailPage(props) {
                               <div className="text-xs text-green-700 leading-relaxed space-y-1 mt-1">
                                 <p>{t("• Timings:")} {org.pathshalaTimings || "04:00 PM – 06:00 PM"}</p>
                                 <p>{t("• Days:")} {org.pathshalaDays || "Weekends"}</p>
+                                {org.pathshalaTeacher && (
+                                  <p>{t("• Contact Person / Teacher:")} {org.pathshalaTeacher}</p>
+                                )}
                               </div>
                             </div>
                             {isMemberView && (
@@ -4882,6 +4945,10 @@ export default function OrgDetailPage(props) {
 
           <TabsContent value="events">
             <EventsTab orgId={org.id} canEdit={canEdit} isMemberView={isMemberView} />
+          </TabsContent>
+
+          <TabsContent value="event_hall">
+            <EventHallTab org={org} apiPrefix={apiPrefix} onRefresh={loadOrg} canEdit={canEdit} />
           </TabsContent>
 
           <TabsContent value="timeline">

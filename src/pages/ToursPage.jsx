@@ -74,6 +74,9 @@ export default function ToursPage() {
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
+  const [monksList, setMonksList] = useState([]);
+  const [monkGroupsList, setMonkGroupsList] = useState([]);
+
   // Active Tab
   const [activeTab, setActiveTab] = useState("admin_tours");
 
@@ -102,7 +105,7 @@ export default function ToursPage() {
   const [description, setDescription] = useState("");
   const [jatraTarget, setJatraTarget] = useState(99);
   const [primaryMonkId, setPrimaryMonkId] = useState("");
-  const [monkGroupName, setMonkGroupName] = useState("");
+  const [monkGroupId, setMonkGroupId] = useState("");
   const [monkGroupLeader, setMonkGroupLeader] = useState("");
   const [supportingMonks, setSupportingMonks] = useState("");
   const [dharamshalaId, setDharamshalaId] = useState("");
@@ -148,9 +151,15 @@ export default function ToursPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const toursRes = await api.get("/tours").catch(() => ({ data: { data: [] } }));
+      const [toursRes, monksRes, groupsRes] = await Promise.all([
+        api.get("/tours").catch(() => ({ data: { data: [] } })),
+        api.get("/monks").catch(() => ({ data: { data: [] } })),
+        api.get("/monks/groups").catch(() => ({ data: { data: [] } }))
+      ]);
       const items = toursRes.data?.data?.items || toursRes.data?.data || [];
       setTours(items);
+      setMonksList(monksRes.data?.data || []);
+      setMonkGroupsList(groupsRes.data?.data || []);
 
       if (items.length > 0) {
         const active = selectedTour ? items.find(t => t.id === selectedTour.id) : items[0];
@@ -210,8 +219,6 @@ export default function ToursPage() {
       const selectedType = tourType === "Other" ? tourTypeOther || "Other 99 Yatra" : tourType;
       const payload = {
         name: tourName,
-        categoryId: "tour_cat_default",
-        category: { name: selectedType },
         tourType: selectedType,
         startDate: new Date(startDate).toISOString(),
         endDate: new Date(endDate).toISOString(),
@@ -219,7 +226,7 @@ export default function ToursPage() {
         description,
         jatraTarget: Number(jatraTarget),
         primaryMonkId: primaryMonkId || undefined,
-        monkGroupName: monkGroupName || undefined,
+        monkGroupId: monkGroupId || undefined,
         monkGroupLeader: monkGroupLeader || undefined,
         supportingMonks: supportingMonks ? supportingMonks.split(",").map(s => s.trim()) : undefined,
         dharamshalaId: dharamshalaId || undefined
@@ -240,7 +247,7 @@ export default function ToursPage() {
   const resetTourForm = () => {
     setTourName(""); setStartDate(""); setEndDate(""); setLocation("");
     setDescription(""); setJatraTarget(99); setPrimaryMonkId("");
-    setMonkGroupName(""); setMonkGroupLeader(""); setSupportingMonks("");
+    setMonkGroupId(""); setMonkGroupLeader(""); setSupportingMonks("");
     setDharamshalaId(""); setTourTypeOther("");
   };
 
@@ -901,11 +908,25 @@ export default function ToursPage() {
               </div>
               <div>
                 <Label className="text-[10px] uppercase font-bold text-slate-400">{t("Primary Monk ID *")}</Label>
-                <Input value={primaryMonkId} onChange={(e) => setPrimaryMonkId(e.target.value)} placeholder={t("Search MS ID")} required className="h-9 mt-1" />
+                <SearchableSelect
+                  value={primaryMonkId}
+                  onValueChange={setPrimaryMonkId}
+                  options={monksList.map(m => ({ value: m.id, label: `${m.dikshaName} (${m.publicId})` }))}
+                  placeholder={t("Select Monk")}
+                  searchPlaceholder={t("Search by name/id...")}
+                  className="mt-1"
+                />
               </div>
               <div>
-                <Label className="text-[10px] uppercase font-bold text-slate-400">{t("Monk Group Name")}</Label>
-                <Input value={monkGroupName} onChange={(e) => setMonkGroupName(e.target.value)} placeholder={t("e.g. Acharya Shri Group")} className="h-9 mt-1" />
+                <Label className="text-[10px] uppercase font-bold text-slate-400">{t("Monk Group")}</Label>
+                <SearchableSelect
+                  value={monkGroupId}
+                  onValueChange={setMonkGroupId}
+                  options={monkGroupsList.map(g => ({ value: g.id, label: g.name }))}
+                  placeholder={t("Select Monk Group")}
+                  searchPlaceholder={t("Search group name...")}
+                  className="mt-1"
+                />
               </div>
             </div>
 

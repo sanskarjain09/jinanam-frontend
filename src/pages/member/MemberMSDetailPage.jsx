@@ -186,7 +186,7 @@ export default function MemberMSDetailPage() {
               {monk.shortName && <span>{t("🌟 Popular:")} {monk.shortName}</span>}
               <span>{t("🔢 ID:")} <strong>{monk.publicId}</strong></span>
               <span>{t("🪷 Sect:")} {monk.sect || "Shwetambar"}</span>
-              {monk.gacchaName && <span>{t("📍 Gaccha:")} {monk.gacchaName}</span>}
+              {/* Gaccha hidden */}
             </div>
 
             <div className="flex items-center gap-4 flex-wrap pt-2">
@@ -392,7 +392,7 @@ export default function MemberMSDetailPage() {
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Community:")}</span><strong className="text-slate-800">{monk.sect || "Shwetambar"}</strong></div>
                       <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Sub-Sect / Tradition:")}</span><strong className="text-slate-800">{monk.subSect || "—"}</strong></div>
-                      {monk.gacchaName && <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500">{t("Gaccha:")}</span><strong className="text-slate-800">{monk.gacchaName}</strong></div>}
+                      {/* Gaccha row hidden */}
                     </div>
                   </div>
                 </div>

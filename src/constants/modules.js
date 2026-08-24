@@ -152,10 +152,12 @@ export const PUBLIC_ID_PREFIXES = {
 
 export const ROLE_LABELS = {
   SUPER_ADMIN: "Super Admin",
+  ORG_ADMIN: "Organization Admin",
   TEMPLE_ADMIN: "Temple Admin",
   DHARAMSHALA_ADMIN: "Dharamshala Admin",
   JAIN_CENTER_ADMIN: "Jain Center Admin",
   MONK_ADMIN: "Monk Admin",
+  BHOJANSHALA_ADMIN: "Bhojanshala Admin",
   STAFF: "Staff",
   SECURITY_GUARD: "Security Guard",
   EVENT_SCANNER: "Event Scanner",

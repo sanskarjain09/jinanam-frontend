@@ -17,13 +17,14 @@ import { PermissionGate } from "@/components/common/PermissionGate";
 
 export default function ChaturmasPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [selectedYear, setSelectedYear] = useState("all");
   
   const [monks, setMonks] = useState([]);
   const [temples, setTemples] = useState([]);
@@ -126,11 +127,11 @@ export default function ChaturmasPage() {
       monkName: finalMonkName,
       locationName: finalLocationName,
       startDate: form.startDate,
-      endDate: form.endDate || null,
-      contactPerson: form.contactPerson || null,
-      contactMobile: form.contactMobile || null,
+      endDate: form.endDate || undefined,
+      contactPerson: form.contactPerson || undefined,
+      contactMobile: form.contactMobile || undefined,
       status: form.status,
-      notes: form.notes || null
+      notes: form.notes || undefined
     };
 
     setSaving(true);
@@ -180,7 +181,20 @@ export default function ChaturmasPage() {
     }
   ];
 
-  const stayCentersCount = Array.from(new Set(rows.map(r => r.locationName))).length;
+  const filteredRows = rows.filter((r) => {
+    if (selectedYear !== "all") {
+      const year = r.startDate ? new Date(r.startDate).getFullYear().toString() : "";
+      if (year !== selectedYear) return false;
+    }
+    return true;
+  });
+
+  const stayCentersCount = Array.from(new Set(filteredRows.map(r => r.locationName))).length;
+
+  const currentYear = new Date().getFullYear();
+  const defaultYears = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map(String);
+  const yearsSet = new Set([...defaultYears, ...rows.map(r => r.startDate ? new Date(r.startDate).getFullYear().toString() : null).filter(Boolean)]);
+  const availableYears = Array.from(yearsSet).sort().reverse();
 
   return (
     <div data-testid="chaturmas-page">
@@ -192,15 +206,32 @@ export default function ChaturmasPage() {
         }
       />
 
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex-1"></div>
+        <div className="w-48">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("Filter by Year")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("All Years")}</SelectItem>
+              {availableYears.map(y => (
+                <SelectItem key={y} value={y}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        <StatCard label={t("Active Chaturmas")} value={rows.filter(r => r.status === "ACTIVE").length} icon={Flame} tone="warning" />
-        <StatCard label={t("Total Stays")} value={rows.length} icon={UserCheck} tone="default" />
+        <StatCard label={t("Active Chaturmas")} value={filteredRows.filter(r => r.status === "ACTIVE").length} icon={Flame} tone="warning" />
+        <StatCard label={t("Total Stays")} value={filteredRows.length} icon={UserCheck} tone="default" />
         <StatCard label={t("Stay Centers")} value={stayCentersCount} icon={MapPin} tone="info" />
       </div>
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={filteredRows}
         loading={loading}
         testId="chaturmas-table"
         emptyTitle={t("No Chaturmas stay listings")}

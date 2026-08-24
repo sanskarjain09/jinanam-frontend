@@ -254,8 +254,8 @@ function calculateAge(dobString) {
  * Register Member Dialog
  * ───────────────────────────────────────────────────────────────────────── */
 function RegisterMemberDialog({ onCreated }) {
-  const { user } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user, activeOrganizationId } = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [subTab, setSubTab] = useState("personal");
@@ -315,7 +315,7 @@ function RegisterMemberDialog({ onCreated }) {
     nationality: "India", preferredLanguage: "English", pan: "", aadhaar: "",
     maritalStatus: "Single", motherTongue: "Gujarati", sect: "Shwetambar",
     subCommunity: "Murtipujak", gaccha: "", tithiCalendar: "Gujarati",
-    mobile: "", whatsapp: "", email: "", preferredCommunicationMethod: "Mobile",
+    mobile: "", whatsapp: "", email: "", password: "", preferredCommunicationMethod: "Mobile",
     alternateContact: "",
     currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
     permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
@@ -467,7 +467,7 @@ function RegisterMemberDialog({ onCreated }) {
               nationality: "India", preferredLanguage: "English", pan: "", aadhaar: "",
               maritalStatus: "Single", motherTongue: "Gujarati", sect: "Shwetambar",
               subCommunity: "Murtipujak", gaccha: "", tithiCalendar: "Gujarati",
-              mobile: "", whatsapp: "", email: "", preferredCommunicationMethod: "Mobile",
+              mobile: "", whatsapp: "", email: "", password: "", preferredCommunicationMethod: "Mobile",
               alternateContact: "",
               currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
               permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
@@ -503,7 +503,7 @@ function RegisterMemberDialog({ onCreated }) {
       nationality: "India", preferredLanguage: "English", pan: "", aadhaar: "",
       maritalStatus: "Single", motherTongue: "Gujarati", sect: "Shwetambar",
       subCommunity: "Murtipujak", gaccha: "", tithiCalendar: "Gujarati",
-      mobile: "", whatsapp: "", email: "", preferredCommunicationMethod: "Mobile",
+      mobile: "", whatsapp: "", email: "", password: "", preferredCommunicationMethod: "Mobile",
       alternateContact: "",
       currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
       permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
@@ -790,6 +790,17 @@ function RegisterMemberDialog({ onCreated }) {
                           {mobileVerified ? t("✓ Verified") : t("Verify Mobile")}
                         </Button>
                       </div>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs">{t("Password (Optional)")}</Label>
+                      <Input 
+                        type="password"
+                        value={form.password || ""} 
+                        onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                        placeholder={t("Leave empty for auto-generated")} 
+                        className="bg-white mt-1" 
+                      />
                     </div>
 
                     <div>
@@ -1454,7 +1465,7 @@ import CountryDropdown from "@/components/common/CountryDropdown";
 
 export default function MembersPage() {
   const location = useLocation();
-  const { canDo, isSuperAdmin, user } = useAuth();
+  const { canDo, isSuperAdmin, user, activeOrganizationId } = useAuth();
   const { t } = useLanguage();
   const [members, setMembers]     = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -1471,7 +1482,7 @@ export default function MembersPage() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [cardOpen, setCardOpen]             = useState(false);
 
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
 
   useEffect(() => {
     let mounted = true;

@@ -131,7 +131,6 @@ function QuickActions() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
         {[
           { icon: Scan,          label: "Scan QR",       to: "/member/digital-id", color: "from-violet-500 to-purple-600" },
-          { icon: Heart,         label: "Donate",         to: "/member/donations",  color: "from-rose-500 to-pink-600" },
           { icon: CalendarCheck, label: "Book Now",       to: "/member/bookings",   color: "from-sky-500 to-blue-600" },
           { icon: Ticket,        label: "My Bookings",    to: "/member/bookings",   color: "from-emerald-500 to-green-600" },
           { icon: CreditCard,    label: "My Digital ID",  to: "/member/digital-id", color: "from-amber-500 to-orange-600" },
@@ -481,7 +480,7 @@ export default function MemberHomePage() {
       alertRes, annRes, tithiRes,
     ] = await Promise.all([
       api.get("/dashboard/member").catch(() => null),
-      api.get("/temples", { params: { take: 4 } }).catch(() => null),
+      api.get("/temples", { params: { take: 100 } }).catch(() => null),
       // §4.7.2 — member-scoped events, so temple-specific ones stay filtered
       api.get("/events/member").catch(() => null),
       api.get("/feed/", { params: { take: 4 } }).catch(() => null),
@@ -656,7 +655,9 @@ export default function MemberHomePage() {
                 {/* Real GPS distance when we have a fix; falls back to city text. */}
                 {[...temples]
                   .map((t) => ({ ...t, _km: distanceTo(t) }))
+                  .filter((t) => t._km == null || t._km <= 20)
                   .sort((a, b) => (a._km ?? Infinity) - (b._km ?? Infinity))
+                  .slice(0, 4)
                   .map((t) => (
                   <div key={t.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-200/60 space-y-2">
                     <div className="flex items-start justify-between">

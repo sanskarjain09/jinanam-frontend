@@ -11,8 +11,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function DonationReportsPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({

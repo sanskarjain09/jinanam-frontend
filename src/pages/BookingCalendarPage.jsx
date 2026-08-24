@@ -15,9 +15,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function BookingCalendarPage() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user , activeOrganizationId} = useAuth();
   const navigate = useNavigate();
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || (activeOrganizationId || user?.organizationIds?.[0]);
 
   const [loading, setLoading] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());

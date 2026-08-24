@@ -52,13 +52,21 @@ const BOOKING_CATEGORIES = [
 
 export default function BookingsPage() {
   const { t } = useLanguage();
-  const { canDo, user, isSuperAdmin } = useAuth();
+  const { canDo, user, isSuperAdmin, activeOrganizationId } = useAuth();
   const { orgs } = useOrgs();
-  const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const [selectedOrg, setSelectedOrg] = useState(activeOrganizationId || "");
+  
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setSelectedOrg(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
+
+  const orgId = selectedOrg || activeOrganizationId || user?.organizationIds?.[0] || (isSuperAdmin ? orgs[0]?.id : undefined);
 
   // Lists & States
   const [bookingItems, setBookingItems] = useState([]);
+  const [orgRooms, setOrgRooms] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +91,7 @@ export default function BookingsPage() {
   const [itemSetupOpen, setItemSetupOpen] = useState(false);
   const [newBookingOpen, setNewBookingOpen] = useState(false);
   const [detailBooking, setDetailBooking] = useState(null);
+  const [assignedRooms, setAssignedRooms] = useState([]); // Array of room IDs for assignment
   const [paymentProofOpen, setPaymentProofOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
   const [blackoutOpen, setBlackoutOpen] = useState(false);
@@ -172,24 +181,21 @@ export default function BookingsPage() {
     if (!orgId) { setLoading(false); return; }
     setLoading(true);
     try {
-      // 1. Fetch configured Booking Items
-      const itemsRes = await api.get(`/bookings/org/${orgId}`).catch(() => ({ data: { data: [] } }));
-      // 2. Fetch admin bookings list
-      const bookingsRes = await api.get(isSuperAdmin ? "/bookings" : `/bookings/org/${orgId}`).catch(() => ({ data: { data: [] } }));
-      // 3. Fetch current member's bookings
-      const myBookingsRes = await api.get("/bookings/my", { params: { scope: filterScope === "all" ? "all" : filterScope } }).catch(() => ({ data: { data: [] } }));
+      const unwrap = (res) => res?.data?.data?.items || res?.data?.data || [];
+      const [res1, res2, res3, res4] = await Promise.all([
+        api.get(isSuperAdmin ? "/bookings" : `/bookings/org/${orgId}`),
+        api.get("/bookings/my", { params: { scope: filterScope === "all" ? "all" : filterScope } }),
+        api.get(`/bookings/items/org/${orgId}`),
+        api.get(`/bookings/org/${orgId}/rooms`)
+      ]).catch(() => ([{data:[]}, {data:[]}, {data:[]}, {data:[]}]));
 
-      // Format arrays safely
-      const items = itemsRes.data?.data?.items || itemsRes.data?.data || [];
-      const adminBookings = bookingsRes.data?.data?.items || bookingsRes.data?.data || [];
-      const userBookings = myBookingsRes.data?.data?.items || myBookingsRes.data?.data || [];
+      setBookings(unwrap(res1));
+      setMyBookings(unwrap(res2));
+      setBookingItems(unwrap(res3));
+      setOrgRooms(unwrap(res4));
 
-      setBookingItems(items);
-      setBookings(adminBookings);
-      setMyBookings(userBookings);
-
-      if (items.length > 0 && !selectedCalendarItem) {
-        setSelectedCalendarItem(items[0]);
+      if (bookingItems.length > 0 && !selectedCalendarItem) {
+        setSelectedCalendarItem(bookingItems[0]);
       }
     } catch (e) {
       toast.error(t("Failed to load booking ledger data"));
@@ -342,7 +348,11 @@ export default function BookingsPage() {
   // Admin decision on Booking Requests
   const handleBookingDecision = async (bookingId, decision, reason) => {
     try {
-      await api.post(`/bookings/${bookingId}/decision`, { decision, reason });
+      const payload = { decision, reason };
+      if (decision === "APPROVE" && assignedRooms.length > 0) {
+        payload.allocatedRoomId = assignedRooms.join(",");
+      }
+      await api.post(`/bookings/${bookingId}/decision`, payload);
       toast.success(`Booking request decided: ${decision}`);
       setDetailBooking(null);
       setReloadKey(k => k + 1);
@@ -354,7 +364,11 @@ export default function BookingsPage() {
   // Admin decision on Payment verification
   const handlePaymentVerification = async (bookingId, decision, reason) => {
     try {
-      await api.post(`/bookings/${bookingId}/payment-verification`, { decision, reason });
+      const payload = { decision, reason };
+      if (decision === "APPROVE" && assignedRooms.length > 0) {
+        payload.allocatedRoomId = assignedRooms.join(",");
+      }
+      await api.post(`/bookings/${bookingId}/payment-verification`, payload);
       toast.success(`Payment verified status: ${decision}`);
       setDetailBooking(null);
       setReloadKey(k => k + 1);
@@ -514,7 +528,10 @@ export default function BookingsPage() {
       key: "action",
       header: t("Audit / Verify"),
       render: (r) => (
-        <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => setDetailBooking(r)}>
+        <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => {
+          setDetailBooking(r);
+          setAssignedRooms(r.allocatedRoomId ? r.allocatedRoomId.split(",").map(i => i.trim()) : []);
+        }}>
           {t("Review Details")}
         </Button>
       )
@@ -1196,6 +1213,33 @@ export default function BookingsPage() {
                     <div className="font-bold text-indigo-900">{t("Submitted Payment Details:")}</div>
                     <div className="mt-1 font-semibold text-slate-700">{t("Reference / UTR:")} {detailBooking.paymentReference}</div>
                     {detailBooking.paymentNotes && <div className="text-slate-500 mt-0.5">{t("Notes:")} {detailBooking.paymentNotes}</div>}
+                  </div>
+                )}
+
+                {/* Room Assignment UI */}
+                {(detailBooking.status === "PENDING_APPROVAL" || detailBooking.status === "PAYMENT_VERIFICATION") && canDo("BOOKINGS", "APPROVE") && (
+                  <div className="p-3 border border-emerald-100 rounded bg-emerald-50/30">
+                    <div className="text-[10px] uppercase font-bold text-slate-500 mb-2">{t("Assign Room(s) (Optional)")}</div>
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1">
+                      {(() => {
+                        const availableRooms = orgRooms.filter(r => r.name === detailBooking.bookingItem?.name && r.status === "AVAILABLE");
+                        if (availableRooms.length === 0) return <div className="text-xs text-slate-400">{t("No available rooms match this category.")}</div>;
+                        return availableRooms.map(r => (
+                          <label key={r.id} className="flex items-center gap-2 text-xs">
+                            <input 
+                              type="checkbox" 
+                              checked={assignedRooms.includes(r.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) setAssignedRooms([...assignedRooms, r.id]);
+                                else setAssignedRooms(assignedRooms.filter(id => id !== r.id));
+                              }}
+                              className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" 
+                            />
+                            {r.name} - {r.roomNumber || r.id.substring(0,6)}
+                          </label>
+                        ));
+                      })()}
+                    </div>
                   </div>
                 )}
               </div>

@@ -36,7 +36,7 @@ const TABS = [
     icon: User,
     match: [
       "/member/profile", "/member/digital-id", "/member/wallet",
-      "/member/bookings", "/member/donations", "/member/tickets",
+      "/member/bookings", "/member/tickets",
       "/member/notifications", "/member/support", "/member/visits", "/member/following",
     ],
   },

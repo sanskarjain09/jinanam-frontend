@@ -100,6 +100,7 @@ export default function MemberRegisterPage() {
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [registrationToken, setRegistrationToken] = useState(null);
+  const [password, setPassword] = useState("");
 
   // Step 2: Member Type
   const [memberType, setMemberType] = useState("JAIN"); // "JAIN" or "NON_JAIN"
@@ -366,6 +367,7 @@ export default function MemberRegisterPage() {
         consentPrivacy,
         consentServices,
         consentPromotional,
+        password: password || undefined,
       };
 
       const res = await memberAuthApi.register(payload);
@@ -652,6 +654,18 @@ export default function MemberRegisterPage() {
                     {t("Sets your Tithi and daily reminder.")}
                   </p>
                 </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <Label className="text-xs font-bold">{t("Account Password (Optional)")}</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={t("Leave empty for auto-generated password")}
+                  className="mt-1 text-xs bg-white"
+                />
               </div>
 
               {/* NON-JAIN Government Identity Documents (§3) */}

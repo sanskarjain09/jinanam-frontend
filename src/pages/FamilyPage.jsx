@@ -36,8 +36,8 @@ import { PhoneField } from "@/components/common/PhoneInput";
  * ------------------------------------------------------------------ */
 function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel, myPublicId }) {
   const { t } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user, isSuperAdmin , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [mode, setMode] = useState("link");
   const [linkedMember, setLinkedMember] = useState("");
   const [form, setForm] = useState({
@@ -214,8 +214,8 @@ function AddFamilyDialog({ open, onClose, onCreated, anchorPublicId, anchorLabel
  * ------------------------------------------------------------------ */
 function CreateFamilyGroupDialog({ open, onClose, onCreated, setAnchorPublicId }) {
   const { t } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user, isSuperAdmin , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [groupName, setGroupName] = useState("");
   const [memberIds, setMemberIds] = useState([]);
   const [memberDetails, setMemberDetails] = useState({}); // publicId → { fullName, mobile }
@@ -444,7 +444,7 @@ function CreateFamilyGroupDialog({ open, onClose, onCreated, setAnchorPublicId }
 /* ─── Family Member Card ────────────────────────────────────────────── */
 function FamilyCard({ link, onClick }) {
   const { t } = useLanguage();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin , activeOrganizationId} = useAuth();
   const m = link.member || {};
   const isActive = m.status === "ACTIVE";
   const mobileDisplay = (() => {
@@ -500,8 +500,8 @@ function FamilyCard({ link, onClick }) {
 /* ─── Main Page ─────────────────────────────────────────────────────── */
 export default function FamilyPage() {
   const { t } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user, isSuperAdmin , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);

@@ -90,7 +90,7 @@ export default function MyBookingsPage() {
     let cancelled = false;
     setLoading(true);
 
-    const fetchBookings = bookingsApi.mine({ group, ...(category ? { category } : {}) });
+    const fetchBookings = bookingsApi.mine({ scope: group, ...(category ? { category } : {}) });
 
     const fetchBhojanshala = (category === "" || category === "Bhojanshala")
       ? memberClient.get('/bhojanshala/my-passes')
@@ -109,9 +109,28 @@ export default function MyBookingsPage() {
           })
       : Promise.resolve([]);
 
-    Promise.all([fetchBookings, fetchBhojanshala, fetchEvents])
-      .then(([bookingsData, passesData, eventsData]) => {
+    const fetchEventHalls = (category === "" || category === "Event Hall")
+      ? memberClient.get('/event-halls/my-bookings')
+          .then(res => res.data?.data || [])
+          .catch(err => {
+            console.error("Error fetching Event Hall bookings:", err);
+            return [];
+          })
+      : Promise.resolve([]);
+
+    Promise.all([fetchBookings, fetchBhojanshala, fetchEvents, fetchEventHalls])
+      .then(([bookingsDataRaw, passesData, eventsData, eventHallsData]) => {
         if (cancelled) return;
+
+        const bookingsData = (bookingsDataRaw || []).map(b => ({
+          ...b,
+          item_name: b.bookingItem?.name,
+          organization_name: b.organization?.name,
+          from_date: b.dateFrom,
+          to_date: b.dateTo,
+          amount_minor: b.amount ? Number(b.amount) * 100 : null,
+          category: b.bookingItem?.categoryId || b.bookingItem?.type,
+        }));
 
         const today = new Date();
         today.setHours(0,0,0,0);
@@ -164,7 +183,33 @@ export default function MyBookingsPage() {
           _originalRsvp: r
         }));
 
-        const combined = [...bookingsData, ...mappedPasses, ...mappedEvents];
+        const filteredEventHalls = eventHallsData.filter(eh => {
+          const eDate = new Date(eh.bookingDate);
+          eDate.setHours(0,0,0,0);
+          const isPastStatus = ['CANCELLED', 'COMPLETED', 'REJECTED'].includes(eh.status);
+
+          if (group === 'past') return isPastStatus || eDate < today;
+          if (group === 'active') return !isPastStatus && eDate.getTime() === today.getTime();
+          if (group === 'upcoming') return !isPastStatus && eDate >= today;
+          return false;
+        });
+
+        const mappedEventHalls = filteredEventHalls.map(eh => ({
+          id: eh.id,
+          uid: eh.id,
+          _isEventHall: true,
+          item_name: `Event Hall - ${eh.eventHall?.name || 'Unknown'}`,
+          status: eh.status,
+          organization_name: eh.eventHall?.organization?.name,
+          from_date: eh.bookingDate,
+          to_date: eh.bookingDate,
+          amount_minor: Number(eh.amountPaid || 0) * 100,
+          currency: 'INR',
+          category: 'Event Hall',
+          _originalEventHall: eh
+        }));
+
+        const combined = [...bookingsData, ...mappedPasses, ...mappedEvents, ...mappedEventHalls];
         
         combined.sort((a, b) => {
           const dateA = new Date(a.from_date || a.booking_date || 0);
@@ -245,6 +290,7 @@ export default function MyBookingsPage() {
         {!loading &&
           rows.map((b) => {
             const isBhojanshala = b._isBhojanshala;
+            const isEventHall = b._isEventHall;
             const cardContent = (
               <Card
                 className="p-4 rounded-xl hover:border-orange-300 transition-colors"
@@ -283,7 +329,14 @@ export default function MyBookingsPage() {
                       </div>
                     )}
                   </div>
-                  <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 mt-1" />
+                  <div className="flex flex-col items-end gap-2">
+                    <ChevronRight className="h-4 w-4 text-slate-300 shrink-0 mt-1" />
+                    {b.status === 'PAYMENT_PENDING' && (
+                      <span className="text-[10px] font-bold uppercase tracking-wide bg-orange-100 text-orange-700 px-2 py-1 rounded border border-orange-200 mt-2 hover:bg-orange-200 transition-colors">
+                        {t("Upload Proof")}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
@@ -307,6 +360,18 @@ export default function MyBookingsPage() {
                   key={b.uid || b.id} 
                   className="block cursor-pointer"
                   onClick={() => setSelectedEventRsvp(b._originalRsvp)}
+                >
+                  {cardContent}
+                </div>
+              );
+            }
+            
+            if (isEventHall) {
+              return (
+                <div 
+                  key={b.uid || b.id} 
+                  className="block cursor-pointer"
+                  onClick={() => window.alert("Event Hall Booking Detail view coming soon!")}
                 >
                   {cardContent}
                 </div>

@@ -16,8 +16,8 @@ import { PermissionGate } from "@/components/common/PermissionGate";
 
 export default function FaqPage() {
   const { t } = useLanguage();
-  const { user, isSuperAdmin } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user, isSuperAdmin , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);

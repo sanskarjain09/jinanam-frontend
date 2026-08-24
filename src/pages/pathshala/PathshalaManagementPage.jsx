@@ -24,7 +24,7 @@ export default function PathshalaManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "structure";
 
-  const { user, isSuperAdmin, isGlobalScope, organizationIds } = useAuth();
+  const { user, isSuperAdmin, isGlobalScope, organizationIds , activeOrganizationId} = useAuth();
   
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState("");
@@ -52,7 +52,7 @@ export default function PathshalaManagementPage() {
         setOrganizations(orgs);
         
         // Set default selected org
-        const initialOrgId = user?.organizationIds?.[0] || (orgs.length > 0 ? orgs[0].id : "");
+        const initialOrgId = (activeOrganizationId || user?.organizationIds?.[0]) || (orgs.length > 0 ? orgs[0].id : "");
         if (initialOrgId && !selectedOrgId) {
           setSelectedOrgId(initialOrgId);
         }

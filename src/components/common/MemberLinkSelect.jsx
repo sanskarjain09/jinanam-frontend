@@ -139,7 +139,7 @@ export default function MemberLinkSelect({
       const newIds = selectedIds.includes(valToReturn)
         ? selectedIds.filter((val) => val !== valToReturn)
         : [...selectedIds, valToReturn];
-      onChange?.(newIds);
+      onChange?.(newIds, member);
       // Update local display objects
       setSelectedMembers((prev) => {
         if (prev.find((m) => m[returnValueType] === valToReturn)) {
@@ -148,7 +148,7 @@ export default function MemberLinkSelect({
         return [...prev, member];
       });
     } else {
-      onChange?.(valToReturn);
+      onChange?.(valToReturn, member);
       setSelectedMembers([member]);
       setOpen(false);
       setQuery("");
@@ -158,10 +158,10 @@ export default function MemberLinkSelect({
 
   const removeMember = (valToRemove) => {
     if (multi) {
-      onChange?.(selectedIds.filter((id) => id !== valToRemove));
+      onChange?.(selectedIds.filter((id) => id !== valToRemove), null);
       setSelectedMembers((prev) => prev.filter((m) => m[returnValueType] !== valToRemove));
     } else {
-      onChange?.(null);
+      onChange?.(null, null);
       setSelectedMembers([]);
     }
   };

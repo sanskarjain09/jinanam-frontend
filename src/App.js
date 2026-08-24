@@ -75,6 +75,7 @@ const CommitteePage = StaffPage;
 const PassManagementPage = OrgListPage;
 const SthanaksPage = OrgListPage;
 const BhojanshalaManagementPage = lazy(() => import("@/pages/BhojanshalaManagementPage"));
+const FeedAnalyticsPage = lazy(() => import("@/pages/FeedAnalyticsPage"));
 
 /* ─── Member Panel Page Imports ───────────────────────────────────────────── */
 import MemberLayout from "@/components/member/MemberLayout";
@@ -344,8 +345,6 @@ export default function App() {
                 <Route path="jain-centers/:id" element={<OrgDetailPage />} />
                 <Route path="jain-centres/:id" element={<OrgDetailPage />} />
                 <Route path="centre-information" element={<OrgListPage defaultType="JAIN_CENTER" />} />
-                <Route path="dharamshala-management" element={<DharamshalaManagementPage />} />
-                <Route path="dharamshala-management/:id" element={<DharamshalaManagementPage />} />
                 <Route path="dharamshalas" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="dharamshalas/:id" element={<OrgDetailPage />} />
                 
@@ -384,7 +383,7 @@ export default function App() {
                 <Route path="scheduled-posts" element={<FeedPage />} />
                 <Route path="featured-posts" element={<FeedPage />} />
                 <Route path="reported-posts" element={<FeedPage />} />
-                <Route path="feed-analytics" element={<FeedPage />} />
+                <Route path="feed-analytics" element={<FeedAnalyticsPage />} />
                 <Route path="events" element={<EventsPage />} />
                 <Route path="event-categories" element={<EventsPage />} />
                 <Route path="event-management" element={<EventsPage />} />
@@ -537,6 +536,10 @@ export default function App() {
                 <Route path="temples/:id" element={<MemberTempleDetailPage />} />
                 <Route path="temples/:id/gallery" element={<MemberGalleryPage />} />
                 <Route path="temples/:id/book" element={<MemberBookingPage />} />
+                <Route path="dharamshalas/:id/book" element={<MemberBookingPage />} />
+                <Route path="bhojanshalas/:id/book" element={<MemberBookingPage />} />
+                <Route path="jain-centers/:id/book" element={<MemberBookingPage />} />
+                <Route path="pathshalas/:id/book" element={<MemberBookingPage />} />
                 <Route path="support" element={<MemberSupportPage />} />
                 <Route path="tours" element={<MemberToursPage />} />
                 <Route path="tours/:tourId/jatra/:participantId" element={<MemberJatraProgressPage />} />
@@ -551,7 +554,7 @@ export default function App() {
                 <Route path="notifications/preferences" element={<MemberNotificationPreferencesPage />} />
                 <Route path="bookings" element={<MyBookingsPage />} />
                 <Route path="bookings/:uid" element={<BookingDetailPage />} />
-                <Route path="donations" element={<MemberDonationsPage />} />
+                {/* <Route path="donations" element={<MemberDonationsPage />} /> */}
                 <Route path="visits" element={<MemberVisitsPage />} />
                 <Route path="events" element={<MemberEventsPage />} />
                 <Route path="events/:id" element={<MemberEventDetailPage />} />

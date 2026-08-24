@@ -183,7 +183,7 @@ export default function OrgListPage(props) {
     upiId: "", bankAccount: "", bankIfsc: "", hasBhojanshala: false,
     hasUpashray: false, hasEventHall: false, hasDharamshala: false, hasPathshala: false,
     upashrayLocation: "Within Property", eventHallPurpose: "Available for Booking",
-    eventHallBookingLink: "", bhojanshalaBreakfast: "07:00 AM - 08:30 AM",
+    bhojanshalaBreakfast: "07:00 AM - 08:30 AM",
     bhojanshalaLunch: "11:30 AM - 01:00 PM", bhojanshalaDinner: "05:00 PM - 06:00 PM",
     bhojanshalaMealType: "Free", bhojanshalaAvailability: "Daily", bhojanshalaContact: "",
     dharamshalaRooms: "Both", dharamshalaOffice: "09:00 AM - 08:00 PM", dharamshalaPhone: "",
@@ -205,7 +205,7 @@ export default function OrgListPage(props) {
     contactMobileVerified: false, contactWhatsAppVerified: false, contactEmailVerified: false,
     primaryContactPreference: "Mobile", trusteesList: [], volunteersList: [],
     instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: "",
-    parentOrganizationId: "", linkedBhojanshalaId: "", linkedDharamshalaId: "", linkedPathshalaId: ""
+    parentOrganizationId: "", linkedBhojanshalaIds: [], linkedDharamshalaIds: [], linkedPathshalaId: ""
   });
 
   useEffect(() => {
@@ -290,8 +290,20 @@ export default function OrgListPage(props) {
       if (!payload.parentOrganizationId) delete payload.parentOrganizationId;
       
       const childOrgIds = [];
-      if (payload.hasBhojanshala && payload.linkedBhojanshalaId) childOrgIds.push(payload.linkedBhojanshalaId);
-      if (payload.hasDharamshala && payload.linkedDharamshalaId) childOrgIds.push(payload.linkedDharamshalaId);
+      if (payload.hasBhojanshala && payload.linkedBhojanshalaIds?.length > 0) {
+        childOrgIds.push(...payload.linkedBhojanshalaIds);
+      } else if (payload.hasBhojanshala && !payload.linkedBhojanshalaIds?.length) {
+        toast.error(t("Please select at least one Bhojanshala to link."));
+        setCreating(false);
+        return;
+      }
+      if (payload.hasDharamshala && payload.linkedDharamshalaIds?.length > 0) {
+        childOrgIds.push(...payload.linkedDharamshalaIds);
+      } else if (payload.hasDharamshala && !payload.linkedDharamshalaIds?.length) {
+        toast.error(t("Please select at least one Dharamshala to link."));
+        setCreating(false);
+        return;
+      }
       if (payload.hasPathshala && payload.linkedPathshalaId) childOrgIds.push(payload.linkedPathshalaId);
       if (childOrgIds.length > 0) payload.childOrganizationIds = childOrgIds;
       if (payload.buildings && Array.isArray(payload.buildings)) {
@@ -326,7 +338,7 @@ export default function OrgListPage(props) {
         upiId: "", bankAccount: "", bankIfsc: "", hasBhojanshala: false,
         hasUpashray: false, hasEventHall: false, hasDharamshala: false, hasPathshala: false,
         upashrayLocation: "Within Property", eventHallPurpose: "Available for Booking",
-        eventHallBookingLink: "", bhojanshalaBreakfast: "07:00 AM - 08:30 AM",
+        bhojanshalaBreakfast: "07:00 AM - 08:30 AM",
         bhojanshalaLunch: "11:30 AM - 01:00 PM", bhojanshalaDinner: "05:00 PM - 06:00 PM",
         bhojanshalaMealType: "Free", bhojanshalaAvailability: "Daily", bhojanshalaContact: "",
         dharamshalaRooms: "Both", dharamshalaOffice: "09:00 AM - 08:00 PM", dharamshalaPhone: "",
@@ -348,7 +360,7 @@ export default function OrgListPage(props) {
         contactMobileVerified: false, contactWhatsAppVerified: false, contactEmailVerified: false,
         primaryContactPreference: "Mobile", trusteesList: [], volunteersList: [],
         instaLink: "", facebookLink: "", youtubeLink: "", donationQrCodeUrl: "", bankName: "", bankBranch: "",
-        parentOrganizationId: "", linkedBhojanshalaId: "", linkedDharamshalaId: "", linkedPathshalaId: ""
+        parentOrganizationId: "", linkedBhojanshalaIds: [], linkedDharamshalaIds: [], linkedPathshalaId: ""
       });
       setReloadKey((k) => k + 1);
     } catch (e) {
@@ -800,108 +812,6 @@ export default function OrgListPage(props) {
                                   onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
                                 />
                               </div>
-                              <div>
-                                <div className="flex items-center justify-between">
-                                  <Label className="text-xs font-semibold text-slate-700">{t("Mul Nayak Bhagwan")}</Label>
-                                  {isSuperAdmin && (
-                                    <button type="button" onClick={() => setCreateDeityOpen(true)}
-                                      className="text-[10px] text-purple-700 hover:text-purple-900 font-bold transition-all">
-                                      {t("+ Create Deity")}
-                                    </button>
-                                  )}
-                                </div>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.templeMulNayakName || ""} onChange={(e) => setForm({ ...form, templeMulNayakName: e.target.value })}>
-                                  <option value="">{t("Select Bhagwan...")}</option>
-                                  {bhagwans.filter(b => b.category === "24 Tirthankars").length > 0 && (
-                                    <optgroup label={t("24 Tirthankars")}>
-                                      {bhagwans.filter(b => b.category === "24 Tirthankars").map(b => (
-                                        <option key={b.id} value={b.name}>{b.name}</option>
-                                      ))}
-                                    </optgroup>
-                                  )}
-                                  {bhagwans.filter(b => b.category !== "24 Tirthankars").length > 0 && (
-                                    <optgroup label={t("Others")}>
-                                      {bhagwans.filter(b => b.category !== "24 Tirthankars").map(b => (
-                                        <option key={b.id} value={b.name}>{b.name}</option>
-                                      ))}
-                                    </optgroup>
-                                  )}
-                                </select>
-                              </div>
-                              {field("Mul Nayak Image URL", "templeMulNayakImageUrl", "text", "https://...")}
-                              <div>
-                                <Label className="text-xs">{t("Temple Type")}</Label>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.templeType || "Griha Chaityalaya"} onChange={(e) => setForm({ ...form, templeType: e.target.value })}>
-                                  <option value="Shikhar-baddha">{t("Shikhar-baddha")}</option>
-                                  <option value="Griha Chaityalaya">{t("Griha Chaityalaya")}</option>
-                                </select>
-                              </div>
-                              <div>
-                                <Label className="text-xs">{t("Select Tithi Calendar")}</Label>
-                                <select className="w-full mt-1 h-9 rounded-md border border-slate-200 bg-white px-3 text-sm focus:outline-none"
-                                  value={form.templeTithiCalendar || "Gujarati"} onChange={(e) => setForm({ ...form, templeTithiCalendar: e.target.value })}>
-                                  <option value="Gujarati">{t("Gujarati")}</option>
-                                  <option value="Hindi">{t("Hindi")}</option>
-                                  <option value="Marwari">{t("Marwari")}</option>
-                                  <option value="Other">{t("Other")}</option>
-                                </select>
-                              </div>
-
-                              {/* Opening Timings: Morning & Evening Clock Time Pickers */}
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Morning Opening Timings")}</Label>
-                                  <TimeRangePicker
-                                    fromValue={form.morningStart || "06:00 AM"}
-                                    toValue={form.morningEnd || "12:00 PM"}
-                                    onFromChange={(val) => setForm(prev => ({ ...prev, morningStart: val }))}
-                                    onToChange={(val) => setForm(prev => ({ ...prev, morningEnd: val }))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Evening Opening Timings")}</Label>
-                                  <TimeRangePicker
-                                    fromValue={form.eveningStart || "05:30 PM"}
-                                    toValue={form.eveningEnd || "09:00 PM"}
-                                    onFromChange={(val) => setForm(prev => ({ ...prev, eveningStart: val }))}
-                                    onToChange={(val) => setForm(prev => ({ ...prev, eveningEnd: val }))}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Pakshal, Pooja & Aarti Clock Pickers */}
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Pakshal Timings")}</Label>
-                                  <TimePicker
-                                    value={form.templePakshalStart || form.pakshalStart || "06:30 AM"}
-                                    onChange={(t) => setForm(prev => ({ ...prev, templePakshalStart: t, pakshalStart: t }))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Morning Pooja Timings")}</Label>
-                                  <TimePicker
-                                    value={form.templePoojaStart || form.poojaStart || "07:30 AM"}
-                                    onChange={(t) => setForm(prev => ({ ...prev, templePoojaStart: t, poojaStart: t }))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Morning Aarti Timings")}</Label>
-                                  <TimePicker
-                                    value={form.aartiMorning || "08:30 AM"}
-                                    onChange={(t) => setForm(prev => ({ ...prev, aartiMorning: t }))}
-                                  />
-                                </div>
-                                <div>
-                                  <Label className="text-xs font-semibold text-slate-700 mb-1 block">{t("Evening Aarti Timings")}</Label>
-                                  <TimePicker
-                                    value={form.templeAartiEvening || form.aartiEvening || "07:15 PM"}
-                                    onChange={(t) => setForm(prev => ({ ...prev, templeAartiEvening: t, aartiEvening: t }))}
-                                  />
-                                </div>
-                              </div>
                             </div>
                           )}
                         </div>
@@ -1300,9 +1210,6 @@ export default function OrgListPage(props) {
                                       <option value="Temple Use Only">{t("Temple Use Only")}</option>
                                     </select>
                                   </div>
-                                  {form.eventHallPurpose === "Available for Booking" && (
-                                    field("Event Hall Booking Link", "eventHallBookingLink", "url", "https://...")
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -1315,9 +1222,13 @@ export default function OrgListPage(props) {
                               {form.hasBhojanshala && (
                                 <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                                   <OrgSelect
-                                    label={t("Link Existing Bhojanshala")}
-                                    value={form.linkedBhojanshalaId}
-                                    onChange={(val) => setForm({ ...form, linkedBhojanshalaId: val })}
+                                    label={t("Link Existing Bhojanshala(s)")}
+                                    value={form.linkedBhojanshalaIds}
+                                    onChange={(val) => setForm({ ...form, linkedBhojanshalaIds: val })}
+                                    filterType="BHOJANSHALA"
+                                    multiple={true}
+                                    required={true}
+                                    testId="bhojanshala-select"
                                   />
                                 </div>
                               )}
@@ -1331,9 +1242,13 @@ export default function OrgListPage(props) {
                               {form.hasDharamshala && (
                                 <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
                                   <OrgSelect
-                                    label={t("Link Existing Dharamshala")}
-                                    value={form.linkedDharamshalaId}
-                                    onChange={(val) => setForm({ ...form, linkedDharamshalaId: val })}
+                                    label={t("Link Existing Dharamshala(s)")}
+                                    value={form.linkedDharamshalaIds}
+                                    onChange={(val) => setForm({ ...form, linkedDharamshalaIds: val })}
+                                    filterType="DHARAMSHALA"
+                                    multiple={true}
+                                    required={true}
+                                    testId="dharamshala-select"
                                   />
                                 </div>
                               )}
@@ -1346,11 +1261,38 @@ export default function OrgListPage(props) {
                               {toggle("Pathshala Available", "hasPathshala")}
                               {form.hasPathshala && (
                                 <div className="space-y-3 pl-6 border-l-2 border-l-orange-500">
-                                  <OrgSelect
-                                    label={t("Link Existing Pathshala")}
-                                    value={form.linkedPathshalaId}
-                                    onChange={(val) => setForm({ ...form, linkedPathshalaId: val })}
-                                  />
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                      <Label className="text-xs">{t("Timings")}</Label>
+                                      <Input
+                                        value={form.pathshalaTimings || ""}
+                                        onChange={(e) => setForm({ ...form, pathshalaTimings: e.target.value })}
+                                        placeholder="04:30 PM - 06:00 PM"
+                                        className="mt-1 bg-white"
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label className="text-xs">{t("Days")}</Label>
+                                      <Input
+                                        value={form.pathshalaDays || ""}
+                                        onChange={(e) => setForm({ ...form, pathshalaDays: e.target.value })}
+                                        placeholder="Sat, Sun"
+                                        className="mt-1 bg-white"
+                                      />
+                                    </div>
+                                  </div>
+                                    <MemberSelect
+                                      label={t("Contact Person / Teacher")}
+                                      value={form.pathshalaTeacher || ""}
+                                      onChange={(val, member) => {
+                                        if (member) {
+                                          setForm({ ...form, pathshalaTeacher: `${member.fullName || member.name}${member.mobileNumber ? ` - ${member.mobileNumber}` : ''}` });
+                                        } else {
+                                          setForm({ ...form, pathshalaTeacher: "" });
+                                        }
+                                      }}
+                                      placeholder={t("Search & link teacher...")}
+                                    />
                                 </div>
                               )}
                             </div>

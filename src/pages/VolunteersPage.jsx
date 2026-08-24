@@ -124,12 +124,19 @@ function RoleRow({ role, idx, onChange, onRemove, canRemove }) {
 }
 
 export default function VolunteersPage() {
-  const { user, canDo, isSuperAdmin } = useAuth();
+  const { user, canDo, isSuperAdmin, activeOrganizationId } = useAuth();
   const { t } = useLanguage();
   const { orgs } = useOrgs();
-  const [selectedOrg, setSelectedOrg] = useState("");
+  const [selectedOrg, setSelectedOrg] = useState(activeOrganizationId || "");
   const myOrgs = isSuperAdmin ? orgs : orgs.filter((o) => user?.organizationIds?.includes(o.id));
-  const orgId = selectedOrg || myOrgs[0]?.id;
+  
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setSelectedOrg(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
+
+  const orgId = selectedOrg || activeOrganizationId || myOrgs[0]?.id;
   const [opportunities, setOpportunities] = useState([]);
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);

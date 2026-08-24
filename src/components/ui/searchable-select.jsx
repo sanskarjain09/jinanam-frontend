@@ -90,7 +90,7 @@ const SearchableSelect = React.forwardRef(function SearchableSelect(
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen} modal={false}>
+    <Popover open={open} onOpenChange={setOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           ref={ref}
@@ -123,7 +123,7 @@ const SearchableSelect = React.forwardRef(function SearchableSelect(
           return 0;
         }}>
           <CommandInput placeholder={t(searchPlaceholder)} className="h-9" />
-          <CommandList>
+          <CommandList className="max-h-60 overflow-y-auto">
             <CommandEmpty>{t(emptyText)}</CommandEmpty>
             <CommandGroup>
               {options.map((opt, idx) => (

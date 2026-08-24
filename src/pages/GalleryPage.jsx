@@ -21,10 +21,17 @@ import { PermissionGate } from "@/components/common/PermissionGate";
 
 export default function GalleryPage() {
   const { t } = useLanguage();
-  const { user, isSuperAdmin, canDo } = useAuth();
+  const { user, isSuperAdmin, canDo, activeOrganizationId } = useAuth();
   const { orgs } = useOrgs();
-  const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const [selectedOrg, setSelectedOrg] = useState(activeOrganizationId || "");
+  
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setSelectedOrg(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
+
+  const orgId = selectedOrg || activeOrganizationId || user?.organizationIds?.[0] || (isSuperAdmin ? orgs[0]?.id : undefined);
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);

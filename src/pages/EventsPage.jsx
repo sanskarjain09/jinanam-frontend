@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { api, extractErrorMessage, API_BASE } from "@/lib/api";
 import { PageHeader } from "@/components/common/PageHeader";
 import { DataTable } from "@/components/common/DataTable";
@@ -74,10 +75,17 @@ const MURTIPUJAK_GACCHAS = [
 
 export default function EventsPage() {
   const { t } = useLanguage();
-  const { canDo, user, isSuperAdmin } = useAuth();
+  const { canDo, user, isSuperAdmin, activeOrganizationId } = useAuth();
   const { orgs } = useOrgs();
-  const [selectedOrg, setSelectedOrg] = useState(isSuperAdmin ? "ALL" : "");
-  const orgId = selectedOrg === "ALL" ? "ALL" : (selectedOrg || user?.organizationIds?.[0]);
+  const [selectedOrg, setSelectedOrg] = useState(isSuperAdmin ? "ALL" : activeOrganizationId || "");
+  
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setSelectedOrg(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
+
+  const orgId = selectedOrg === "ALL" ? "ALL" : (selectedOrg || activeOrganizationId || user?.organizationIds?.[0]);
 
   // States
   const [rows, setRows] = useState([]);
@@ -91,8 +99,20 @@ export default function EventsPage() {
     ticketsSold: 0, revenue: 0
   });
 
+  const location = useLocation();
+  const getTabFromPath = (path) => {
+    if (path.includes("seating")) return "seating";
+    if (path.includes("ticket")) return "tickets";
+    if (path.includes("report") || path.includes("analytic")) return "reports";
+    return "admin_events";
+  };
+
   // Active Tab
-  const [activeTab, setActiveTab] = useState("admin_events");
+  const [activeTab, setActiveTab] = useState(() => getTabFromPath(location.pathname));
+
+  useEffect(() => {
+    setActiveTab(getTabFromPath(location.pathname));
+  }, [location.pathname]);
 
   // Selection & Dialogs
   const [createOpen, setCreateOpen] = useState(false);
@@ -700,7 +720,14 @@ export default function EventsPage() {
           )}
           {canDo("EVENTS", "CREATE") && (
             <Button
-              onClick={() => { resetWizard(); setCreateOpen(true); }}
+              onClick={() => {
+                if (orgId === "ALL") {
+                  toast.error(t("Please select a specific organization from the Active Location Facility to create an event."));
+                  return;
+                }
+                resetWizard();
+                setCreateOpen(true);
+              }}
               data-testid="events-add-button"
               className="bg-white hover:bg-orange-50 text-orange-700 font-bold h-10 px-5 shadow-md border border-white"
             >

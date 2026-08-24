@@ -27,9 +27,9 @@ const REPORTS_DEF = [
 ];
 
 export default function ReportsPage() {
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin , activeOrganizationId} = useAuth();
   const { t } = useLanguage();
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Sidebar links arrive as /reports?tab=<reportKey>. Honour the param so each

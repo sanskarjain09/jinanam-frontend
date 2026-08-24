@@ -46,10 +46,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function VisitorsPage() {
   const { t } = useLanguage();
-  const { canDo, user, isSuperAdmin } = useAuth();
+  const { canDo, user, isSuperAdmin , activeOrganizationId} = useAuth();
   const { orgs } = useOrgs();
   const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const orgId = (activeOrganizationId || user?.organizationIds?.[0]) || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
 
   const [live, setLive] = useState([]);
   const [history, setHistory] = useState([]);

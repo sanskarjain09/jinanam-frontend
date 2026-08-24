@@ -27,7 +27,7 @@ import {
   toOptions,
 } from "@/constants/dropdownOptions";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatPan, formatAadhaar } from "@/lib/idFormats";
+import { formatPan, formatAadhaar, isValidPan, isValidAadhaar } from "@/lib/idFormats";
 
 /* ─── Helpers & Constants ─────────────────────────────────────── */
 function initials(name = "") {
@@ -209,19 +209,8 @@ function IdCardVisual({ member, relation }) {
 }
 
 /* ─── Edit Panel: 21/22 Sections ─── */
-function EditPanel({ member, onSave, onCancel }) {
-  const { t } = useLanguage();
-  // A member is Jain only when category === "JAIN" (explicit) OR when category is absent/null (default).
-  // When category === "NON_JAIN", isJain must be false so Jain-specific tabs are hidden.
-  const isJain = member?.category !== "NON_JAIN";
-  const [subTab, setSubTab] = useState("personal");
-  
-  // Simulated verification hooks
-  const [mobileVerified, setMobileVerified] = useState(!!member?.mobile);
-  const [whatsappVerified, setWhatsappVerified] = useState(!!member?.whatsapp);
-  const [emailVerified, setEmailVerified] = useState(!!member?.email);
-
-  const [form, setForm] = useState({
+function getInitialFormState(member) {
+  return {
     firstName: member?.firstName || "",
     middleName: member?.middleName || "",
     surname: member?.surname || "",
@@ -272,7 +261,9 @@ function EditPanel({ member, onSave, onCancel }) {
       pincode: member?.nativeVillage?.pincode || "",
     },
     visitFrequency: member?.visitFrequency || "Weekly",
-    favouriteTemple: member?.favouriteTemple || "",
+    favouriteTempleId: member?.favouriteTempleId || "",
+    favouriteDharamshalaId: member?.favouriteDharamshalaId || "",
+    favouriteBhojanshalaId: member?.favouriteBhojanshalaId || "",
     bloodGroup: member?.bloodGroup || "O+",
     disability: member?.disability || "No",
     disabilityDetails: member?.disabilityDetails || "",
@@ -297,12 +288,39 @@ function EditPanel({ member, onSave, onCancel }) {
     allowContact: member?.allowContact ?? true,
     preferredCurrency: member?.preferredCurrency || "INR (₹)",
     interests: member?.interests || [],
-    favouriteTemples: member?.favouriteTemples || "",
+    favouriteTempleId: member?.favouriteTempleId || "",
+    favouriteDharamshalaId: member?.favouriteDharamshalaId || "",
+    favouriteBhojanshalaId: member?.favouriteBhojanshalaId || "",
     govtDocs: member?.govtDocs || [
       { docType: "Aadhaar Card", docNumber: "", imageUrl: "", status: "Pending Verification" },
       { docType: "PAN Card", docNumber: "", imageUrl: "", status: "Pending Verification" }
     ]
-  });
+  };
+}
+
+function EditPanel({ member, onSave, onCancel }) {
+  const { t } = useLanguage();
+  // A member is Jain only when category === "JAIN" (explicit) OR when category is absent/null (default).
+  // When category === "NON_JAIN", isJain must be false so Jain-specific tabs are hidden.
+  const isJain = member?.category !== "NON_JAIN";
+  const [subTab, setSubTab] = useState("personal");
+  const [organizations, setOrganizations] = useState([]);
+
+  
+  // Simulated verification hooks
+  const [mobileVerified, setMobileVerified] = useState(!!member?.mobile);
+  const [whatsappVerified, setWhatsappVerified] = useState(!!member?.whatsapp);
+  const [emailVerified, setEmailVerified] = useState(!!member?.email);
+
+  const [form, setForm] = useState(() => getInitialFormState(member));
+
+  useEffect(() => {
+    setForm(getInitialFormState(member));
+    setMobileVerified(!!member?.mobile);
+    setWhatsappVerified(!!member?.whatsapp);
+    setEmailVerified(!!member?.email);
+  }, [member]);
+
 
   const [saving, setSaving] = useState(false);
 
@@ -784,10 +802,17 @@ function EditPanel({ member, onSave, onCancel }) {
           {/* TAB 5: PREFERENCES */}
           {subTab === "preferences" && (
             <div className="space-y-3">
-              <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("❤️ Temple & Dharamshala Preferences")}</h3>
-              <div>
-                <Label className="text-xs font-semibold text-slate-600">{t("Favourite Temple")}</Label>
-                <Input value={form.favouriteTemple} onChange={(e) => setForm({ ...form, favouriteTemple: e.target.value })} placeholder={t("e.g. Adinath Derasar, Mumbai")} className="bg-white mt-1" />
+              <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("❤️ Temple Preferences")}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <div>
+                  <Label className="text-slate-600 text-xs">{t("Favourite Temple")}</Label>
+                  <Input
+                    value={form.favouriteTempleId}
+                    onChange={(e) => setForm({ ...form, favouriteTempleId: e.target.value })}
+                    placeholder={t("e.g. Mahavir Swami Temple")}
+                    className="mt-1"
+                  />
+                </div>
               </div>
 
               <div>
@@ -835,7 +860,17 @@ function EditPanel({ member, onSave, onCancel }) {
 
               <div className="pt-2">
                 <Label className="text-xs">{t("Follow Temples / Favourites")}</Label>
-                <Input value={form.favouriteTemples} onChange={(e) => setForm({ ...form, favouriteTemples: e.target.value })} placeholder={t("Search and select temples to follow...")} className="bg-white mt-1" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                  <div>
+                    <Label className="text-slate-600 text-xs">{t("Favourite Temple")}</Label>
+                    <Input
+                      value={form.favouriteTempleId}
+                      onChange={(e) => setForm({ ...form, favouriteTempleId: e.target.value })}
+                      placeholder={t("e.g. Mahavir Swami Temple")}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -1386,6 +1421,7 @@ export function MemberIdCardDialog({
             {mode === "edit" && (
               <div className="bg-white rounded-xl p-0 overflow-hidden shadow-inner">
                 <EditPanel
+                  key={member?._detailLoaded ? "loaded" : "loading"}
                   member={member}
                   onSave={onSave}
                   onCancel={() => setMode("preview")}

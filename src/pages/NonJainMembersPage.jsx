@@ -46,8 +46,8 @@ function calculateAge(dobString) {
 }
 
 function RegisterNonJainDialog({ onCreated }) {
-  const { user } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { user , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || (activeOrganizationId || user?.organizationIds?.[0]);
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [subTab, setSubTab] = useState("personal");
@@ -61,15 +61,16 @@ function RegisterNonJainDialog({ onCreated }) {
   const [whatsappVerified, setWhatsappVerified] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
 
+
   const [form, setForm] = useState({
-    firstName: "", middleName: "", surname: "", gender: "Male", dob: "",
-    nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "",
+    firstName: "", middleName: "", surname: "", dob: "", gender: "Male",
+    nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "", password: "",
     email: "", preferredCommunicationMethod: "Mobile", alternateContact: "",
     currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
     permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
     sameAsPermanent: false,
     nativeVillage: { village: "", landmark: "", district: "", city: "", state: "", pincode: "" },
-    interests: [], favouriteTemples: "", isVolunteer: false, volunteerAreas: [],
+    interests: [], favouriteTempleId: "", favouriteDharamshalaId: "", favouriteBhojanshalaId: "", isVolunteer: false, volunteerAreas: [],
     volunteerAvailability: "Weekend", bloodGroup: "O+", medicalConditions: "",
     allergies: "", emergencyName: "", emergencyRelation: "", emergencyMobile: "",
     profession: "", organizationName: "", serviceNotifications: ["SMS", "WhatsApp", "Push"],
@@ -124,6 +125,7 @@ function RegisterNonJainDialog({ onCreated }) {
     try {
       const res = await api.post("/members/admin-create", {
         firstName: form.firstName,
+        middleName: form.middleName || undefined,
         surname: form.surname || undefined,
         mobile: form.mobile,
         whatsapp: form.whatsapp || undefined,
@@ -134,7 +136,23 @@ function RegisterNonJainDialog({ onCreated }) {
         category: "NON_JAIN", // Hard-locked: this form persists to non-jain records only
         status: "ACTIVE",
         dob: form.dob ? new Date(form.dob).toISOString() : undefined,
-        currentAddress: (form.currentAddress.city || form.currentAddress.state) ? { city: form.currentAddress.city || undefined, state: form.currentAddress.state || undefined } : undefined,
+        nationality: form.nationality || undefined,
+        preferredLanguage: form.preferredLanguage || undefined,
+        bloodGroup: form.bloodGroup || undefined,
+        profession: form.profession || undefined,
+        interests: form.interests?.length > 0 ? form.interests : undefined,
+        favouriteTempleId: form.favouriteTempleId || undefined,
+        favouriteDharamshalaId: form.favouriteDharamshalaId || undefined,
+        favouriteBhojanshalaId: form.favouriteBhojanshalaId || undefined,
+        isVolunteer: form.isVolunteer,
+        volunteerAreas: form.volunteerAreas?.length > 0 ? form.volunteerAreas : undefined,
+        volunteerAvailability: form.volunteerAvailability || undefined,
+        emergencyContact: (form.emergencyName || form.emergencyMobile) ? { name: form.emergencyName, mobile: form.emergencyMobile, relation: form.emergencyRelation } : undefined,
+        pan: form.govtDocs.find(d => d.docType === "PAN Card")?.docNumber || undefined,
+        aadhaar: form.govtDocs.find(d => d.docType === "Aadhaar Card")?.docNumber || undefined,
+        currentAddress: (form.currentAddress.line1 || form.currentAddress.city || form.currentAddress.state) ? form.currentAddress : undefined,
+        permanentAddress: (!form.sameAsPermanent && (form.permanentAddress.line1 || form.permanentAddress.city || form.permanentAddress.state)) ? form.permanentAddress : undefined,
+        sameAsPermanent: form.sameAsPermanent,
         ...(orgId && { organizationId: orgId }),
       });
       const data = res.data?.data || {};
@@ -148,14 +166,14 @@ function RegisterNonJainDialog({ onCreated }) {
             setCreatedId(null);
             setOpen(false);
             setForm({
-              firstName: "", middleName: "", surname: "", gender: "Male", dob: "",
-              nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "",
+              firstName: "", middleName: "", surname: "", dob: "", gender: "Male",
+              nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "", password: "",
               email: "", preferredCommunicationMethod: "Mobile", alternateContact: "",
               currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
               permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
               sameAsPermanent: false,
               nativeVillage: { village: "", landmark: "", district: "", city: "", state: "", pincode: "" },
-              interests: [], favouriteTemples: "", isVolunteer: false, volunteerAreas: [],
+              interests: [], favouriteTempleId: "", favouriteDharamshalaId: "", favouriteBhojanshalaId: "", isVolunteer: false, volunteerAreas: [],
               volunteerAvailability: "Weekend", bloodGroup: "O+", medicalConditions: "",
               allergies: "", emergencyName: "", emergencyRelation: "", emergencyMobile: "",
               profession: "", organizationName: "", serviceNotifications: ["SMS", "WhatsApp", "Push"],
@@ -185,14 +203,14 @@ function RegisterNonJainDialog({ onCreated }) {
     setCreatedId(null);
     setOpen(false);
     setForm({
-      firstName: "", middleName: "", surname: "", gender: "Male", dob: "",
-      nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "",
+      firstName: "", middleName: "", surname: "", dob: "", gender: "Male",
+      nationality: "India", preferredLanguage: "English", mobile: "", whatsapp: "", password: "",
       email: "", preferredCommunicationMethod: "Mobile", alternateContact: "",
       currentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
       permanentAddress: { line1: "", city: "", state: "", country: "India", pincode: "" },
       sameAsPermanent: false,
       nativeVillage: { village: "", landmark: "", district: "", city: "", state: "", pincode: "" },
-      interests: [], favouriteTemples: "", isVolunteer: false, volunteerAreas: [],
+      interests: [], favouriteTempleId: "", favouriteDharamshalaId: "", favouriteBhojanshalaId: "", isVolunteer: false, volunteerAreas: [],
       volunteerAvailability: "Weekend", bloodGroup: "O+", medicalConditions: "",
       allergies: "", emergencyName: "", emergencyRelation: "", emergencyMobile: "",
       profession: "", organizationName: "", serviceNotifications: ["SMS", "WhatsApp", "Push"],
@@ -413,6 +431,17 @@ function RegisterNonJainDialog({ onCreated }) {
                     </div>
 
                     <div>
+                      <Label className="text-xs">{t("Password (Optional)")}</Label>
+                      <Input 
+                        type="password"
+                        value={form.password || ""} 
+                        onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                        placeholder={t("Leave empty for auto-generated")} 
+                        className="bg-white mt-1" 
+                      />
+                    </div>
+
+                    <div>
                       <Label className="text-xs">{t("WhatsApp Number")}</Label>
                       <div className="flex gap-2 mt-1">
                         <PhoneField value={form.whatsapp} onChange={(v) => setForm({ ...form, whatsapp: v })} placeholder={t("WhatsApp Number")} className="flex-1" />
@@ -556,7 +585,17 @@ function RegisterNonJainDialog({ onCreated }) {
 
                     <div className="pt-2">
                       <Label className="text-xs">{t("Follow Temples / Favourites")}</Label>
-                      <Input value={form.favouriteTemples} onChange={(e) => setForm({ ...form, favouriteTemples: e.target.value })} placeholder={t("Search and select temples to follow...")} className="bg-white mt-1" />
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                        <div>
+                          <Label className="text-slate-600 text-xs">{t("Favourite Temple")}</Label>
+                          <Input
+                            value={form.favouriteTempleId}
+                            onChange={(e) => setForm({ ...form, favouriteTempleId: e.target.value })}
+                            placeholder={t("e.g. Mahavir Swami Temple")}
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -671,7 +710,7 @@ function RegisterNonJainDialog({ onCreated }) {
 
 export default function NonJainMembersPage() {
   const { t } = useLanguage();
-  const { isSuperAdmin, user } = useAuth();
+  const { isSuperAdmin, user , activeOrganizationId} = useAuth();
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -680,7 +719,7 @@ export default function NonJainMembersPage() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [cardOpen, setCardOpen] = useState(false);
 
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || (activeOrganizationId || user?.organizationIds?.[0]);
 
   useEffect(() => {
     let mounted = true;

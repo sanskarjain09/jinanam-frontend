@@ -9,7 +9,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /**
  * Browser-camera QR scanner. Renders a video preview and calls onScan(qrText) when detected.
  */
-export function QrScanner({ onScan, onClose, testId = "qr-scanner" }) {
+export function QrScanner({ onScan, onClose, title, inputLabel, testId = "qr-scanner" }) {
   const { t } = useLanguage();
   const containerRef = useRef(null);
   const qrRef = useRef(null);
@@ -73,7 +73,7 @@ export function QrScanner({ onScan, onClose, testId = "qr-scanner" }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2">
             <Camera className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold">{t("Scan Ticket QR")}</span>
+            <span className="text-sm font-semibold">{title ? t(title) : t("Scan Ticket QR")}</span>
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} data-testid="qr-scanner-close">
             <X className="h-4 w-4" />
@@ -84,7 +84,7 @@ export function QrScanner({ onScan, onClose, testId = "qr-scanner" }) {
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  {t("Enter Ticket / RSVP ID")}
+                  {inputLabel ? t(inputLabel) : t("Enter Ticket / RSVP ID")}
                 </label>
                 <Input 
                   value={manualId} 

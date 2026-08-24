@@ -187,7 +187,7 @@ export default function MemberProfilePage() {
             <h2 className="text-base font-bold text-slate-900 mb-4">{t("Community & Sect")}</h2>
             <SectionRow icon={Info} label={t("Sect")} value={profile?.sect || user?.sect} iconBg="bg-orange-100 text-orange-600" />
             <SectionRow icon={Users} label={t("Sub-Sect")} value={profile?.subCommunity?.name || user?.subCommunity} iconBg="bg-amber-100 text-amber-600" />
-            <SectionRow icon={Star} label={t("Gaccha")} value={profile?.gaccha?.name || user?.gaccha} iconBg="bg-yellow-100 text-yellow-600" />
+            {/* Gaccha row hidden */}
           </div>
 
           {/* §4.2.7 Family Member Addition */}

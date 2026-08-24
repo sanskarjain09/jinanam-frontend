@@ -82,15 +82,22 @@ import CountryDropdown from "@/components/common/CountryDropdown";
 
 export default function StaffPage() {
   const {
-    canDo, user, isSuperAdmin, permissions, modules,
+    canDo, user, isSuperAdmin, permissions, modules, activeOrganizationId,
     delegatableModules, capabilities, role: actorRole,
   } = useAuth();
   const { t } = useLanguage();
   const { orgs } = useOrgs();
   const location = useLocation();
   const navigate = useNavigate();
-  const [selectedOrg, setSelectedOrg] = useState("");
-  const orgId = user?.organizationIds?.[0] || selectedOrg || (isSuperAdmin ? orgs[0]?.id : undefined);
+  const [selectedOrg, setSelectedOrg] = useState(activeOrganizationId || "");
+  
+  useEffect(() => {
+    if (!isSuperAdmin && activeOrganizationId) {
+      setSelectedOrg(activeOrganizationId);
+    }
+  }, [activeOrganizationId, isSuperAdmin]);
+
+  const orgId = selectedOrg || activeOrganizationId || user?.organizationIds?.[0] || (isSuperAdmin ? orgs[0]?.id : undefined);
 
   /**
    * What this account may delegate onward. Super Admin can hand out the full
@@ -1021,7 +1028,7 @@ export default function StaffPage() {
 
                 <div className="pt-2">
                   <label className="flex items-center gap-2 font-semibold text-slate-700 cursor-pointer">
-                    <input type="checkbox" checked={form.sameAsCurrent} onChange={(e) => setForm({ ...form, sameAsCurrent: e.target.checked })} className="rounded border-slate-350 text-teal-650 h-3.5 w-3.5" />
+                    <input type="checkbox" checked={form.sameAsCurrent} onChange={(e) => setForm({ ...form, sameAsCurrent: e.target.checked })} className="rounded border-slate-350 text-teal-600 h-3.5 w-3.5" />
                     {t("Permanent Address same as Current Address")}
                   </label>
                 </div>
@@ -1218,7 +1225,7 @@ export default function StaffPage() {
                   {t("Continue Form")}
                 </Button>
               ) : (
-                <Button type="submit" disabled={saving} className="bg-teal-650 hover:bg-teal-700 text-white font-bold">
+                <Button type="submit" disabled={saving} className="bg-teal-600 hover:bg-teal-700 text-white font-bold">
                   {saving ? t("Registering profile...") : t("Confirm Onboarding & Save Tab Access")}
                 </Button>
               )}
@@ -1480,7 +1487,7 @@ export default function StaffPage() {
 
             <DialogFooter className="gap-2 pt-2">
               <Button variant="ghost" onClick={() => setDocModalOpen(false)}>{t("Cancel")}</Button>
-              <Button onClick={handleUploadDocument} disabled={uploadingDoc} className="bg-teal-650 hover:bg-teal-700 text-white font-bold">
+              <Button onClick={handleUploadDocument} disabled={uploadingDoc} className="bg-teal-600 hover:bg-teal-700 text-white font-bold">
                 {uploadingDoc ? t("Saving Doc & Archiving Old...") : t("Save and Audit Doc")}
               </Button>
             </DialogFooter>
@@ -1526,7 +1533,7 @@ export default function StaffPage() {
 
             <DialogFooter className="gap-2 pt-2">
               <Button variant="ghost" onClick={() => setLeaveModalOpen(false)}>{t("Cancel")}</Button>
-              <Button onClick={handleApplyLeave} disabled={applyingLeave} className="bg-teal-650 hover:bg-teal-700 text-white font-bold">
+              <Button onClick={handleApplyLeave} disabled={applyingLeave} className="bg-teal-600 hover:bg-teal-700 text-white font-bold">
                 {applyingLeave ? t("Submitting Request...") : t("File Leave Request")}
               </Button>
             </DialogFooter>

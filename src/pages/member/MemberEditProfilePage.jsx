@@ -6,6 +6,7 @@ import { useMemberAuth } from "@/contexts/MemberAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { memberProfileApi } from "@/lib/memberApi";
 import { memberClient as api } from "@/lib/memberClient";
+import ChangePasswordModal from "@/components/modals/ChangePasswordModal";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,7 @@ export default function MemberEditProfilePage() {
   
   const [busy, setBusy] = useState(false);
   const [subTab, setSubTab] = useState("personal");
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
 
   const [pinLookup, setPinLookup] = useState({
     currentAddress: { status: "idle", areas: [] },
@@ -262,7 +264,8 @@ export default function MemberEditProfilePage() {
     { id: "contact", label: t("📱 Contacts") },
     { id: "address", label: t("📍 Addresses") },
     { id: "health", label: t("🏥 Health & Emergency") },
-    { id: "volunteer", label: t("🙏 Volunteering") }
+    { id: "volunteer", label: t("🙏 Volunteering") },
+    { id: "security", label: t("🔒 Security") }
   ];
 
   const onSubmit = async (e) => {
@@ -529,17 +532,7 @@ export default function MemberEditProfilePage() {
                   </div>
                 </div>
 
-                {/* Gaccha Field */}
-                <div>
-                  <Label className="text-xs">{t("members.gaccha", "Gaccha")}</Label>
-                  <SearchableSelect
-                    value={form.gaccha}
-                    onValueChange={(v) => setForm({ ...form, gaccha: v })}
-                    options={toApiOptions(gacchaList, "id", "name")}
-                    placeholder={t("Select gaccha")}
-                    className="mt-1"
-                  />
-                </div>
+                {/* Gaccha field hidden */}
 
                 {form.subCommunity === "Other" && (
                   <div>
@@ -809,42 +802,41 @@ export default function MemberEditProfilePage() {
                 <h3 className="text-lg font-bold text-slate-800 border-b pb-2">{t("🙏 Volunteering & Profession")}</h3>
                 
                 <div>
-                  <Label className="text-xs">{t("Profession / Occupation")}</Label>
-                  <Input value={form.profession} onChange={(e) => setForm({ ...form, profession: e.target.value })} placeholder={t("e.g. Software Engineer")} className="mt-1 bg-white" />
+                  <Label className="text-xs">{t("Occupation / Profession")}</Label>
+                  <Input value={form.profession || ""} onChange={(e) => setForm({ ...form, profession: e.target.value })} placeholder={t("e.g. Doctor, Engineer")} className="mt-1 bg-white" />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-xl border border-orange-100 shadow-sm mt-4">
+                <div className="flex items-center justify-between p-4 bg-orange-50/50 border border-orange-100 rounded-xl mt-6">
                   <div>
-                    <div className="text-sm font-bold text-slate-800">{t("Open for Volunteering Seva")}</div>
-                    <div className="text-xs text-slate-500 mt-1">{t("Enable to receive volunteer requests from your temple/community.")}</div>
+                    <h4 className="font-bold text-orange-900">{t("Open for Volunteering")}</h4>
+                    <p className="text-xs text-orange-700/80">{t("Join teams for event management, medical help, or crowd coordination.")}</p>
                   </div>
-                  <input type="checkbox" checked={form.isVolunteer} onChange={(e) => setForm({ ...form, isVolunteer: e.target.checked })} className="h-5 w-5 text-orange-500 rounded border-orange-300 cursor-pointer" />
+                  <input type="checkbox" checked={form.isVolunteer} onChange={(e) => setForm({ ...form, isVolunteer: e.target.checked })} className="h-5 w-5 text-orange-600 rounded border-orange-300" />
                 </div>
 
                 {form.isVolunteer && (
-                  <div className="space-y-4 mt-4 p-4 border rounded-xl bg-white shadow-sm">
+                  <div className="space-y-4 pt-4 border-t">
                     <div>
-                      <Label className="text-xs font-semibold mb-2 block">{t("Preferred Volunteering Areas")}</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        {["Pooja Seva", "Event Management", "Bhojanshala", "Medical Help", "Admin / Management", "Other"].map(area => {
-                          const checked = form.volunteerAreas.includes(area);
+                      <Label className="text-xs">{t("Volunteer Areas")}</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                        {["Event Management", "Medical Help", "Crowd Management", "Hospitality", "Food Distribution", "Administration", "Other"].map(v => {
+                          const checked = form.volunteerAreas?.includes(v);
                           return (
-                            <label key={area} className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <label key={v} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
                               <input type="checkbox" checked={checked} onChange={() => {
-                                const next = checked ? form.volunteerAreas.filter(a => a !== area) : [...form.volunteerAreas, area];
+                                const next = checked ? form.volunteerAreas.filter(a => a !== v) : [...(form.volunteerAreas || []), v];
                                 setForm({ ...form, volunteerAreas: next });
                               }} className="h-4 w-4 text-orange-500 rounded border-slate-300" />
-                              <span>{area}</span>
+                              <span className="text-xs font-medium text-slate-700">{v}</span>
                             </label>
                           );
                         })}
                       </div>
                     </div>
-
                     <div>
-                      <Label className="text-xs">{t("Availability hours")}</Label>
+                      <Label className="text-xs">{t("Availability")}</Label>
                       <SearchableSelect
-                        value={form.volunteerAvailability}
+                        value={form.volunteerAvailability || ""}
                         onValueChange={(v) => setForm({ ...form, volunteerAvailability: v })}
                         options={VOLUNTEER_AVAILABILITY_OPTIONS}
                         placeholder={t("Select availability")}
@@ -855,10 +847,36 @@ export default function MemberEditProfilePage() {
                 )}
               </div>
             )}
+
+            {/* Security Tab */}
+            {subTab === "security" && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <h3 className="text-lg font-bold text-slate-800 border-b pb-2">{t("🔒 Security")}</h3>
+                
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="font-bold text-slate-800">{t("Account Password")}</h4>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {t("Set or change your password for logging into your account.")}
+                    </p>
+                  </div>
+                  <Button type="button" onClick={() => setPasswordModalOpen(true)} className="bg-orange-500 hover:bg-orange-600 text-white shrink-0">
+                    {t("Change Password")}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
       </div>
+      {passwordModalOpen && (
+        <ChangePasswordModal
+          open={passwordModalOpen}
+          onClose={() => setPasswordModalOpen(false)}
+          apiClient={api}
+        />
+      )}
     </div>
   );
 }

@@ -24,7 +24,7 @@ export default function DharamshalaManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "structure";
 
-  const { user, isSuperAdmin, isGlobalScope, organizationIds } = useAuth();
+  const { user, isSuperAdmin, isGlobalScope, organizationIds , activeOrganizationId} = useAuth();
   
   const [organizations, setOrganizations] = useState([]);
   const [selectedOrgId, setSelectedOrgId] = useState("");
@@ -52,7 +52,7 @@ export default function DharamshalaManagementPage() {
         setOrganizations(orgs);
         
         // Set default selected org
-        const initialOrgId = user?.organizationIds?.[0] || (orgs.length > 0 ? orgs[0].id : "");
+        const initialOrgId = (activeOrganizationId || user?.organizationIds?.[0]) || (orgs.length > 0 ? orgs[0].id : "");
         if (initialOrgId && !selectedOrgId) {
           setSelectedOrgId(initialOrgId);
         }
@@ -205,6 +205,7 @@ const StructureTab = ({ orgId }) => {
     pricePerUnit: 0,
     roomNumber: "",
     bedType: "Double",
+    amenities: [],
   });
 
   useEffect(() => {
@@ -263,7 +264,7 @@ const StructureTab = ({ orgId }) => {
       await api.post(`/dharamshalas/wings/${activeWingId}/rooms`, { ...newRoom });
       toast.success(t("Room added successfully!"));
       setIsRoomModalOpen(false);
-      setNewRoom({ name: "", type: "ROOM", category: "Non-AC", capacity: 2, pricePerUnit: 0, roomNumber: "", bedType: "Double" });
+      setNewRoom({ name: "", type: "ROOM", category: "Non-AC", capacity: 2, pricePerUnit: 0, roomNumber: "", bedType: "Double", amenities: [] });
       loadStructure();
     } catch (e) {
       toast.error(extractErrorMessage(e));
@@ -379,6 +380,15 @@ const StructureTab = ({ orgId }) => {
                                       {r.capacity} {t("Beds")}
                                     </div>
                                   </div>
+                                  {r.amenities && r.amenities.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-1.5">
+                                      {r.amenities.map(a => (
+                                        <span key={a} className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200">
+                                          {a}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
                                 </Card>
                               ))}
                             </div>
@@ -503,6 +513,30 @@ const StructureTab = ({ orgId }) => {
                 value={newRoom.capacity}
                 onChange={(e) => setNewRoom({...newRoom, capacity: parseInt(e.target.value) || 0})}
               />
+            </div>
+
+            <div className="col-span-2 space-y-2 mt-2">
+              <label className="text-sm font-medium">{t("Room Amenities")}</label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+                {["Attached Bathroom", "Western Toilet", "Indian Toilet", "AC", "Cooler", "Geyser", "TV", "Balcony", "WiFi"].map((amenity) => (
+                  <div key={amenity} className="flex items-center space-x-2 bg-slate-50 p-2 rounded border border-slate-100 hover:bg-slate-100 transition-colors">
+                    <Checkbox 
+                      id={`room-amenity-${amenity.replace(/\s+/g, '-')}`} 
+                      checked={newRoom.amenities?.includes(amenity)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setNewRoom({...newRoom, amenities: [...(newRoom.amenities || []), amenity]});
+                        } else {
+                          setNewRoom({...newRoom, amenities: (newRoom.amenities || []).filter(a => a !== amenity)});
+                        }
+                      }}
+                    />
+                    <label htmlFor={`room-amenity-${amenity.replace(/\s+/g, '-')}`} className="text-xs font-medium leading-none cursor-pointer">
+                      {amenity}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgs } from "@/hooks/useOrgs";
 import {
   Search,
   Bell,
@@ -87,7 +88,7 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
   });
 
   // Master Data Lists for Compose Visibility
-  const [myOrgs, setMyOrgs] = useState([]);
+  const { orgs: myOrgs } = useOrgs();
   const [communities, setCommunities] = useState([]);
   const [subCommunities, setSubCommunities] = useState([]);
   const [gacchas, setGacchas] = useState([]);
@@ -111,7 +112,8 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
         pageSize: 10,
         q: q || undefined,
         categoryId: selectedCategory !== "all" ? selectedCategory : undefined,
-        savedOnly: savedOnly || undefined
+        savedOnly: savedOnly || undefined,
+        tab: activeTab !== "all" ? activeTab : undefined
       };
       
       const queryParts = [];
@@ -126,7 +128,7 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
       if (filterKeys.includes("offers")) queryParts.push("offers");
       
       const queryString = queryParts.map(k => `filterKeys=${k}`).join("&");
-      const url = `/feed?page=${nextPage}&pageSize=10${params.q ? `&q=${encodeURIComponent(params.q)}` : ""}${params.categoryId ? `&categoryId=${params.categoryId}` : ""}${params.savedOnly ? `&savedOnly=true` : ""}${queryString ? `&${queryString}` : ""}`;
+      const url = `/feed?page=${nextPage}&pageSize=10${params.q ? `&q=${encodeURIComponent(params.q)}` : ""}${params.categoryId ? `&categoryId=${params.categoryId}` : ""}${params.savedOnly ? `&savedOnly=true` : ""}${params.tab ? `&tab=${params.tab}` : ""}${queryString ? `&${queryString}` : ""}`;
 
       const res = await api.get(url);
       const feedItems = res.data?.data?.items || res.data?.data || [];
@@ -150,7 +152,7 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
   useEffect(() => {
     loadFeed(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, selectedCategory, filterKeys, savedOnly]);
+  }, [q, selectedCategory, filterKeys, savedOnly, activeTab]);
 
   useEffect(() => {
     api.get("/master-data/feed-categories").then((res) => {
@@ -158,9 +160,6 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
     }).catch(() => {});
 
     // Preload visibility list dependencies for composition
-    api.get("/temples").then((res) => {
-      setMyOrgs(res.data?.data?.items || res.data?.data || []);
-    }).catch(() => {});
     api.get("/master-data/communities").then((res) => {
       setCommunities(res.data?.data || []);
     }).catch(() => {});
@@ -828,24 +827,7 @@ export default function FeedPage({ defaultCompose = false, defaultTab = "all" })
                       {subCommunities.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <Label className="text-[10px] uppercase font-bold text-slate-500">{t("Target Gaccha")}</Label>
-                    <select className="w-full mt-1 h-9 rounded-md border border-slate-205 bg-white px-3 text-sm focus:outline-none"
-                      value={formData.visibilityConfig.community.gacchaIds?.[0] || ""}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        visibilityConfig: {
-                          ...formData.visibilityConfig,
-                          community: {
-                            ...formData.visibilityConfig.community,
-                            gacchaIds: e.target.value ? [e.target.value] : []
-                          }
-                        }
-                      })}>
-                      <option value="">{t("All Gacchas")}</option>
-                      {gacchas.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-                    </select>
-                  </div>
+                  {/* Gaccha filter hidden */}
                 </div>
               </div>
             </div>

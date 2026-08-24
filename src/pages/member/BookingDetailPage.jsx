@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Upload, Loader2, AlertTriangle, Receipt } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, AlertTriangle, Receipt, QrCode } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import StatusTimeline, { buildBookingTimeline } from "@/components/member/StatusTimeline";
 import { bookingsApi, formatMinor } from "@/lib/memberApi";
 import { extractErrorMessage } from "@/lib/api";
@@ -59,8 +60,9 @@ export default function BookingDetailPage() {
   useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [uid]);
 
   const steps = useMemo(() => (booking ? buildBookingTimeline(booking) : []), [booking]);
-  const msLeft = useCountdown(booking?.payment_window_expires_at);
-  const windowOpen = msLeft != null && msLeft > 0;
+  const expiresAt = booking?.paymentWindowExpiresAt || booking?.payment_window_expires_at;
+  const msLeft = useCountdown(expiresAt);
+  const windowOpen = msLeft == null || msLeft > 0;
   const needsProof = String(booking?.status || "").toUpperCase() === "PAYMENT_PENDING";
 
   const submitProof = async (e) => {
@@ -131,7 +133,7 @@ export default function BookingDetailPage() {
       </div>
 
       {/* Payment window countdown — §B15.5 */}
-      {needsProof && booking.payment_window_expires_at && (
+      {needsProof && expiresAt && (
         <Card
           className={`mt-4 p-4 rounded-xl border ${
             windowOpen ? "border-orange-200 bg-orange-50" : "border-red-200 bg-red-50"
@@ -153,6 +155,22 @@ export default function BookingDetailPage() {
               {t("The slot has been released. Please submit a fresh booking request.")}
             </p>
           )}
+        </Card>
+      )}
+
+      {/* Entry QR Code for Approved/Confirmed Bookings */}
+      {["APPROVED", "CONFIRMED"].includes(String(booking.status || "").toUpperCase()) && (
+        <Card className="mt-4 p-4 rounded-xl flex flex-col items-center justify-center bg-green-50 border-green-200">
+          <h2 className="text-sm font-bold text-green-800 mb-2 flex items-center gap-1">
+            <QrCode className="h-4 w-4" /> {t("Your Check-In QR Code")}
+          </h2>
+          <div className="bg-white p-2 rounded-lg shadow-sm border border-green-100">
+            <QRCodeSVG value={`BOOKING:${booking.id || booking.uid}`} size={160} level="M" />
+          </div>
+          <p className="text-xs text-green-700 mt-3 text-center">
+            {t("Show this QR code at the reception for check-in.")}<br/>
+            {t("Booking ID:")} <span className="font-mono font-bold">{booking.id || booking.uid}</span>
+          </p>
         </Card>
       )}
 
@@ -257,13 +275,24 @@ export default function BookingDetailPage() {
       </Card>
 
       {/* Receipts */}
-      {Array.isArray(booking.receipts) && booking.receipts.length > 0 && (
+      {(booking.receipt || (Array.isArray(booking.receipts) && booking.receipts.length > 0)) && (
         <Card className="mt-4 p-4 rounded-xl">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 border-b pb-1.5 mb-3">
             {t("Receipts")}
           </h2>
           <div className="space-y-2">
-            {booking.receipts.map((r) => (
+            {booking.receipt && (
+              <a
+                href={booking.receipt.pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-xs text-orange-700 font-semibold hover:underline"
+              >
+                <Receipt className="h-3.5 w-3.5" /> {t("Download Receipt")} ({booking.receipt.publicId})
+              </a>
+            )}
+            
+            {Array.isArray(booking.receipts) && booking.receipts.map((r) => (
               <a
                 key={r.uid || r.url}
                 href={r.url}

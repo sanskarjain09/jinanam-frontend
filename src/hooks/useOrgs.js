@@ -21,14 +21,21 @@ export function useOrgs() {
       api.get("/jain-centers").catch(() => ({ data: { data: [] } })),
       api.get("/sthanaks").catch(() => ({ data: { data: [] } })),
       api.get("/community-pages").catch(() => ({ data: { data: [] } })),
+      api.get("/bhojanshalas").catch(() => ({ data: { data: [] } })),
+      api.get("/pathshalas").catch(() => ({ data: { data: [] } })),
+      api.get("/gaushalas").catch(() => ({ data: { data: [] } })),
     ])
       .then((results) => {
         const list = results.flatMap((r) => {
           const d = r.data?.data;
           return Array.isArray(d) ? d : d?.items || [];
         });
-        cache = list;
-        if (mounted) setOrgs(list);
+        
+        // Remove duplicates by id
+        const uniqueList = Array.from(new Map(list.map(org => [org.id, org])).values());
+        
+        cache = uniqueList;
+        if (mounted) setOrgs(uniqueList);
       })
       .finally(() => mounted && setLoading(false));
     return () => {

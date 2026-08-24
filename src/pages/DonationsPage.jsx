@@ -32,8 +32,8 @@ const STATUS_TONE = {
 
 export default function DonationsPage() {
   const { t } = useLanguage();
-  const { canDo, user, isSuperAdmin } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { canDo, user, isSuperAdmin, activeOrganizationId } = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("ALL");

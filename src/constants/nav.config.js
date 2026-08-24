@@ -88,6 +88,7 @@ export const FLAT_NAV = [
   { id: "sep-comm", isSeparator: true, label: "Communication" },
   { id: "flat-feed", label: "Feed", icon: Newspaper, route: "/admin/feed" },
   { id: "flat-events", label: "Events", icon: PartyPopper, route: "/admin/events" },
+  { id: "flat-gallery", label: "Gallery", icon: Image, route: "/admin/gallery" },
   { id: "flat-announcements", label: "Announcements", icon: Megaphone, route: "/admin/announcements" },
   { id: "flat-news", label: "News", icon: ScrollText, route: "/admin/news" },
   { id: "flat-polls", label: "Polls", icon: BarChart3, route: "/admin/polls" },
@@ -201,7 +202,6 @@ export const NESTED_NAV = [
       { id: "t-mgt", label: "Temple Management", route: "/admin/temples" },
       { id: "t-info", label: "Temple Information", route: "/admin/coming-soon?module=Temple Information", featureFlag: false },
       { id: "t-fac", label: "Facilities", route: "/admin/coming-soon?module=Temple Facilities", featureFlag: false },
-      { id: "t-gal", label: "Gallery", route: "/admin/gallery" },
       { id: "t-com", label: "Committee", route: "/admin/coming-soon?module=Temple Committee", featureFlag: false },
       { id: "t-not", label: "Notices", route: "/admin/coming-soon?module=Temple Notices", featureFlag: false },
       { id: "t-rev", label: "Reviews", route: "/admin/coming-soon?module=Temple Reviews", featureFlag: false },
@@ -218,7 +218,6 @@ export const NESTED_NAV = [
       { id: "jc-mgt", label: "Jain Centre Management", route: "/admin/jain-centers" },
       { id: "jc-info", label: "Centre Information", route: "/admin/coming-soon?module=Centre Information", featureFlag: false },
       { id: "jc-fac", label: "Facilities", route: "/admin/coming-soon?module=Jain Centre Facilities", featureFlag: false },
-      { id: "jc-gal", label: "Gallery", route: "/admin/gallery" },
       { id: "jc-com", label: "Committee", route: "/admin/coming-soon?module=Jain Centre Committee", featureFlag: false },
       { id: "jc-not", label: "Notices", route: "/admin/coming-soon?module=Jain Centre Notices", featureFlag: false },
       { id: "jc-rev", label: "Reviews", route: "/admin/coming-soon?module=Jain Centre Reviews", featureFlag: false },
@@ -233,7 +232,6 @@ export const NESTED_NAV = [
     roles: ["SUPER_ADMIN"],
     children: [
       { id: "d-list", label: "Dharamshalas (Orgs)", route: "/admin/dharamshalas" },
-      { id: "d-mgt", label: "Dharamshala Setup", route: "/admin/dharamshala-management" },
       { id: "d-book", label: "Bookings", route: "/admin/dharamshala/bookings" }
     ]
   },
@@ -245,7 +243,6 @@ export const NESTED_NAV = [
     roles: ["DHARAMSHALA_ADMIN", "TEMPLE_ADMIN", "JAIN_CENTER_ADMIN", "JC_ADMIN", "MONK_ADMIN", "SUB_ADMIN", "STAFF", "ORG_ADMIN"],
     children: [
       { id: "d-list-admin", module: "DHARAMSHALAS", label: "Dharamshalas (Orgs)", route: "/admin/dharamshalas" },
-      { id: "d-mgt-admin", module: "DHARAMSHALAS", label: "Dharamshala Setup", route: "/admin/dharamshala-management" },
       { id: "d-book-admin", module: "DHARAMSHALAS", label: "Bookings", route: "/admin/dharamshala/bookings" }
     ]
   },
@@ -265,6 +262,7 @@ export const NESTED_NAV = [
     module: "PATHSHALAS",
     label: "Pathshala",
     icon: Sigma,
+    featureFlag: false,
     roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
     children: [
       { id: "pt-list", label: "Pathshalas (Orgs)", route: "/admin/pathshalas" },
@@ -276,6 +274,7 @@ export const NESTED_NAV = [
     module: "GAUSHALAS",
     label: "Gaushala",
     icon: Sigma,
+    featureFlag: false,
     roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
     children: [
       { id: "go-list", label: "Gaushalas (Orgs)", route: "/admin/gaushalas" },
@@ -299,7 +298,6 @@ export const NESTED_NAV = [
     children: [
       { id: "cp-my", label: "My Page", route: "/admin/community-pages" },
       { id: "cp-info", label: "Page Information", route: "/admin/coming-soon?module=Community Page Information", featureFlag: false },
-      { id: "cp-gal", label: "Gallery", route: "/admin/gallery" },
       { id: "cp-fol", label: "Followers", route: "/admin/coming-soon?module=Community Page Followers", featureFlag: false },
       { id: "cp-rev", label: "Reviews", route: "/admin/coming-soon?module=Community Page Reviews", featureFlag: false },
       { id: "cp-social", label: "Social Links", route: "/admin/coming-soon?module=Community Page Social Links", featureFlag: false },
@@ -313,32 +311,15 @@ export const NESTED_NAV = [
     icon: Newspaper,
     children: [
       { id: "fe-mgt", label: "Feed Management", route: "/admin/feed" },
-      { id: "fe-create", label: "Create Post", route: "/admin/create-post" },
-      { id: "fe-sched", label: "Scheduled Posts", route: "/admin/scheduled-posts" },
-      { id: "fe-feat", label: "Featured Posts", route: "/admin/featured-posts" },
-      { id: "fe-rep", label: "Reported Posts", route: "/admin/reported-posts" },
       { id: "fe-an", label: "Feed Analytics", route: "/admin/feed-analytics" }
     ]
   },
   {
-    id: "folder-events",
+    id: "group-events",
     module: "EVENTS",
-    label: "Events",
+    label: "Event Management",
     icon: PartyPopper,
-    children: [
-      { id: "ev-cat", label: "Event Categories", route: "/admin/coming-soon?module=Event Categories", featureFlag: false },
-      { id: "ev-mgt", label: "Event Management", route: "/admin/events" },
-      { id: "ev-sched", label: "Event Schedule", route: "/admin/coming-soon?module=Event Schedule", featureFlag: false },
-      { id: "ev-reg", label: "Registrations", route: "/admin/coming-soon?module=Event Registrations", featureFlag: false },
-      { id: "ev-att", label: "Attendees", route: "/admin/coming-soon?module=Event Attendees", featureFlag: false },
-      { id: "ev-seat", label: "Seating Layout", route: "/admin/seating-layout" },
-      { id: "ev-tcat", label: "Ticket Categories", route: "/admin/ticket-categories" },
-      { id: "ev-pr", label: "Pricing", route: "/admin/coming-soon?module=Event Ticket Pricing", featureFlag: false },
-      { id: "ev-coup", label: "Coupons", route: "/admin/coming-soon?module=Event Coupons", featureFlag: false },
-      { id: "ev-qr", label: "QR Check-in", route: "/admin/coming-soon?module=Event QR Check-in", featureFlag: false },
-      { id: "ev-qrep", label: "Check-in Reports", route: "/admin/coming-soon?module=Check-in Reports", featureFlag: false },
-      { id: "ev-an", label: "Event Analytics", route: "/admin/event-analytics" }
-    ]
+    route: "/admin/events"
   },
   {
     id: "folder-volunteers",
@@ -347,6 +328,13 @@ export const NESTED_NAV = [
     children: [
       { id: "vol-mgt", label: "Volunteer Management", route: "/admin/volunteers" }
     ]
+  },
+  {
+    id: "group-gallery",
+    module: "GALLERY",
+    label: "Gallery",
+    icon: Image,
+    route: "/admin/gallery"
   },
   {
     id: "folder-news",

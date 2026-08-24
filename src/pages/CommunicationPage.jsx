@@ -11,9 +11,9 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CommunicationPage() {
   const { t } = useLanguage();
-  const { user, canDo } = useAuth();
+  const { user, canDo , activeOrganizationId} = useAuth();
   const { orgs } = useOrgs();
-  const orgId = user?.organizationIds?.[0];
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [openCreate, setOpenCreate] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 

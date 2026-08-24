@@ -144,74 +144,7 @@ export default function PersonalizedDashboard({ orgs = [], loading = false }) {
   return (
     <div className="space-y-4 md:space-y-6" data-testid="personalized-dashboard">
 
-      {/* ── Hero: who you are, what you run ─────────────────────────────── */}
-      <Card className="relative overflow-hidden rounded-2xl border-border">
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-400 opacity-95" />
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E\")" }}
-        />
-        <div className="relative p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-          <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/20 border-2 border-white/40 backdrop-blur-sm flex items-center justify-center shrink-0 overflow-hidden">
-            {primary?.logoUrl ? (
-              <img
-                src={primary.logoUrl.startsWith("http") ? primary.logoUrl : `${STATIC_URL}/${primary.logoUrl}`}
-                alt=""
-                className="h-full w-full object-cover"
-                onError={(e) => { e.currentTarget.style.display = "none"; }}
-              />
-            ) : (
-              <Landmark className="h-8 w-8 md:h-10 md:w-10 text-white" strokeWidth={2} />
-            )}
-          </div>
-
-          <div className="min-w-0 flex-1 text-white">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-white/80">
-              {greeting}, {user?.firstName || t("Admin")} · {t("Jai Jinendra")}
-            </div>
-            <h1 className="font-heading text-xl md:text-3xl font-bold tracking-tight truncate mt-0.5">
-              {primary?.name || t("Your Workspace")}
-            </h1>
-            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              {primary?.publicId && (
-                <Badge className="bg-white/20 text-white border-white/30 text-[10px] font-mono font-bold hover:bg-white/25">
-                  {primary.publicId}
-                </Badge>
-              )}
-              {(primary?.city || primary?.state) && (
-                <span className="text-[11px] text-white/90 flex items-center gap-1">
-                  <MapPin className="h-3 w-3" /> {[primary.city, primary.state].filter(Boolean).join(", ")}
-                </span>
-              )}
-              <span className="text-[11px] text-white/90 flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> {allowedModules.length} {t("tab(s) granted")}
-              </span>
-            </div>
-          </div>
-
-          {primary && (
-            <Button
-              onClick={() => navigate(orgs[0]._route)}
-              className="bg-white text-slate-800 hover:bg-white/90 font-bold shrink-0"
-            >
-              {canDo(primary._module, "EDIT") ? t("Manage") : t("View")}
-              <ArrowUpRight className="h-4 w-4 ml-1.5" />
-            </Button>
-          )}
-        </div>
-      </Card>
-
-      {hasNoOrgScope && (
-        <Card className="p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
-          <Landmark className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-900">
-            <div className="font-bold">{t("No organisation assigned to your account")}</div>
-            <div className="mt-0.5">
-              {t("Ask your Super Admin to map you to a temple, Jain centre or dharamshala.")}
-            </div>
-          </div>
-        </Card>
-      )}
+      {/* Hero and Organization Scope Warning have been hidden as requested */}
 
       {/* ── Record facts for the organisation you manage ─────────────────── */}
       {primary && (
@@ -228,48 +161,7 @@ export default function PersonalizedDashboard({ orgs = [], loading = false }) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-        {/* ── Your tabs, as a workspace ──────────────────────────────────── */}
-        <Card className="p-5 rounded-xl border-border bg-white lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-heading text-base font-semibold text-foreground">
-              {t("My Workspace")}
-            </h2>
-            <span className="text-[11px] text-muted-foreground font-medium">
-              {tabs.length} {t("tab(s)")}
-            </span>
-          </div>
-
-          {tabs.length === 0 ? (
-            <div className="text-xs text-muted-foreground italic text-center py-8">
-              {t("No tabs have been granted to your account yet.")}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => navigate(tab.route)}
-                  className="group flex items-center gap-3 p-3 rounded-xl border border-border bg-white hover:border-orange-300 hover:shadow-sm transition-all text-left"
-                >
-                  <div className={`icon-chip ${tab.tone} h-10 w-10 shrink-0`}>
-                    <tab.icon className="h-4.5 w-4.5" strokeWidth={2.2} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-foreground truncate">{t(tab.label)}</div>
-                    <div className="text-[10px] text-muted-foreground mt-0.5 flex flex-wrap gap-1">
-                      {canDo(tab.key, "CREATE") && <span className="text-emerald-600 font-semibold">{t("Add")}</span>}
-                      {canDo(tab.key, "EDIT") && <span className="text-blue-600 font-semibold">{t("Edit")}</span>}
-                      {!canDo(tab.key, "DELETE") && <span className="text-slate-400">{t("No delete")}</span>}
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all shrink-0" />
-                </button>
-              ))}
-            </div>
-          )}
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* ── Profile completeness: a concrete next action ────────────────── */}
         {primary && (

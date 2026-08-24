@@ -15,8 +15,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ReceiptsPage() {
   const { t } = useLanguage();
-  const { isSuperAdmin, user } = useAuth();
-  const orgId = user?.organizationIds?.[0];
+  const { isSuperAdmin, user , activeOrganizationId} = useAuth();
+  const orgId = activeOrganizationId || user?.organizationIds?.[0];
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
