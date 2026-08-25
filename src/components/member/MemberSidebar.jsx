@@ -122,8 +122,8 @@ export default function MemberSidebar({ collapsed, onNavigate }) {
       {/* ── Top Header / Brand Logo ───────────────────────────────────────── */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-white/10 shrink-0">
         <Link to="/member/home" onClick={onNavigate} className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white font-black text-lg shadow-md shadow-orange-500/20 shrink-0">
-            J
+          <div className="w-9 h-9 rounded-xl bg-white p-0.5 flex items-center justify-center shadow-md shadow-orange-500/20 shrink-0">
+            <img src="/logo.png" alt="JiNANAM" className="w-full h-full object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
