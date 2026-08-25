@@ -136,12 +136,13 @@ export function MemberAuthProvider({ children }) {
           password,
           ...device(),
         });
-        return acceptSession(data?.data);
+        acceptSession(data?.data);
+        return await refreshMember();
       } finally {
         setLoading(false);
       }
     },
-    [acceptSession]
+    [acceptSession, refreshMember]
   );
 
   const requestOtp = useCallback(async (mobile, purpose = "LOGIN") => {
@@ -170,12 +171,13 @@ export function MemberAuthProvider({ children }) {
         if (data?.data?.registrationToken) {
           return data.data;
         }
-        return acceptSession(data?.data);
+        acceptSession(data?.data);
+        return await refreshMember();
       } finally {
         setLoading(false);
       }
     },
-    [acceptSession]
+    [acceptSession, refreshMember]
   );
 
   /**
@@ -191,13 +193,23 @@ export function MemberAuthProvider({ children }) {
     throw err;
   }, []);
 
-  const loginWithGoogle = useCallback(async () => {
-    const err = new Error(
-      "Google sign-in isn't available yet. Please use your mobile number."
-    );
-    err.code = "NOT_IMPLEMENTED";
-    throw err;
-  }, []);
+  const loginWithGoogle = useCallback(async ({ email, googleId, firstName, lastName, photoUrl }) => {
+    setLoading(true);
+    try {
+      const { data } = await memberClient.post("/auth/google", {
+        email,
+        googleId,
+        firstName,
+        lastName,
+        photoUrl,
+        ...device(),
+      });
+      acceptSession(data?.data);
+      return await refreshMember();
+    } finally {
+      setLoading(false);
+    }
+  }, [acceptSession]);
 
   const logout = useCallback(async () => {
     try {

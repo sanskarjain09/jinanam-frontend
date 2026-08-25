@@ -42,7 +42,7 @@ export default function AccountStatusPage() {
   const handleToggleLock = async (account) => {
     try {
       const isLockedNow = !account.isLocked;
-      toast.success(`Account ${isLockedNow ? "locked" : "unlocked"} successfully.`);
+      toast.success(t(`Account ${isLockedNow ? "locked" : "unlocked"} successfully.`));
       setAccounts((prev) =>
         prev.map((a) => (a.id === account.id ? { ...a, isLocked: isLockedNow } : a))
       );

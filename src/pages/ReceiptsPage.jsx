@@ -52,7 +52,7 @@ export default function ReceiptsPage() {
   };
 
   const downloadReceiptPdf = (r) => {
-    toast.success(`Receipt ${r.receiptNumber} downloaded successfully as PDF.`);
+    toast.success(t(`Receipt ${r.receiptNumber} downloaded successfully as PDF.`));
   };
 
   const columns = [

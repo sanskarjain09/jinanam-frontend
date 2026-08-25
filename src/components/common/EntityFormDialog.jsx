@@ -65,7 +65,7 @@ export function EntityFormDialog({
         const res = await api.post(endpoint, payload);
         saved = res.data?.data;
       }
-      toast.success(`${title} saved`);
+      toast.success(t(`${title} saved`));
       onSaved?.(saved);
       onOpenChange(false);
     } catch (err) {

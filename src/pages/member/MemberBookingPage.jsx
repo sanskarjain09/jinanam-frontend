@@ -139,7 +139,7 @@ export default function MemberBookingPage() {
 
     const parsedQty = parseInt(quantity) || 1;
     if (parsedQty > maxQty) {
-      toast.error(t("Cannot book more rooms than currently available") + ` (${maxQty}).`);
+      toast.error(t(`Cannot book more rooms than currently available (${maxQty}).`));
       return;
     }
 

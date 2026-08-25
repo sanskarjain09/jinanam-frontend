@@ -52,7 +52,7 @@ export default function FeedPostCard({
         setLocalLikeCount((prev) => Math.max(0, actualLiked ? prev + 1 : prev - 1));
       }
     } catch (err) {
-      toast.error("Failed to toggle like");
+      toast.error(t("Failed to toggle like"));
       // Rollback
       setIsLiked(prevLiked);
       setLocalLikeCount((prev) => Math.max(0, prevLiked ? prev + 1 : prev - 1));
@@ -66,9 +66,9 @@ export default function FeedPostCard({
     if (!reason) return;
     try {
       await memberClient.post(`/feed/posts/${post.id}/report`, { reason });
-      toast.success("Post reported successfully");
+      toast.success(t("Post reported successfully"));
     } catch (err) {
-      toast.error("Failed to report post");
+      toast.error(t("Failed to report post"));
     }
   };
 

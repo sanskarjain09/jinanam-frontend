@@ -22,8 +22,10 @@ import { toast } from "sonner";
 import { ScanPassModal } from "../components/modals/ScanPassModal";
 import CreatePassModal from "../components/modals/CreatePassModal";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const PathshalaManagementPage = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "timings";
 
@@ -69,7 +71,7 @@ const PathshalaManagementPage = () => {
     try {
       const payload = { pathshalaPublished: !selectedOrg.pathshalaPublished };
       await api.patch(`/temples/${selectedOrg.id}`, payload);
-      toast.success(payload.pathshalaPublished ? "Pathshala published successfully!" : "Pathshala unpublished.");
+      toast.success(payload.pathshalaPublished ? t("Pathshala published successfully!") : t("Pathshala unpublished."))
       setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, pathshalaPublished: payload.pathshalaPublished } : o));
     } catch (error) {
       toast.error(extractErrorMessage(error));
@@ -557,9 +559,9 @@ const PassesTab = ({ orgId }) => {
     if (!window.confirm("Are you sure you want to cancel this pass?")) return;
     let toastId;
     try {
-      toastId = toast.loading("Cancelling pass...");
+      toastId = toast.loading(t("Cancelling pass..."));
       await api.patch(`/pathshala/${orgId}/passes/${passId}/cancel`);
-      toast.success("Pass cancelled successfully", { id: toastId });
+      toast.success(t("Pass cancelled successfully"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -570,9 +572,9 @@ const PassesTab = ({ orgId }) => {
   const handleApprove = async (passId) => {
     let toastId;
     try {
-      toastId = toast.loading("Approving pass...");
+      toastId = toast.loading(t("Approving pass..."));
       await api.patch(`/pathshala/${orgId}/passes/${passId}/approve`);
-      toast.success("Pass approved successfully", { id: toastId });
+      toast.success(t("Pass approved successfully"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -583,9 +585,9 @@ const PassesTab = ({ orgId }) => {
   const handlePending = async (passId) => {
     let toastId;
     try {
-      toastId = toast.loading("Moving to pending...");
+      toastId = toast.loading(t("Moving to pending..."));
       await api.patch(`/pathshala/${orgId}/passes/${passId}/pending`);
-      toast.success("Pass marked as pending", { id: toastId });
+      toast.success(t("Pass marked as pending"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -757,17 +759,17 @@ const ManagersTab = ({ orgId }) => {
   const handleAddManager = async (e) => {
     e.preventDefault();
     if (!mobile || mobile.length < 10) {
-      toast.error("Please enter a valid mobile number.");
+      toast.error(t("Please enter a valid mobile number."));
       return;
     }
     
     try {
       setIsAdding(true);
       const res = await api.post(`/pathshala/${orgId}/managers`, { mobile });
-      toast.success("Manager added successfully!");
+      toast.success(t("Manager added successfully!"));
       if (res.data?.data?.tempPassword) {
         // Show the temporary password for a new user in the real world
-        toast.info(`Generated Password: ${res.data.data.tempPassword}`, { duration: 10000 });
+        toast.info(t(`Generated Password: ${res.data.data.tempPassword}`), { duration: 10000 });
       }
       setMobile("");
       fetchManagers();
@@ -782,7 +784,7 @@ const ManagersTab = ({ orgId }) => {
     if (!window.confirm("Are you sure you want to remove this manager?")) return;
     try {
       await api.delete(`/pathshala/${orgId}/managers/${userId}`);
-      toast.success("Manager removed successfully.");
+      toast.success(t("Manager removed successfully."));
       fetchManagers();
     } catch (err) {
       toast.error(extractErrorMessage(err));
@@ -870,10 +872,10 @@ const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
     try {
       setLoading(true);
       await api.patch(`/temples/${orgId}`, { pathshalaName });
-      toast.success("Settings saved successfully!");
+      toast.success(t("Settings saved successfully!"));
       setOrganizations(orgs => orgs.map(o => o.id === orgId ? { ...o, pathshalaName } : o));
     } catch (err) {
-      toast.error("Error saving settings: " + extractErrorMessage(err));
+      toast.error(t("Error saving settings: ") + extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -884,7 +886,7 @@ const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
     try {
       const payload = { pathshalaPublished: !selectedOrg.pathshalaPublished };
       await api.patch(`/temples/${selectedOrg.id}`, payload);
-      toast.success(payload.pathshalaPublished ? "Pathshala published successfully!" : "Pathshala unpublished.");
+      toast.success(payload.pathshalaPublished ? t("Pathshala published successfully!") : t("Pathshala unpublished."))
       setOrganizations(orgs => orgs.map(o => o.id === selectedOrg.id ? { ...o, pathshalaPublished: payload.pathshalaPublished } : o));
     } catch (error) {
       toast.error(extractErrorMessage(error));

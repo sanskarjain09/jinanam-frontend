@@ -362,8 +362,9 @@ export default function StaffPage() {
       // onboarder's own access, and carrying View/Add/Edit but never Delete.
       // grantMapToKeys strips sub-tab dot-notation keys (only top-level modules
       // are checked against the delegation subset).
+      // `requestedTabs` will include both base modules and sub-modules.
       const requestedTabs = form.modulePermissions
-        ? grantMapToKeys(form.modulePermissions).filter((k) => !k.includes("."))
+        ? grantMapToKeys(form.modulePermissions)
         : actorAllowedModules;
       const { granted: grantedTabs, rejected: rejectedTabs } = sanitizeGrant(
         requestedTabs, capabilities, actorRole
@@ -391,7 +392,8 @@ export default function StaffPage() {
         medicalConditions: "", allergies: "", govtDocs: [], modulePermissions: []
       });
     } catch (e) {
-      toast.error(extractErrorMessage(e) || "Failed to register staff");
+      console.error(e);
+      toast.error(extractErrorMessage(e) || t("Failed to register staff"));
     } finally {
       setSaving(false);
     }
@@ -435,7 +437,7 @@ export default function StaffPage() {
         // Empty input produced NaN, which serialises to null and fails validation.
         workingHours: Number.isFinite(Number(manualAttHours)) ? Number(manualAttHours) : 0
       });
-      toast.success(`Attendance successfully logged override for ${selectedStaffForAtt.member?.fullName}`);
+      toast.success(t(`Attendance successfully logged override for ${selectedStaffForAtt.member?.fullName}`));
       setAttendanceOpen(false);
       setReloadKey(k => k + 1);
     } catch (e) {
@@ -497,7 +499,7 @@ export default function StaffPage() {
   const handleDecideLeave = async (leaveId, status) => {
     try {
       await api.patch(`/staff/leaves/${leaveId}`, { status });
-      toast.success(`Leave request status updated: ${status}`);
+      toast.success(t(`Leave request status updated: ${status}`));
       setReloadKey(k => k + 1);
     } catch (e) {
       toast.error(extractErrorMessage(e));
@@ -527,8 +529,10 @@ export default function StaffPage() {
     setSavingStaffTabs(true);
     try {
       // Grant map → flat top-level module keys for the delegation subset check.
-      const requestedFlat = grantMapToKeys(selectedStaffTabs).filter((k) => !k.includes("."));
-      const { granted, rejected } = sanitizeGrant(requestedFlat, capabilities, actorRole);
+      const requestedFlat = grantMapToKeys(selectedStaffTabs);
+      const { granted, rejected } = sanitizeGrant(
+        requestedFlat, capabilities, actorRole
+      );
       if (rejected.length > 0) {
         toast.warning(
           `${rejected.length} tab(s) skipped — you can only delegate access you hold yourself.`
@@ -545,7 +549,7 @@ export default function StaffPage() {
       const nextMap = {};
       for (const m of granted) nextMap[m] = ["VIEW", "CREATE", "EDIT"];
       setSelectedStaffTabs(nextMap);
-      toast.success(`Tab access permissions updated for ${tabAccessStaff.member?.fullName || "Staff"}.`);
+      toast.success(t(`Tab access permissions updated for ${tabAccessStaff.member?.fullName || "Staff"}.`));
       setTabAccessStaff(null);
       setReloadKey((k) => k + 1);
     } catch (e) {

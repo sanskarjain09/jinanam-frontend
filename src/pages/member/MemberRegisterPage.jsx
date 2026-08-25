@@ -15,6 +15,8 @@ import { useMemberAuth } from "@/contexts/MemberAuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { PhoneField } from "@/components/common/PhoneInput";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 function normalizeMobile(raw) {
   const s = String(raw || "").replace(/[^\d+]/g, "");
@@ -83,7 +85,7 @@ export default function MemberRegisterPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  const { requestOtp, verifyOtp, isAuthenticated } = useMemberAuth();
+  const { requestOtp, verifyOtp, isAuthenticated, loginWithGoogle } = useMemberAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -258,6 +260,26 @@ export default function MemberRegisterPage() {
     );
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setBusy(true);
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      await loginWithGoogle({
+        email: decoded.email,
+        googleId: decoded.sub,
+        firstName: decoded.given_name,
+        lastName: decoded.family_name,
+        photoUrl: decoded.picture
+      });
+      toast.success(t("Signed up with Google successfully. Jai Jinendra 🙏"));
+      navigate("/member/home", { replace: true });
+    } catch (err) {
+      toast.error(extractErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const sendOtp = async () => {
     const normMobile = normalizeMobile(mobile);
     if (!normMobile) { toast.error(t("Mobile Number is required.")); return; }
@@ -267,6 +289,12 @@ export default function MemberRegisterPage() {
       if (res?.redirectToLogin) {
         toast.info(t("This mobile number is already registered. Please login."));
         navigate("/member/login");
+        return;
+      }
+      if (res?.registrationToken) {
+        setRegistrationToken(res.registrationToken);
+        setStep(1);
+        toast.success(t("Mobile number saved."));
         return;
       }
       setOtpSent(true);
@@ -418,8 +446,8 @@ export default function MemberRegisterPage() {
           {/* Step 0: Mobile OTP Verification */}
           {step === 0 && (
             <div className="space-y-4">
-              <h1 className="text-xl font-black text-slate-900">📱 {t("Contact & Mobile Verification")}</h1>
-              <p className="text-xs text-slate-500">{t("OTP verification is mandatory for all members to prevent duplicates.")}</p>
+              <h1 className="text-xl font-black text-slate-900">📱 {t("Contact Information")}</h1>
+              <p className="text-xs text-slate-500">{t("Enter your mobile number to get started.")}</p>
 
               <div>
                 <Label className="text-xs font-bold text-slate-700">{t("Mobile Number *")}</Label>
@@ -453,6 +481,33 @@ export default function MemberRegisterPage() {
                   </Button>
                 </form>
               )}
+
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200/80" />
+                </div>
+                <div className="relative flex justify-center text-[10px]">
+                  <span className="bg-white px-3 text-slate-400 font-medium uppercase tracking-wider">
+                    or
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-center mb-4">
+                <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => {
+                      toast.error(t("Google Signup Failed"));
+                    }}
+                    useOneTap
+                    shape="pill"
+                    theme="outline"
+                    text="signup_with"
+                  />
+                </GoogleOAuthProvider>
+              </div>
+
             </div>
           )}
 

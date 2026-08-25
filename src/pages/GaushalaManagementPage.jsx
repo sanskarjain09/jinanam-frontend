@@ -22,8 +22,10 @@ import { toast } from "sonner";
 import { ScanPassModal } from "../components/modals/ScanPassModal";
 import CreatePassModal from "../components/modals/CreatePassModal";
 import { useAuth } from "../contexts/AuthContext";
+import { useLanguage } from "../contexts/LanguageContext";
 
 const GaushalaManagementPage = () => {
+  const { t } = useLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get("tab") || "timings";
 
@@ -229,9 +231,9 @@ const TimingsTab = ({ orgId, selectedOrg }) => {
     try {
       setLoading(true);
       await api.put(`/gaushala/${orgId}/timings`, formData);
-      alert("Timings and prices saved successfully!");
+      toast.success(t("Timings and prices saved successfully!"));
     } catch (err) {
-      alert("Error saving: " + extractErrorMessage(err));
+      toast.error(t("Error saving: ") + extractErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -388,18 +390,20 @@ const MenuTab = ({ orgId }) => {
       }
       setIsModalOpen(false);
       fetchMenu();
+      toast.success(t("Menu item saved!"));
     } catch (err) {
-      alert("Error saving menu: " + extractErrorMessage(err));
+      toast.error(t("Error saving menu: ") + extractErrorMessage(err));
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this menu item?")) {
+    if (window.confirm(t("Are you sure you want to delete this menu item?"))) {
       try {
         await api.delete(`/gaushala/${orgId}/menu/${id}`);
         fetchMenu();
+        toast.success(t("Menu item deleted."));
       } catch (err) {
-        alert("Error deleting menu item: " + extractErrorMessage(err));
+        toast.error(t("Error deleting menu item: ") + extractErrorMessage(err));
       }
     }
   };
@@ -554,12 +558,12 @@ const PassesTab = ({ orgId }) => {
 
   
   const handleCancel = async (passId) => {
-    if (!window.confirm("Are you sure you want to cancel this pass?")) return;
+    if (!window.confirm(t("Are you sure you want to cancel this pass?"))) return;
     let toastId;
     try {
-      toastId = toast.loading("Cancelling pass...");
+      toastId = toast.loading(t("Cancelling pass..."));
       await api.patch(`/gaushala/${orgId}/passes/${passId}/cancel`);
-      toast.success("Pass cancelled successfully", { id: toastId });
+      toast.success(t("Pass cancelled successfully"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -570,9 +574,9 @@ const PassesTab = ({ orgId }) => {
   const handleApprove = async (passId) => {
     let toastId;
     try {
-      toastId = toast.loading("Approving pass...");
+      toastId = toast.loading(t("Approving pass..."));
       await api.patch(`/gaushala/${orgId}/passes/${passId}/approve`);
-      toast.success("Pass approved successfully", { id: toastId });
+      toast.success(t("Pass approved successfully"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -583,9 +587,9 @@ const PassesTab = ({ orgId }) => {
   const handlePending = async (passId) => {
     let toastId;
     try {
-      toastId = toast.loading("Moving to pending...");
+      toastId = toast.loading(t("Moving to pending..."));
       await api.patch(`/gaushala/${orgId}/passes/${passId}/pending`);
-      toast.success("Pass marked as pending", { id: toastId });
+      toast.success(t("Pass marked as pending"), { id: toastId });
       fetchPasses();
     } catch (error) {
       if (toastId) toast.dismiss(toastId);
@@ -757,17 +761,17 @@ const ManagersTab = ({ orgId }) => {
   const handleAddManager = async (e) => {
     e.preventDefault();
     if (!mobile || mobile.length < 10) {
-      toast.error("Please enter a valid mobile number.");
+      toast.error(t("Please enter a valid mobile number."));
       return;
     }
     
     try {
       setIsAdding(true);
       const res = await api.post(`/gaushala/${orgId}/managers`, { mobile });
-      toast.success("Manager added successfully!");
+      toast.success(t("Manager added successfully!"));
       if (res.data?.data?.tempPassword) {
         // Show the temporary password for a new user in the real world
-        toast.info(`Generated Password: ${res.data.data.tempPassword}`, { duration: 10000 });
+        toast.info(t(`Generated Password: ${res.data.data.tempPassword}`), { duration: 10000 });
       }
       setMobile("");
       fetchManagers();
@@ -779,10 +783,10 @@ const ManagersTab = ({ orgId }) => {
   };
 
   const handleRemove = async (userId) => {
-    if (!window.confirm("Are you sure you want to remove this manager?")) return;
+    if (!window.confirm(t("Are you sure you want to remove this manager?"))) return;
     try {
       await api.delete(`/gaushala/${orgId}/managers/${userId}`);
-      toast.success("Manager removed successfully.");
+      toast.success(t("Manager removed successfully."));
       fetchManagers();
     } catch (err) {
       toast.error(extractErrorMessage(err));
@@ -870,7 +874,7 @@ const SettingsTab = ({ orgId, selectedOrg, setOrganizations }) => {
     try {
       setLoading(true);
       await api.patch(`/temples/${orgId}`, { gaushalaName });
-      toast.success("Settings saved successfully!");
+      toast.success(t("Settings saved successfully!"));
       setOrganizations(orgs => orgs.map(o => o.id === orgId ? { ...o, gaushalaName } : o));
     } catch (err) {
       toast.error("Error saving settings: " + extractErrorMessage(err));

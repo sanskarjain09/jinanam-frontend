@@ -325,12 +325,12 @@ function CreateFamilyGroupDialog({ open, onClose, onCreated, setAnchorPublicId }
           : alreadyLinkedCount > 0
             ? ` (${created} new, ${alreadyLinkedCount} already existed)`
             : "";
-        toast.success(`Family group ${label} ready with ${memberIds.length} members${suffix}.`);
+        toast.success(t(`Family group ${label} ready with ${memberIds.length} members${suffix}.`));
       }
       if (failed.length > 0) {
         const uniqueReasons = Array.from(new Set(failureMessages));
         toast.error(
-          `${failed.length} link(s) failed. ${uniqueReasons[0] || "Check permissions."}`,
+          t(`${failed.length} link(s) failed. ${uniqueReasons[0] || "Check permissions."}`),
           { duration: 8000 }
         );
       }

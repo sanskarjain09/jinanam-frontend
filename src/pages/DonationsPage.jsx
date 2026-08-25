@@ -169,7 +169,7 @@ export default function DonationsPage() {
     });
 
     if (Math.abs(splitsSum - totalAmountNum) > 0.05) {
-      toast.error(`Category splits sum (₹${splitsSum}) must equal total amount (₹${totalAmountNum}). Click "Split Evenly" to auto-allocate.`);
+      toast.error(t(`Category splits sum (₹${splitsSum}) must equal total amount (₹${totalAmountNum}). Click "Split Evenly" to auto-allocate.`));
       return;
     }
 

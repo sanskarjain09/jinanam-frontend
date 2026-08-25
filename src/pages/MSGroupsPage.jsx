@@ -10,8 +10,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Trash2, Pencil, Users } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function MSGroupsPage() {
+  const { t } = useLanguage();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -59,17 +61,17 @@ export default function MSGroupsPage() {
 
   const handleSave = async () => {
     if (!formData.name) {
-      toast.error("Group Name is required");
+      toast.error(t("Group Name is required"));
       return;
     }
     try {
       setSaving(true);
       if (formData.id) {
         await api.patch(`/monks/groups/${formData.id}`, formData);
-        toast.success("Group updated successfully");
+        toast.success(t("Group updated successfully"));
       } else {
         await api.post("/monks/groups", formData);
-        toast.success("Group created successfully");
+        toast.success(t("Group created successfully"));
       }
       setDialogOpen(false);
       loadData();
@@ -84,7 +86,7 @@ export default function MSGroupsPage() {
     if (!window.confirm("Are you sure you want to delete this group?")) return;
     try {
       await api.delete(`/monks/groups/${id}`);
-      toast.success("Group deleted successfully");
+      toast.success(t("Group deleted successfully"));
       loadData();
     } catch (err) {
       toast.error(extractErrorMessage(err));

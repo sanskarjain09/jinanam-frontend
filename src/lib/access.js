@@ -436,7 +436,8 @@ export function sanitizeGrant(requestedModules, actorCapabilities, actorRole) {
   const rejected = [];
   for (const key of requested) {
     const k = String(key).toUpperCase();
-    if (allowed.has(k)) granted.push(k);
+    const parentKey = k.includes(".") ? k.split(".")[0] : k;
+    if (allowed.has(k) || allowed.has(parentKey)) granted.push(k);
     else rejected.push(k);
   }
   return { granted, rejected };

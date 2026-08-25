@@ -88,7 +88,7 @@ export default function BannersPage() {
     try {
       const validation = await validateImageRatio(form.imageUrl, form.deviceType || "MOBILE");
       if (!validation.valid) {
-        toast.error(validation.msg + " Please crop the image or adjust the target device.");
+        toast.error(t(validation.msg + " Please crop the image or adjust the target device."));
         setSaving(false);
         return;
       }
@@ -132,7 +132,7 @@ export default function BannersPage() {
   const toggleActive = async (row) => {
     try {
       await api.patch(`/banners/${row.id}`, { isActive: !row.isActive });
-      toast.success(`Banner ${row.isActive ? "deactivated" : "activated"}.`);
+      toast.success(t(`Banner ${row.isActive ? "deactivated" : "activated"}.`));
       load();
     } catch (e) {
       toast.error(extractErrorMessage(e));

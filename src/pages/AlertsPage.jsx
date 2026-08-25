@@ -33,7 +33,7 @@ export default function AlertsPage() {
   const { connected } = useSocket("/tracking", {
     "alert:new": (evt) => {
       setRows((prev) => [{ ...evt, createdAt: evt.timestamp || new Date().toISOString() }, ...prev]);
-      toast.warning(`New ${evt.severity || "alert"}: ${evt.message || evt.type}`);
+      toast.warning(t(`New ${evt.severity || "alert"}: ${evt.message || evt.type}`));
     },
     "alert:resolved": (evt) => {
       setRows((prev) => prev.map((r) => r.id === evt.alertId ? { ...r, resolvedAt: new Date().toISOString() } : r));

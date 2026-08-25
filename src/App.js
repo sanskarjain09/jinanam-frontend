@@ -15,10 +15,11 @@ import LandingPage from "@/pages/LandingPage";
 // Naye pages yahan import kiye hain
 import AboutPage from "@/pages/AboutPage";
 import ContactPage from "@/pages/ContactPage";
-import PolicyPage from "@/pages/PolicyPage";
+import PoliciesPage from "@/pages/PoliciesPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import TermsConditionsPage from "@/pages/TermsConditionsPage";
 import DharamshalaManagementPage from "./pages/dharamshala/DharamshalaManagementPage";
 import DharamshalaBookingsPage from "./pages/dharamshala/DharamshalaBookingsPage";
-import GaushalaManagementPage from "./pages/gaushala/GaushalaManagementPage";
 import PathshalaManagementPage from "./pages/pathshala/PathshalaManagementPage";
 
 const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
@@ -158,7 +159,6 @@ function SmartRouteResolver() {
     role.includes("TEMPLE") ||
     role.includes("DHARAMSHALA") ||
     role.includes("BHOJANSHALA") ||
-    role.includes("GAUSHALA") ||
     role.includes("PATHSHALA") ||
     role.includes("MONK") ||
     role.includes("CENTER") ||
@@ -166,7 +166,6 @@ function SmartRouteResolver() {
     role === "TEMPLE_ADMIN" ||
     role === "DHARAMSHALA_ADMIN" ||
     role === "BHOJANSHALA_ADMIN" ||
-    role === "GAUSHALA_ADMIN" ||
     role === "PATHSHALA_ADMIN" ||
     role === "JC_ADMIN" ||
     role === "MONK_ADMIN" ||
@@ -259,9 +258,11 @@ export default function App() {
               {/* Naye pages ke routes yahan add kiye hain */}
               <Route path="/info/about" element={<AboutPage />} />
               <Route path="/info/contact" element={<ContactPage />} />
-              <Route path="/info/policy" element={<PolicyPage />} />
+              <Route path="/info/policies" element={<PoliciesPage />} />
+              <Route path="/info/policies/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/info/policies/terms-conditions" element={<TermsConditionsPage />} />
               
-              <Route path="/info/*" element={<LandingPage />} />
+              <Route path="/info/*" element={<Navigate to="/info" replace />} />
               
               <Route path="/login/admin" element={<LoginPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -273,7 +274,7 @@ export default function App() {
               <Route
                 path="/admin"
                 element={
-                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ORG_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
+                  <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ORG_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "JC_ADMIN", "MONK_ADMIN", "STAFF"]}>
                     <AdminLayout />
                   </ProtectedRoute>
                 }
@@ -347,11 +348,7 @@ export default function App() {
                 <Route path="centre-information" element={<OrgListPage defaultType="JAIN_CENTER" />} />
                 <Route path="dharamshalas" element={<OrgListPage defaultType="DHARAMSHALA" />} />
                 <Route path="dharamshalas/:id" element={<OrgDetailPage />} />
-                
-                <Route path="gaushala-management" element={<GaushalaManagementPage />} />
-                <Route path="gaushala-management/:id" element={<GaushalaManagementPage />} />
-                <Route path="gaushalas" element={<OrgListPage defaultType="GAUSHALA" />} />
-                <Route path="gaushalas/:id" element={<OrgDetailPage />} />
+
 
                 <Route path="pathshala-management" element={<PathshalaManagementPage />} />
                 <Route path="pathshala-management/:id" element={<PathshalaManagementPage />} />

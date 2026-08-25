@@ -85,7 +85,7 @@ function BulkImportDialog({ autoOpen = false, onImported }) {
       const data = res.data?.data;
       setResult(data);
       if (data?.created > 0) {
-        toast.success(`${data.created} member(s) imported successfully.`);
+        toast.success(t(`${data.created} member(s) imported successfully.`));
         onImported?.();
       }
     } catch (e) {
@@ -366,7 +366,7 @@ function RegisterMemberDialog({ onCreated }) {
   };
 
   const verifyField = (field) => {
-    toast.success(`OTP successfully verified on channel ${field.toUpperCase()}!`);
+    toast.success(t(`OTP successfully verified on channel ${field.toUpperCase()}!`));
     if (field === "mobile") setMobileVerified(true);
     if (field === "whatsapp") setWhatsappVerified(true);
     if (field === "email") setEmailVerified(true);
@@ -1362,7 +1362,7 @@ function ExportDialog({ autoOpen = false, members = [], filtersLabel = "" }) {
       a.download = `jinanam-members-${rows.length}-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(`Exported ${rows.length} filtered member${rows.length === 1 ? "" : "s"}.`);
+      toast.success(t(`Exported ${rows.length} filtered member${rows.length === 1 ? "" : "s"}.`));
       setOpen(false);
     } catch {
       toast.success(t("Members exported successfully."));
@@ -1581,7 +1581,7 @@ export default function MembersPage() {
       setMembers((prev) =>
         prev.map((m) => ((m.publicId || m.id) === mId ? { ...m, status: "ACTIVE", isAutoCreated: false } : m))
       );
-      toast.success(`Member "${member.fullName || member.firstName || "Profile"}" activated successfully.`);
+      toast.success(t(`Member "${member.fullName || member.firstName || "Profile"}" activated successfully.`));
     } catch (e) {
       toast.error(extractErrorMessage(e));
     }
@@ -1598,7 +1598,7 @@ export default function MembersPage() {
       setMembers((prev) =>
         prev.map((m) => ((m.publicId || m.id) === mId ? { ...m, status: "INACTIVE" } : m))
       );
-      toast.success(`Member marked Inactive.`);
+      toast.success(t(`Member marked Inactive.`));
     } catch (e) {
       toast.error(extractErrorMessage(e));
     }

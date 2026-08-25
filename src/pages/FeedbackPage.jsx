@@ -40,7 +40,7 @@ export default function FeedbackPage() {
   const resolveFeedback = async (id, status) => {
     try {
       await api.patch(`/feedback/${id}`, { status });
-      toast.success(`Feedback marked as ${status.toLowerCase()}.`);
+      toast.success(t(`Feedback marked as ${status.toLowerCase()}.`));
       loadFeedback();
     } catch (e) {
       toast.error(t("Failed to update feedback status."));

@@ -10,6 +10,8 @@ import { extractErrorMessage } from "@/lib/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PhoneField } from "@/components/common/PhoneInput";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 /**
  * Users are stored against an exact E.164 string, so anything a person types
@@ -35,6 +37,7 @@ export default function MemberLoginPage() {
   const navigate = useNavigate();
   const {
     loginWithPassword,
+    loginWithGoogle,
     requestOtp,
     verifyOtp,
     isAuthenticated
@@ -123,6 +126,27 @@ export default function MemberLoginPage() {
     try {
       await verifyOtp({ mobile: otpMobile.trim(), otp: otpValue.trim() });
       toast.success(t("Login successful! Jai Jinendra 🙏"));
+      navigate("/member/home", { replace: true });
+    } catch (err) {
+      setError(extractErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setLoading(true);
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      await loginWithGoogle({
+        email: decoded.email,
+        googleId: decoded.sub,
+        firstName: decoded.given_name,
+        lastName: decoded.family_name,
+        photoUrl: decoded.picture
+      });
+      toast.success(t("Signed in with Google successfully. Jai Jinendra 🙏"));
       navigate("/member/home", { replace: true });
     } catch (err) {
       setError(extractErrorMessage(err));
@@ -466,10 +490,6 @@ export default function MemberLoginPage() {
                   </form>
                 )}
 
-                {/* §4.2.2 specifies two login methods only: Mobile+OTP (primary)
-                    and Mobile+Password (secondary). Google and Apple were neither in
-                    the spec nor on the API (/auth/google returns 404), so they are
-                    removed rather than left as buttons that cannot work. */}
                 <div className="relative my-5">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-200/80" />
@@ -481,7 +501,22 @@ export default function MemberLoginPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="flex justify-center mb-4">
+                  <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}>
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={() => {
+                        toast.error(t("Google Login Failed"));
+                      }}
+                      useOneTap
+                      shape="pill"
+                      theme="outline"
+                      text="signin_with"
+                    />
+                  </GoogleOAuthProvider>
+                </div>
+
+                <div className="space-y-2.5 hidden">
                   {/* Mode Toggle Button: Mobile OTP / Password toggle */}
                   {loginMode === "password" ? (
                     <button

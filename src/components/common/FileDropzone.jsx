@@ -43,9 +43,9 @@ export function FileDropzone({
         if (url) results.push(url);
       }
       if (onUploaded) onUploaded(multiple ? results : results[0]);
-      toast.success(`Uploaded ${results.length} file(s)`);
+      toast.success(t(`Uploaded ${results.length} file(s)`));
     } catch (e) {
-      toast.error("Upload failed. Check backend `POST " + uploadEndpoint + "`.");
+      toast.error(t("Upload failed. Please try again."));
     } finally {
       setUploading(false);
     }

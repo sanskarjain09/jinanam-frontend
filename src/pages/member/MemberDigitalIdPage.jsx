@@ -63,7 +63,7 @@ export default function MemberDigitalIdPage() {
   const onDownload = useCallback(() => {
     // Grab the SVG rendered by QRCodeSVG and convert to a high-res PNG via canvas
     const svg = qrRef.current?.querySelector("svg");
-    if (!svg) { toast.error("QR not ready"); return; }
+    if (!svg) { toast.error(t("QR not ready")); return; }
 
     const svgData = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });

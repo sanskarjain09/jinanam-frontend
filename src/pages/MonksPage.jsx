@@ -1721,7 +1721,7 @@ function MonkBulkImportDialog({ onImported }) {
       const res = await api.post("/monks/bulk-import/excel", fd, { headers: { "Content-Type": "multipart/form-data" } });
       const data = res.data?.data;
       setResult(data);
-      if (data?.created > 0) { toast.success(`${data.created} monk(s) imported.`); onImported?.(); }
+      if (data?.created > 0) { toast.success(t(`${data.created} monk(s) imported.`)); onImported?.(); }
     } catch (e) { toast.error(extractErrorMessage(e)); }
     finally { setUploading(false); }
   };

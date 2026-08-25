@@ -61,7 +61,7 @@ export default function AdminReportsPage() {
   }, []);
 
   const handleExport = (format) => {
-    toast.success(`Exporting Admin Reports in ${format.toUpperCase()} format...`);
+    toast.success(t(`Exporting Admin Reports in ${format.toUpperCase()} format...`));
   };
 
   const columns = [

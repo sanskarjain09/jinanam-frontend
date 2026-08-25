@@ -353,7 +353,7 @@ export default function BookingsPage() {
         payload.allocatedRoomId = assignedRooms.join(",");
       }
       await api.post(`/bookings/${bookingId}/decision`, payload);
-      toast.success(`Booking request decided: ${decision}`);
+      toast.success(t(`Booking request decided: ${decision}`));
       setDetailBooking(null);
       setReloadKey(k => k + 1);
     } catch (err) {
@@ -369,7 +369,7 @@ export default function BookingsPage() {
         payload.allocatedRoomId = assignedRooms.join(",");
       }
       await api.post(`/bookings/${bookingId}/payment-verification`, payload);
-      toast.success(`Payment verified status: ${decision}`);
+      toast.success(t(`Payment verified status: ${decision}`));
       setDetailBooking(null);
       setReloadKey(k => k + 1);
     } catch (err) {
@@ -444,7 +444,7 @@ export default function BookingsPage() {
       await api.post(`/bookings/${detailBooking.id}/extend-stay`, {
         additionalDays: Number(extendDays),
       });
-      toast.success(`Stay extended by ${extendDays} day(s). Booking dates updated.`);
+      toast.success(t(`Stay extended by ${extendDays} day(s). Booking dates updated.`));
       setExtendOpen(false);
       setDetailBooking(null);
       setReloadKey(k => k + 1);

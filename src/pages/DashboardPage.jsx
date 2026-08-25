@@ -199,6 +199,7 @@ const ORG_TYPES = [
   { key: "JAIN_CENTER", label: "Jain Centers" },
   { key: "STHANAK", label: "Sthanaks" },
   { key: "COMMUNITY_PAGE", label: "Community Pages" },
+  { key: "BHOJANSHALA", label: "Bhojanshalas" },
   { key: "ADMIN", label: "Admins (System & Org)" },
 ];
 
@@ -304,6 +305,9 @@ export default function DashboardPage() {
         let endpoint = "/temples";
         if (selectedType === "DHARAMSHALA") endpoint = "/dharamshalas";
         else if (selectedType === "JAIN_CENTER") endpoint = "/jain-centers";
+        else if (selectedType === "STHANAK") endpoint = "/sthanaks";
+        else if (selectedType === "COMMUNITY_PAGE") endpoint = "/community-pages";
+        else if (selectedType === "BHOJANSHALA") endpoint = "/bhojanshalas";
 
         api.get(endpoint)
           .then((res) => {
@@ -396,11 +400,11 @@ export default function DashboardPage() {
       setData((prev) => ({ ...(prev || {}), statCards: { ...(prev?.statCards || {}), ...(evt.statCards || {}) } }));
     },
     "booking:new": (evt) => {
-      toast.success(`New booking ${evt.publicId || ""} · ${formatCurrency(evt.amount || 0)}`);
+      toast.success(t(`New booking ${evt.publicId || ""} · ${formatCurrency(evt.amount || 0)}`));
       setReloadKey(k => k + 1);
     },
     "donation:new": (evt) => {
-      toast.success(`Donation received: ${formatCurrency(evt.amount || 0)} by ${evt.donorName || "Donor"}`);
+      toast.success(t(`Donation received: ${formatCurrency(evt.amount || 0)} by ${evt.donorName || "Donor"}`));
       setReloadKey(k => k + 1);
     },
   }, { enabled: Boolean(orgId), query: { organizationId: orgId } });
@@ -506,6 +510,18 @@ export default function DashboardPage() {
     return true;
   });
 
+  const getSelectPlaceholder = () => {
+    switch (selectedType) {
+      case "DHARAMSHALA": return t("Select Dharamshala");
+      case "JAIN_CENTER": return t("Select Jain Center");
+      case "STHANAK": return t("Select Sthanak");
+      case "COMMUNITY_PAGE": return t("Select Community Page");
+      case "BHOJANSHALA": return t("Select Bhojanshala");
+      default: return t("Select Temple");
+    }
+  };
+  const dynamicPlaceholder = getSelectPlaceholder();
+
   return (
     <div data-testid="dashboard-page">
       {/* Single inline filter bar — SA only */}
@@ -601,10 +617,10 @@ export default function DashboardPage() {
             disabled={filteredOrgs.length === 0}
           >
             <SelectTrigger className="w-52 h-10 text-xs font-semibold bg-white border border-border">
-              <SelectValue placeholder={orgName || t("Select Temple")} />
+              <SelectValue placeholder={orgName || dynamicPlaceholder} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__none__" className="text-xs font-medium text-slate-400">{t("Select Temple")}</SelectItem>
+              <SelectItem value="__none__" className="text-xs font-medium text-slate-400">{dynamicPlaceholder}</SelectItem>
               {filteredOrgs.map((o) => (
                 <SelectItem key={o.id} value={o.id} className="text-xs font-medium">{o.name}</SelectItem>
               ))}

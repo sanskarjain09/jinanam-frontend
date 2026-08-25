@@ -96,7 +96,7 @@ export default function HomeSectionsPage() {
   const toggleActive = async (row) => {
     try {
       await api.patch(`/home-sections/${row.id}`, { isActive: !row.isActive });
-      toast.success(`Section ${row.isActive ? "deactivated" : "activated"}.`);
+      toast.success(t(`Section ${row.isActive ? "deactivated" : "activated"}.`));
       load();
     } catch (e) {
       toast.error(extractErrorMessage(e));

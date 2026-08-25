@@ -24,13 +24,27 @@ export default function ModuleControllerPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [staffList, setStaffList] = useState([]);
+  const [admins, setAdmins] = useState([]);
+  const [selectedAdminId, setSelectedAdminId] = useState("all");
   
   const [delegateModalOpen, setDelegateModalOpen] = useState(false);
   const [delegateModuleKey, setDelegateModuleKey] = useState(null);
 
   useEffect(() => {
     fetchOrganizations();
-  }, []);
+    if (isSuperAdmin) {
+      fetchAdmins();
+    }
+  }, [isSuperAdmin]);
+
+  const fetchAdmins = async () => {
+    try {
+      const res = await api.get("/auth/admins");
+      setAdmins(res.data?.data || []);
+    } catch (err) {
+      console.error("Failed to load admins", err);
+    }
+  };
 
   const fetchOrganizations = async () => {
     try {
@@ -60,9 +74,7 @@ export default function ModuleControllerPage() {
         setSelectedOrgId(allOrgs[0].id || allOrgs[0]._id);
         let initialModules = allOrgs[0].activeModules;
         if (!initialModules || initialModules.length === 0) {
-          initialModules = PLATFORM_MODULES
-            .filter(m => isSuperAdmin || canDo(m.key, "VIEW"))
-            .map(m => m.key);
+          initialModules = [];
         } else if (initialModules.length === 1 && initialModules[0] === "NONE") {
           initialModules = [];
         }
@@ -82,10 +94,7 @@ export default function ModuleControllerPage() {
     if (org) {
       const initialModules = org.activeModules;
       if (!initialModules || initialModules.length === 0) {
-        setActiveModules(new Set(PLATFORM_MODULES
-          .filter(m => isSuperAdmin || canDo(m.key, "VIEW"))
-          .map(m => m.key)
-        ));
+        setActiveModules(new Set());
       } else if (initialModules.length === 1 && initialModules[0] === "NONE") {
         setActiveModules(new Set());
       } else {
@@ -93,6 +102,27 @@ export default function ModuleControllerPage() {
       }
     }
   };
+
+  const handleAdminChange = (adminId) => {
+    setSelectedAdminId(adminId);
+    const admin = admins.find(a => a.id === adminId);
+    const newFiltered = adminId === "all" ? orgs : orgs.filter(org => {
+      return admin?.userOrganizations?.some(uo => uo.organizationId === (org.id || org._id));
+    });
+    
+    if (newFiltered.length > 0) {
+      handleOrgChange(newFiltered[0].id || newFiltered[0]._id);
+    } else {
+      setSelectedOrgId("");
+      setActiveModules(new Set());
+    }
+  };
+
+  const filteredOrgs = selectedAdminId === "all" ? orgs : orgs.filter(org => {
+    const admin = admins.find(a => a.id === selectedAdminId);
+    if (!admin) return true;
+    return admin.userOrganizations?.some(uo => uo.organizationId === (org.id || org._id));
+  });
 
   const fetchOrgStaff = async (orgId) => {
     try {
@@ -129,7 +159,7 @@ export default function ModuleControllerPage() {
       else if (org?.type === "JAIN_CENTER") endpointPrefix = "jain-centers";
       else if (org?.type === "BHOJANSHALA") endpointPrefix = "bhojanshalas";
       
-      const endpoint = `/${endpointPrefix}/${selectedOrgId}`;
+      const endpoint = `/${endpointPrefix}/${selectedOrgId}/modules`;
       
       await api.patch(endpoint, {
         activeModules: activeModules.size === 0 ? ["NONE"] : Array.from(activeModules)
@@ -145,8 +175,13 @@ export default function ModuleControllerPage() {
         return o;
       }));
       
-      // Notify Sidebar to refresh
-      window.dispatchEvent(new CustomEvent("jinanam_temples_mutated"));
+      // Notify Sidebar to refresh optimistically
+      window.dispatchEvent(new CustomEvent("jinanam_modules_optimistic_update", {
+        detail: {
+          updatedOrgId: selectedOrgId,
+          activeModules: Array.from(activeModules)
+        }
+      }));
     } catch (err) {
       toast.error(extractErrorMessage(err) || t("Failed to update modules"));
     } finally {
@@ -174,7 +209,25 @@ export default function ModuleControllerPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          {orgs.length > 0 && (
+          {isSuperAdmin && admins.length > 0 && (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <Select value={selectedAdminId} onValueChange={handleAdminChange}>
+                <SelectTrigger className="w-full sm:w-[200px] bg-white">
+                  <SelectValue placeholder={t("All Admins")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("All Admins")}</SelectItem>
+                  {admins.map(admin => (
+                    <SelectItem key={admin.id} value={admin.id}>
+                      {admin.firstName} {admin.lastName || ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {filteredOrgs.length > 0 && (
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <Building2 className="w-4 h-4 text-slate-400 hidden sm:block" />
               <Select value={selectedOrgId} onValueChange={handleOrgChange}>
@@ -182,7 +235,7 @@ export default function ModuleControllerPage() {
                   <SelectValue placeholder={t("Select...")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {orgs.map(org => (
+                  {filteredOrgs.map(org => (
                     <SelectItem key={org.id || org._id} value={org.id || org._id}>
                       {org.name}
                     </SelectItem>
@@ -192,7 +245,7 @@ export default function ModuleControllerPage() {
             </div>
           )}
 
-          <Button onClick={handleSave} disabled={saving || orgs.length === 0} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 whitespace-nowrap">
+          <Button onClick={handleSave} disabled={saving || filteredOrgs.length === 0} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 whitespace-nowrap">
             <Save className="w-4 h-4 mr-2" />
             {saving ? t("Saving...") : t("Save Configuration")}
           </Button>
@@ -200,7 +253,7 @@ export default function ModuleControllerPage() {
       </div>
 
       <Card className="p-6 border-slate-200 shadow-sm space-y-6">
-        {orgs.length > 0 ? (
+        {filteredOrgs.length > 0 ? (
           <>
 
             <div className="space-y-4">
@@ -216,6 +269,18 @@ export default function ModuleControllerPage() {
               {/* Note: Physical facilities validation is handled in Sidebar.jsx. Here we just let them toggle what they want. */}
               <div className="grid grid-cols-1 gap-4">
                 {PLATFORM_MODULES.filter(mod => {
+                  // Filter by selected admin if one is selected
+                  if (selectedAdminId !== "all") {
+                    const admin = admins.find(a => a.id === selectedAdminId);
+                    if (admin) {
+                      const isSa = admin.primaryRoleKey === "SUPER_ADMIN" || admin.grantedModules?.includes("*");
+                      if (!isSa && !admin.grantedModules?.includes(mod.key)) {
+                        return false;
+                      }
+                    }
+                  }
+                  
+                  // Filter by current user permissions
                   if (!isSuperAdmin && !canDo(mod.key, "VIEW")) return false;
 
                   return true;

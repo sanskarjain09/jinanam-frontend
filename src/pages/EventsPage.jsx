@@ -259,7 +259,7 @@ export default function EventsPage() {
     setTicketsScanOpen(false);
     try {
       const { data } = await api.post("/tickets/scan", { qrToken: qrText });
-      toast.success(`Checked in: ${data?.data?.publicId || "ticket"}`);
+      toast.success(t(`Checked in: ${data?.data?.publicId || "ticket"}`));
       setTicketsReload((k) => k + 1);
     } catch (e) {
       toast.error(extractErrorMessage(e));
@@ -341,7 +341,7 @@ export default function EventsPage() {
     setSeatingSaving(true);
     try {
       await api.post(`/seating/rows/${newSeats.rowId}/seats`, { count });
-      toast.success(`${count} seats added.`);
+      toast.success(t(`${count} seats added.`));
       setNewSeats({ rowId: "", count: "" });
       loadSeatingMap(seatingEventId);
     } catch (err) { toast.error(extractErrorMessage(err)); }
@@ -352,7 +352,7 @@ export default function EventsPage() {
     try {
       const isLocked = seat.status === "LOCKED";
       await api.post(`/seating/seats/${seat.id}/${isLocked ? "release" : "lock"}`);
-      toast.success(isLocked ? "Seat released" : "Seat locked");
+      toast.success(isLocked ? t("Seat released") : t("Seat locked"));
       loadSeatingMap(seatingEventId);
     } catch (err) { toast.error(extractErrorMessage(err)); }
   };
@@ -559,14 +559,14 @@ export default function EventsPage() {
         await api.post(`/events/${detailEvent.id}/gallery`, {
           images: [{ url: newImageUrl, caption: albumName, albumName }]
         });
-        toast.success(`Gallery image added to album "${albumName}".`);
+        toast.success(t(`Gallery image added to album "${albumName}".`));
         setNewImageUrl("");
       }
       if (newVideoUrl) {
         await api.post(`/events/${detailEvent.id}/video-links`, {
           links: [{ url: newVideoUrl, title: albumName, albumName }]
         });
-        toast.success(`Video link added to album "${albumName}".`);
+        toast.success(t(`Video link added to album "${albumName}".`));
         setNewVideoUrl("");
       }
       setReloadKey(k => k + 1);
@@ -678,7 +678,7 @@ export default function EventsPage() {
         link.href = URL.createObjectURL(blob);
         link.download = `${reportType}_report.${format}`;
         link.click();
-        toast.success(`Exported ${reportType} report as ${format.toUpperCase()}.`);
+        toast.success(t(`Exported ${reportType} report as ${format.toUpperCase()}.`));
         return;
       }
       const blob = await res.blob();
@@ -686,9 +686,9 @@ export default function EventsPage() {
       a.href = URL.createObjectURL(blob);
       a.download = `${reportType}_report.${format}`;
       a.click();
-      toast.success(`Downloaded ${reportType} report.`);
+      toast.success(t(`Downloaded ${reportType} report.`));
     } catch {
-      toast.success(`Exported ${reportType} report as ${format.toUpperCase()}.`);
+      toast.success(t(`Exported ${reportType} report as ${format.toUpperCase()}.`));
     }
   };
 

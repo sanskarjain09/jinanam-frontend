@@ -99,11 +99,11 @@ export default function CountersPage() {
     if (!confirm(`Are you sure you want to reset all user counts for "${name}" to zero?`)) return;
     try {
       await api.post(`/counters/types/${id}/reset`);
-      toast.success(`Reset counts for ${name}`);
+      toast.success(t(`Reset counts for ${name}`));
       setReload(k => k + 1);
     } catch (e) {
 
-      toast.error(e?.response?.data?.message || "Failed to reset counter.");
+      toast.error(extractErrorMessage(e) || t("Failed to reset counter."));
     }
   };
 
@@ -111,10 +111,10 @@ export default function CountersPage() {
     if (!confirm(`Are you sure you want to delete the counter type "${name}"?`)) return;
     try {
       await api.delete(`/counters/types/${id}`);
-      toast.success(`Deleted ${name}`);
+      toast.success(t(`Deleted ${name}`));
       setReload(k => k + 1);
     } catch (e) {
-      toast.error(e?.response?.data?.message || "Failed to delete counter type.");
+      toast.error(extractErrorMessage(e) || t("Failed to delete counter type."));
     }
   };
 

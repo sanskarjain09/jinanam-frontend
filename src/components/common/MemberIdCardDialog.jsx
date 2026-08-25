@@ -356,7 +356,7 @@ function EditPanel({ member, onSave, onCancel }) {
   };
 
   const verifyField = (field) => {
-    toast.success(`OTP successfully verified on channel ${field.toUpperCase()}!`);
+    toast.success(t(`OTP successfully verified on channel ${field.toUpperCase()}!`));
     if (field === "mobile") setMobileVerified(true);
     if (field === "whatsapp") setWhatsappVerified(true);
     if (field === "email") setEmailVerified(true);
@@ -716,7 +716,7 @@ function EditPanel({ member, onSave, onCancel }) {
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center border-b pb-1">
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">{t("Current Address")}</h3>
-                  <Button variant="ghost" size="xs" type="button" className="text-orange-500 font-semibold text-[10px]" onClick={() => toast.success(t("Latitude/Longitude coordinates detected dynamically."))}>
+                  <Button variant="ghost" size="xs" type="button" className="text-orange-500 font-semibold text-[10px]" onClick={() => toast.success(t("Location auto-detected."))}>
                     {t("Auto Detect GPS Location")}
                   </Button>
                 </div>

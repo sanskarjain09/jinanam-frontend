@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { api, extractErrorMessage } from "@/lib/api";
-// import { extractErrorMessage } from "@/utils/error"; // removed
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ScanPassModal({ isOpen, onClose, organizationId, onScanSuccess }) {
+  const { t } = useLanguage();
   const open = isOpen;
   const orgId = organizationId;
   const [mode, setMode] = useState("camera"); // 'camera' or 'manual'
@@ -18,19 +19,19 @@ export function ScanPassModal({ isOpen, onClose, organizationId, onScanSuccess }
   const handleScan = async (code) => {
     if (!code || isSubmitting) return;
     setIsSubmitting(true);
-    let toastId = toast.loading("Verifying Pass...");
+    let toastId = toast.loading(t("Verifying Pass..."));
     try {
       const res = await api.post(`/bhojanshala/${orgId}/passes/${code}/scan`, {
         deviceInfo: { method: mode }
       });
-      toast.success("Pass Scanned Successfully!", { id: toastId });
+      toast.success(t("Pass Scanned Successfully!"), { id: toastId });
       onScanSuccess(res.data?.data);
       if (qrRef.current && qrRef.current.isScanning) {
         try { await qrRef.current.stop(); qrRef.current.clear(); } catch {}
       }
       onClose();
     } catch (e) {
-      toast.error(extractErrorMessage(e) || "Invalid or already scanned pass", { id: toastId });
+      toast.error(extractErrorMessage(e) || t("Invalid or already scanned pass"), { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -54,7 +55,7 @@ export function ScanPassModal({ isOpen, onClose, organizationId, onScanSuccess }
           );
         } catch (e) {
           console.error("Camera start error", e);
-          toast.error("Could not start camera. Using manual mode.");
+          toast.error(t("Could not start camera. Using manual mode."));
           setMode("manual");
         }
       };

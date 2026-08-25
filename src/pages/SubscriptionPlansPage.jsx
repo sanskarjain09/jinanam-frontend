@@ -111,7 +111,7 @@ export default function SubscriptionPlansPage() {
   const toggleActive = async (row) => {
     try {
       await api.patch(`/subscription-plans/${row.id}`, { isActive: !row.isActive });
-      toast.success(`Plan ${row.isActive ? "deactivated" : "activated"}.`);
+      toast.success(t(`Plan ${row.isActive ? "deactivated" : "activated"}.`));
       load();
     } catch (e) {
       toast.error(extractErrorMessage(e));

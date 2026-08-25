@@ -145,7 +145,7 @@ function GalleryTab({ images, apiPrefix, orgId, onRefresh, canEdit }) {
       }).then(async (r) => {
         if (!r.ok) throw new Error(await r.text());
       });
-      toast.success(`${files.length} image(s) uploaded.`);
+      toast.success(t(`${files.length} image(s) uploaded.`));
       setBulkOpen(false);
       setFiles([]);
       onRefresh();
@@ -2472,7 +2472,6 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
   const isDharamshala = entityLabel === "Dharamshala";
   const isBhojanshala = entityLabel === "Bhojanshala";
   const isPathshala = entityLabel === "Pathshala";
-  const isGaushala = entityLabel === "Gaushala";
   const isSthanak = entityLabel === "Sthanak";
   const isJainCenter = entityLabel === "Jain Center";
 
@@ -2494,7 +2493,7 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
     { id: "location", label: t("📍 Location & Maps") },
     { id: "facilities", label: t("🏢 Facilities & Units") },
     { id: "finance", label: t("💰 Banking Details") }
-  ] : isPathshala || isGaushala ? [
+  ] : isPathshala ? [
     { id: "basic", label: t("📝 Basic & Trust") },
     { id: "location", label: t("📍 Location & Maps") },
     { id: "facilities", label: t("🏢 Facilities & Units") },
@@ -2536,11 +2535,11 @@ function EditOrgDialog({ open, onClose, org, apiPrefix, onSaved, entityLabel }) 
                 {tab === "basic" && (
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">
-                      {isDharamshala ? t("🏨 Basic Dharamshala Info") : isBhojanshala ? t("🥗 Basic Bhojanshala Info") : isPathshala ? t("📖 Basic Pathshala Info") : isGaushala ? t("🐄 Basic Gaushala Info") : t("🛕 Basic & Trust Details")}
+                      {isDharamshala ? t("🏨 Basic Dharamshala Info") : isBhojanshala ? t("🥗 Basic Bhojanshala Info") : isPathshala ? t("📖 Basic Pathshala Info") : t("🛕 Basic & Trust Details")}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : isPathshala ? t("Pathshala Name *") : isGaushala ? t("Gaushala Name *") : t("Name *"), "name")}</div>
-                      {(isBhojanshala || isPathshala || isGaushala || isSthanak) && (
+                      <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : isPathshala ? t("Pathshala Name *") : t("Name *"), "name")}</div>
+                      {(isBhojanshala || isPathshala || isSthanak) && (
                         <div className="col-span-2">
                           <OrgSelect
                             label={t("Parent Temple / Organization (Optional)")}
@@ -3745,7 +3744,6 @@ const ORG_ROUTE_CONFIG = [
   { match: /(^|\/)(sthanaks?|stanaks?|sthanak-management)(\/|$)/, entityLabel: "Sthanak", apiPrefix: "/sthanaks", basePath: "/admin/sthanaks" },
   { match: /(^|\/)(bhojanshalas?|bhojanshala-management)(\/|$)/, entityLabel: "Bhojanshala", apiPrefix: "/bhojanshalas", basePath: "/admin/bhojanshalas" },
   { match: /(^|\/)(pathshalas?|pathshala-management)(\/|$)/, entityLabel: "Pathshala", apiPrefix: "/pathshalas", basePath: "/admin/pathshalas" },
-  { match: /(^|\/)(gaushalas?|gaushala-management)(\/|$)/, entityLabel: "Gaushala", apiPrefix: "/gaushalas", basePath: "/admin/gaushalas" },
 ];
 
 /**
@@ -4077,7 +4075,6 @@ export default function OrgDetailPage(props) {
    * set. Loading the master list lets the view resolve the id to a name.
    */
   const [bhagwanNameById, setBhagwanNameById] = useState({});
-  const [allGaushalas, setAllGaushalas] = useState([]);
   const [allPathshalas, setAllPathshalas] = useState([]);
   
   useEffect(() => {
@@ -4088,10 +4085,6 @@ export default function OrgDetailPage(props) {
           Object.fromEntries((Array.isArray(list) ? list : []).map((b) => [b.id, b.name]))
         );
       })
-      .catch(() => { });
-
-    apiClient.get("/gaushalas", { params: { pageSize: 1000 } })
-      .then((r) => setAllGaushalas(r.data?.data?.items || r.data?.data || []))
       .catch(() => { });
 
     apiClient.get("/pathshalas", { params: { pageSize: 1000 } })
@@ -4217,7 +4210,6 @@ export default function OrgDetailPage(props) {
   const isDharamshala = entityLabel === "Dharamshala" || org?.type === "DHARAMSHALA";
   const isBhojanshala = entityLabel === "Bhojanshala" || org?.type === "BHOJANSHALA";
   const isPathshala = entityLabel === "Pathshala" || org?.type === "PATHSHALA";
-  const isGaushala = entityLabel === "Gaushala" || org?.type === "GAUSHALA";
   const isSthanak = entityLabel === "Sthanak" || org?.type === "STHANAK";
   const isJainCenter = entityLabel === "Jain Center" || org?.type === "JAIN_CENTER";
   const accentClass = isTemple ? "from-orange-500 to-amber-400" : isDharamshala ? "from-teal-600 to-emerald-500" : isBhojanshala ? "from-amber-600 to-orange-500" : "from-blue-600 to-indigo-500";
@@ -4294,7 +4286,7 @@ export default function OrgDetailPage(props) {
                   ) : (
                     <>
                       <div className="flex flex-col items-center gap-1 absolute inset-0 m-auto h-full w-full justify-center pointer-events-none">
-                        {isBhojanshala ? <Coffee className="h-8 w-8 text-slate-400" /> : isDharamshala ? <Home className="h-8 w-8 text-slate-400" /> : isPathshala ? <BookOpen className="h-8 w-8 text-slate-400" /> : isGaushala ? <Heart className="h-8 w-8 text-slate-400" /> : <Landmark className="h-8 w-8 text-slate-400" />}
+                        {isBhojanshala ? <Coffee className="h-8 w-8 text-slate-400" /> : isDharamshala ? <Home className="h-8 w-8 text-slate-400" /> : isPathshala ? <BookOpen className="h-8 w-8 text-slate-400" /> : <Landmark className="h-8 w-8 text-slate-400" />}
                         {!org.logoUrl && canEdit && <span className="text-[9px] text-slate-400">{t("Upload logo")}</span>}
                       </div>
                       {org.logoUrl && (
@@ -4368,7 +4360,7 @@ export default function OrgDetailPage(props) {
               ? ["info", "accommodations", "food", "trustees", "volunteers", "rules", "bank", "gallery", "reviews", "timeline", "events"]
               : isBhojanshala
               ? ["info", "bhojanshala", "contacts", "reviews"]
-              : isGaushala || isPathshala
+              : isPathshala
               ? ["info", "gallery", "trustees", "contacts", "volunteers", "rules", "reviews", "timeline", "events"]
               : ["info", "gallery", "trustees", "contacts", "notices", "announcements", "reviews", "dhaja", "chaturmas", "bhojanshala", "event_hall", "timeline", "events"]
             ).map((tab) => {

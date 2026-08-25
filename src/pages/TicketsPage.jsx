@@ -47,7 +47,7 @@ export default function TicketsPage({ defaultTab }) {
     setScanOpen(false);
     try {
       const { data } = await api.post("/tickets/scan", { qrToken: qrText });
-      toast.success(`Checked in: ${data?.data?.publicId || "ticket"}`);
+      toast.success(t(`Checked in: ${data?.data?.publicId || "ticket"}`));
       setReload((k) => k + 1);
     } catch (e) {
       toast.error(extractErrorMessage(e));

@@ -40,7 +40,7 @@ export default function IncorrectReportsPage() {
   const verifyReport = async (id, status) => {
     try {
       await api.patch(`/incorrect-reports/${id}`, { status });
-      toast.success(`Flagged information marked as ${status.toLowerCase()}.`);
+      toast.success(t(`Flagged information marked as ${status.toLowerCase()}.`));
       loadReports();
     } catch (e) {
       toast.error(t("Failed to update report status."));

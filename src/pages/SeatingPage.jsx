@@ -79,7 +79,7 @@ export default function SeatingPage() {
     setSaving(true);
     try {
       await api.post(`/seating/rows/${newSeats.rowId}/seats`, { count });
-      toast.success(`${count} seats added.`);
+      toast.success(t(`${count} seats added.`));
       setNewSeats({ rowId: "", count: "" });
       loadMap(eventId);
     } catch (err) { toast.error(extractErrorMessage(err)); }

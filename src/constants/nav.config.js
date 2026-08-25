@@ -67,7 +67,7 @@ export const TONE_HEX = {
 export const FLAT_NAV = [
   { id: "sep-overview", isSeparator: true, label: "Overview" },
   { id: "sa-dashboard", label: "SA Dashboard", icon: LayoutDashboard, route: "/admin/sa-dashboard", roles: ["SUPER_ADMIN"] },
-  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
 
   { id: "sep-orgs", isSeparator: true, label: "Organizations" },
   { id: "flat-temples", label: "Temple", icon: Landmark, route: "/admin/temples" },
@@ -129,14 +129,14 @@ export const FLAT_NAV = [
   { id: "flat-reports", label: "Reports", icon: TrendingUp, route: "/admin/reports" },
   { id: "flat-support", label: "Support", icon: LifeBuoy, route: "/admin/support-tickets" },
   { id: "flat-activity-logs", label: "Activity Logs", icon: ClipboardList, route: "/admin/audit-logs", roles: ["SUPER_ADMIN"] },
-  { id: "flat-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", icon: Settings, route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "flat-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", icon: Settings, route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
   { id: "flat-settings", label: "Settings", icon: Settings, route: "/admin/settings" }
 ];
 
 // --- NESTED STRUCTURE (Option 2) ---
 export const NESTED_NAV = [
   { id: "sa-dashboard", label: "SA Dashboard", icon: LayoutDashboard, route: "/admin/sa-dashboard", roles: ["SUPER_ADMIN"] },
-  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+  { id: "a-dashboard", label: "A Dashboard", icon: LayoutDashboard, route: "/admin/a-dashboard", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "MONK_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
 
   {
     id: "folder-members",
@@ -257,6 +257,7 @@ export const NESTED_NAV = [
       { id: "bh-mgt", label: "Bhojanshala Management", route: "/admin/bhojanshala-management" }
     ]
   },
+  /*
   {
     id: "folder-pathshala",
     module: "PATHSHALAS",
@@ -269,18 +270,8 @@ export const NESTED_NAV = [
       { id: "pt-mgt", label: "Pathshala Management", route: "/admin/pathshala-management" }
     ]
   },
-  {
-    id: "folder-gaushala",
-    module: "GAUSHALAS",
-    label: "Gaushala",
-    icon: Sigma,
-    featureFlag: false,
-    roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"],
-    children: [
-      { id: "go-list", label: "Gaushalas (Orgs)", route: "/admin/gaushalas" },
-      { id: "go-mgt", label: "Gaushala Management", route: "/admin/gaushala-management" }
-    ]
-  },
+  */
+
   {
     id: "folder-st",
     module: "STHANAKS",
@@ -671,11 +662,11 @@ export const NESTED_NAV = [
     icon: Settings,
     children: [
       { id: "se-admin", label: "Admin Management", route: "/admin/admins", roles: ["SUPER_ADMIN"] },
-      { id: "se-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
+      { id: "se-module-controller", module: "MODULE_CONTROLLER", label: "Module Controller", route: "/admin/module-controller", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF"] },
       { id: "se-roles", label: "Roles & Permissions", route: "/admin/coming-soon?module=Roles & Permissions", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-master", label: "Master Data", route: "/admin/master-data", roles: ["SUPER_ADMIN"] },
       { id: "se-notif", label: "Notification Center", route: "/admin/notifications/preferences", featureFlag: false },
-      { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "GAUSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
+      { id: "se-platform", label: "Settings", route: "/admin/settings", roles: ["SUPER_ADMIN", "TEMPLE_ADMIN", "DHARAMSHALA_ADMIN", "JAIN_CENTER_ADMIN", "BHOJANSHALA_ADMIN", "PATHSHALA_ADMIN", "ORG_ADMIN", "SUB_ADMIN", "STAFF", "MONK_ADMIN"] },
       { id: "se-payment", label: "Payment Settings", route: "/admin/coming-soon?module=Payment Settings", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-security", label: "Security", route: "/admin/settings?tab=security", roles: ["SUPER_ADMIN"], featureFlag: false },
       { id: "se-sub", label: "Subscription", route: "/admin/subscription-plans", roles: ["SUPER_ADMIN"] }

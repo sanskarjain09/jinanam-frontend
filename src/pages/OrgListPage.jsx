@@ -139,7 +139,7 @@ export default function OrgListPage(props) {
     moduleKey = moduleKey || "STHANAKS";
     testId = testId || "sthanak-list-page";
   } else if (typeKey === "BHOJANSHALA") {
-    endpoint = endpoint || "/bhojanshala";
+    endpoint = endpoint || "/bhojanshalas";
     entity = entity || "bhojanshala";
     label = label || "Bhojanshala";
     pluralLabel = pluralLabel || "Bhojanshalas";
@@ -275,7 +275,7 @@ export default function OrgListPage(props) {
     }
   };
 
-  const ORG_TYPE = { temple: "TEMPLE", dharamshala: "DHARAMSHALA", "jain-center": "JAIN_CENTER", bhojanshala: "BHOJANSHALA" };
+  const ORG_TYPE = { temple: "TEMPLE", dharamshala: "DHARAMSHALA", "jain-center": "JAIN_CENTER", bhojanshala: "BHOJANSHALA", sthanak: "STHANAK" };
 
   const create = async () => {
     setCreating(true);
@@ -327,7 +327,7 @@ export default function OrgListPage(props) {
         muritCount: payload.muritCount ? Number(payload.muritCount) : undefined,
         establishedDate: payload.establishedDate ? new Date(payload.establishedDate).toISOString() : undefined
       });
-      toast.success(`${label} created successfully.`);
+      toast.success(t(`${label} created successfully.`));
       setOpen(false);
       setForm({
         name: "", shortName: "", trustName: "", trustRegistrationNumber: "", history: "",
@@ -616,7 +616,6 @@ export default function OrgListPage(props) {
   const isDharamshala = entity === "dharamshala";
   const isBhojanshala = entity === "bhojanshala";
   const isPathshala = entity === "pathshala";
-  const isGaushala = entity === "gaushala";
   const isSthanak = entity === "sthanak";
   const isJainCenter = entity === "jain-center";
 
@@ -639,12 +638,25 @@ export default function OrgListPage(props) {
     { id: "food", label: t("🥗 Bhojanshala Details") },
     { id: "contacts", label: t("👥 Contacts") },
     { id: "bank", label: t("💰 Banking Details") },
-  ] : [
-    { id: "basic", label: t("🛕 Basic & Trust") },
+  ] : isSthanak ? [
+    { id: "basic", label: t("🏢 Basic & Trust") },
     { id: "location", label: t("📍 Location & Maps") },
     { id: "facilities", label: t("🏢 Facilities & Units") },
     { id: "timings", label: t("🕒 Slot Timings") },
-    { id: "finance", label: t("💰 Banking Details") }
+    { id: "contacts", label: t("👥 Contacts") },
+    { id: "bank", label: t("💰 Banking Details") },
+  ] : isPathshala ? [
+    { id: "basic", label: t("📚 Basic Info") },
+    { id: "location", label: t("📍 Location") },
+    { id: "facilities", label: t("✨ Facilities") },
+    { id: "contacts", label: t("👥 Contacts") },
+  ] : [
+    { id: "basic", label: t("🛕 Basic & Trust") },
+    { id: "location", label: t("📍 Location & Maps") },
+    { id: "facilities", label: t("✨ Facilities & Units") },
+    { id: "timings", label: t("🕒 Slot Timings") },
+    { id: "contacts", label: t("👥 Contacts") },
+    { id: "bank", label: t("💰 Banking Details") },
   ];
 
   return (
@@ -687,15 +699,20 @@ export default function OrgListPage(props) {
                       
                       {tab === "basic" && (
                         <div className="space-y-3">
+                          {!isDharamshala && !isBhojanshala && !isSthanak && (
+                            <div className="space-y-4">
+                              <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">{t("🛕 Temple Basic Details")}</h3>
+                            </div>
+                          )}
                           <h3 className="text-sm font-bold text-slate-800 border-b pb-1.5">
-                            {isDharamshala ? t("🏨 Create New Dharamshala") : `🛕 Create New ${label}`}
+                            {isDharamshala ? t("🏨 Create New Dharamshala") : isBhojanshala ? t("🥗 Create New Bhojanshala") : isSthanak ? t("🏢 Create New Sthanak") : `🛕 Create New ${label}`}
                           </h3>
                           <div className="grid grid-cols-2 gap-3">
                             <div className="col-span-2">{field(isDharamshala ? t("Dharamshala Name *") : isBhojanshala ? t("Bhojanshala Name *") : t("Name *"), "name")}</div>
-                            {(isBhojanshala || isPathshala || isGaushala || isSthanak) && (
+                            {(isBhojanshala || isPathshala || isSthanak) && (
                               <div className="col-span-2">
                                 <OrgSelect
-                                  label={t("Parent Temple / Organization (Optional)")}
+                                  label={t("Parent Organization / Trust (Optional)")}
                                   value={form.parentOrganizationId}
                                   onChange={(val) => setForm({ ...form, parentOrganizationId: val })}
                                 />
@@ -1215,7 +1232,7 @@ export default function OrgListPage(props) {
                             </div>
                           )}
 
-                          {!isDharamshala && !isBhojanshala && (
+                          {!isBhojanshala && (
                             /* Bhojanshala (Food) Unit */
                             <div className="border p-4 rounded-xl bg-white space-y-3">
                               {toggle("Bhojanshala (Food) Available", "hasBhojanshala")}

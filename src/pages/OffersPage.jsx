@@ -283,7 +283,7 @@ export default function OffersPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`Exporting Offers report as ${format.toUpperCase()}...`);
+    toast.success(t(`Exporting Offers report as ${format.toUpperCase()}...`));
   };
 
   const handleDeleteOffer = async (offerId) => {

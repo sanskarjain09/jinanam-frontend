@@ -66,6 +66,10 @@ export default function AdminsPage() {
   const [editingOrgs, setEditingOrgs] = useState([]);
   const [savingScope, setSavingScope] = useState(false);
 
+  // Profile editing modal state
+  const [editingProfileAdmin, setEditingProfileAdmin] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
   // Tab permissions editing modal state.
   // `selectedAdminTabs` now holds the grant-map shape (module → actions[]),
   // e.g. { MEMBERS: ["VIEW","EDIT"], "MEMBERS.JAIN": ["VIEW"] }. Legacy admin
@@ -106,13 +110,12 @@ export default function AdminsPage() {
     setLoadingOrgs(true);
     
     try {
-      const [tRes, dRes, jRes, bRes, pRes, gRes, sRes] = await Promise.allSettled([
+      const [tRes, dRes, jRes, bRes, pRes, sRes] = await Promise.allSettled([
         api.get("/temples"),
         api.get("/dharamshalas"),
         api.get("/jain-centers"),
         api.get("/bhojanshalas"),
         api.get("/pathshalas"),
-        api.get("/gaushalas"),
         api.get("/sthanaks")
       ]);
       const allOrgs = [];
@@ -121,7 +124,6 @@ export default function AdminsPage() {
       if (jRes.status === "fulfilled") allOrgs.push(...(jRes.value.data?.data || []));
       if (bRes.status === "fulfilled") allOrgs.push(...(bRes.value.data?.data || []));
       if (pRes.status === "fulfilled") allOrgs.push(...(pRes.value.data?.data || []));
-      if (gRes.status === "fulfilled") allOrgs.push(...(gRes.value.data?.data || []));
       if (sRes?.status === "fulfilled") allOrgs.push(...(sRes.value.data?.data || []));
       
       // Deduplicate by ID
@@ -131,7 +133,7 @@ export default function AdminsPage() {
       });
       setOrganizations(Array.from(uniqueOrgsMap.values()));
     } catch (e) {
-      toast.error(`Failed to load organizations`);
+      toast.error(t(`Failed to load organizations`));
     } finally {
       setLoadingOrgs(false);
     }
@@ -157,11 +159,11 @@ export default function AdminsPage() {
 
     try {
       const grantedTabs = form.grantedModules || form.modules || {};
-      // Backend + sidebar expect `modules` as a flat array of TOP-LEVEL module
-      // keys (no dot-notation sub-tabs). `grantedModules` keeps the full
-      // grant map (with per-module actions and sub-tabs) for granular checks.
+      // Backend + sidebar expect `modules` as a flat array of module keys.
+      // We now include sub-module dotted keys so the backend can save them too.
+      // `grantedModules` keeps the full grant map for granular checks.
       // `permissions` carries the per-action payload for RolePermission writes.
-      const flatModuleKeys = grantMapToKeys(grantedTabs).filter((k) => !k.includes("."));
+      const flatModuleKeys = grantMapToKeys(grantedTabs);
       const payload = {
         ...form,
         modules: flatModuleKeys,
@@ -225,7 +227,7 @@ export default function AdminsPage() {
     try {
       await api.patch(`/auth/admins/${admin.id}/status`, { active: nextStatus === "ACTIVE" });
       setAdmins((prev) => prev.map((a) => (a.id === admin.id ? { ...a, status: nextStatus } : a)));
-      toast.success(`Admin status updated to ${nextStatus}.`);
+      toast.success(t(`Admin status updated to ${nextStatus}.`));
     } catch (e) {
       toast.error(extractErrorMessage(e));
     }
@@ -256,6 +258,47 @@ export default function AdminsPage() {
       toast.error(extractErrorMessage(e));
     } finally {
       setSavingScope(false);
+    }
+  };
+
+  // Save updated Profile Details
+  const saveProfileEdits = async () => {
+    if (!editingProfileAdmin) return;
+    
+    if (!editingProfileAdmin.firstName || !editingProfileAdmin.mobile) {
+      toast.error(t("First Name and Mobile Number are required."));
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      const payload = {
+        firstName: editingProfileAdmin.firstName,
+        lastName: editingProfileAdmin.lastName,
+        mobile: editingProfileAdmin.mobile,
+      };
+      if (editingProfileAdmin.password) {
+        payload.password = editingProfileAdmin.password;
+      }
+      
+      const res = await api.patch(`/auth/admins/${editingProfileAdmin.id}`, payload);
+      
+      toast.success(t("Admin details updated successfully."));
+      
+      if (editingProfileAdmin.password) {
+        setCredentialPopup({
+          username: payload.mobile,
+          password: payload.password,
+          role: editingProfileAdmin.primaryRoleKey,
+        });
+      }
+      
+      setEditingProfileAdmin(null);
+      fetchAdmins();
+    } catch (e) {
+      toast.error(extractErrorMessage(e));
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -313,9 +356,9 @@ export default function AdminsPage() {
 
       // 2. Update /auth/admins/:id/modules
       // `permissions` carries the actions per module (the granular Read /
-      // Read+Write choice from the picker). `modules` stays a flat list of
-      // granted top-level module keys for legacy consumers.
-      const flatModuleKeys = grantMapToKeys(selectedAdminTabs).filter((k) => !k.includes("."));
+      // Read+Write choice from the picker). `modules` is an array of
+      // granted module and sub-module keys.
+      const flatModuleKeys = grantMapToKeys(selectedAdminTabs);
       await api.put(`/auth/admins/${targetId}/modules`, {
         modules: flatModuleKeys,
         grantedModules: selectedAdminTabs,
@@ -327,7 +370,7 @@ export default function AdminsPage() {
 
       // 4. (Removed redundant /settings/users/:userId/permission-overrides call, which is already handled entirely on the backend by updateAdminModules)
 
-      toast.success(`Tab access permissions updated for ${tabAccessAdmin.firstName || "Administrator"}.`);
+      toast.success(t(`Tab access permissions updated for ${tabAccessAdmin.firstName || "Administrator"}.`));
       setTabAccessAdmin(null);
       fetchAdmins();
     } catch (e) {
@@ -499,9 +542,18 @@ export default function AdminsPage() {
                                 onClick={() => openScopeEditor(admin)}
                                 title={t("Edit organization scope")}
                               >
-                                <Edit className="h-3.5 w-3.5 text-slate-600" />
+                                <Building className="h-3.5 w-3.5 text-slate-600" />
                               </Button>
                             )}
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-8 px-2"
+                              onClick={() => setEditingProfileAdmin({ ...admin, password: "" })}
+                              title={t("Edit admin details")}
+                            >
+                              <Edit className="h-3.5 w-3.5 text-slate-600" />
+                            </Button>
                             <Button 
                               size="sm" 
                               variant="outline" 
@@ -837,6 +889,93 @@ export default function AdminsPage() {
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >
                 {savingScope ? t("Saving...") : t("Save Scope Changes")}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* 3. Edit Profile Modal */}
+      {editingProfileAdmin && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <Card className="p-6 w-full max-w-lg bg-white border border-border shadow-lg relative space-y-4">
+            <button 
+              onClick={() => setEditingProfileAdmin(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <div className="flex items-center gap-2.5 text-slate-800">
+              <Edit className="h-5 w-5 text-orange-500" />
+              <h3 className="text-lg font-semibold font-heading">
+                {t("Edit Admin Profile")}
+              </h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700">{t("First Name")}</Label>
+                  <Input 
+                    required
+                    value={editingProfileAdmin.firstName || ""} 
+                    onChange={(e) => setEditingProfileAdmin({ ...editingProfileAdmin, firstName: e.target.value })} 
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-slate-700">{t("Last Name")}</Label>
+                  <Input 
+                    value={editingProfileAdmin.lastName || ""} 
+                    onChange={(e) => setEditingProfileAdmin({ ...editingProfileAdmin, lastName: e.target.value })} 
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-xs font-semibold text-slate-700">{t("Mobile Number *")}</Label>
+                <PhoneField
+                  value={editingProfileAdmin.mobile || ""}
+                  onChange={(v) => setEditingProfileAdmin({ ...editingProfileAdmin, mobile: v })}
+                  className="mt-1"
+                />
+              </div>
+
+              <div className="pt-2 border-t mt-4">
+                <Label className="text-xs font-semibold text-slate-700">{t("New Password (Optional)")}</Label>
+                <Input 
+                  type="text"
+                  value={editingProfileAdmin.password || ""} 
+                  onChange={(e) => setEditingProfileAdmin({ ...editingProfileAdmin, password: e.target.value })} 
+                  placeholder={t("Leave empty to keep current password")} 
+                  className="mt-1"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  {t("If you set a new password here, you will be prompted to share it via WhatsApp/Email.")}
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2 text-[10px] h-7"
+                  onClick={() => {
+                    const temp = Math.random().toString(36).slice(-8);
+                    setEditingProfileAdmin({ ...editingProfileAdmin, password: temp });
+                  }}
+                >
+                  <KeyRound className="h-3 w-3 mr-1" /> {t("Generate Random Password")}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2 border-t">
+              <Button variant="outline" onClick={() => setEditingProfileAdmin(null)}>{t("Cancel")}</Button>
+              <Button 
+                onClick={saveProfileEdits} 
+                disabled={savingProfile} 
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                {savingProfile ? t("Saving...") : t("Save Changes")}
               </Button>
             </div>
           </Card>

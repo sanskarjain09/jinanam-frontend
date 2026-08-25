@@ -121,14 +121,14 @@ export default function VisitorsPage() {
       "visitor:in": (evt) => {
         if (!evt || (orgId && evt.orgId && evt.orgId !== orgId)) return;
         setLive((prev) => [{ ...evt, checkInAt: evt.timestamp || new Date().toISOString() }, ...prev]);
-        toast.success(`Visitor checked in: ${evt.name || evt.visitorName || evt.publicId || "guest"}`);
+        toast.success(t(`Visitor checked in: ${evt.name || evt.visitorName || evt.publicId || "guest"}`));
         setReload((k) => k + 1);
       },
       "visitor:out": (evt) => {
         if (!evt || (orgId && evt.orgId && evt.orgId !== orgId)) return;
         setLive((prev) => prev.filter((r) => r.id !== evt.entryId));
         setReload((k) => k + 1);
-        toast.info(`Visitor checked out: ${evt.name || evt.visitorName || "guest"}`);
+        toast.info(t(`Visitor checked out: ${evt.name || evt.visitorName || "guest"}`));
       },
     },
     { query: { organizationId: orgId }, enabled: Boolean(orgId) }
@@ -228,7 +228,7 @@ export default function VisitorsPage() {
         const results = res.data?.data || [];
         const successCount = results.filter(r => r.success).length;
         
-        toast.success(`Successfully synchronized ${successCount} offline visitor entries!`, { id: "sync" });
+        toast.success(t(`Successfully synchronized ${successCount} offline visitor entries!`), { id: "sync" });
         setOfflineQueue([]);
         setReload(k => k + 1);
       } catch (err) {
@@ -246,9 +246,9 @@ export default function VisitorsPage() {
     try {
       const res = await api.get(`/visitors/member-lookup`, { params: { q: memberPublicId } });
       setLookupResult(res.data?.data || null);
-      toast.success("Member found: " + (res.data?.data?.fullName || ""));
+      toast.success(t("Member found: ") + (res.data?.data?.fullName || ""));
     } catch (e) {
-      toast.error(extractErrorMessage(e) || "No active member found for this ID");
+      toast.error(extractErrorMessage(e) || t("No active member found for this ID"));
     } finally {
       setLookupLoading(false);
     }

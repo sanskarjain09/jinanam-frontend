@@ -29,6 +29,7 @@ import { PermissionGate } from "@/components/common/PermissionGate";
 const GEO_VISIBILITY_OPTIONS = ["Global", "Country", "State", "District", "City", "Area"];
 const OPERATES_FROM_OPTIONS = ["Online", "Office", "Temple", "Community"];
 const ORG_TYPES = [
+  "Temple", "Dharamshala", "Bhojanshala", "Sthanak",
   "Youth Organization", "Jain Trust", "Jain Social Group", "Jain Business Network",
   "NGO", "Educational Institution", "Religious Organization", "Women's Group",
   "Professional Network", "Charity Organization", "Cultural Organization",
@@ -336,7 +337,7 @@ export default function CommunityPagesPage() {
     const a = document.createElement("a");
     a.href = url; a.download = `${detailPage?.name || "members"}_${memberTab.toLowerCase()}.csv`;
     a.click(); URL.revokeObjectURL(url);
-    toast.success(`Exported ${rows.length} members as CSV.`);
+    toast.success(t(`Exported ${rows.length} members as CSV.`));
   };
 
   // ─── Tab switch handler ───────────────────────────────────────────────────
@@ -428,7 +429,7 @@ export default function CommunityPagesPage() {
   const toggleSuspendStatus = async (targetStatus) => {
     try {
       await api.patch(`/community-pages/${detailPage.id}/subscription`, { status: targetStatus });
-      toast.success(`Page status updated to ${targetStatus}.`);
+      toast.success(t(`Page status updated to ${targetStatus}.`));
       openDetail(detailPage);
       setReloadKey((k) => k + 1);
     } catch (err) { toast.error(extractErrorMessage(err)); }

@@ -176,7 +176,7 @@ export default function MemberProfilePage() {
           <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-xs">
             <h2 className="text-base font-bold text-slate-900 mb-4">{t("Personal Information")}</h2>
             <SectionRow icon={User} label={t("Full Name")} value={displayName} />
-            <SectionRow icon={Phone} label={t("Mobile Number")} value={(profile || user)?.mobile} iconBg="bg-green-100 text-green-600" />
+            <SectionRow icon={Phone} label={t("Mobile Number")} value={((profile || user)?.mobile?.startsWith("google:") || (profile || user)?.mobile?.startsWith("email:")) ? "—" : (profile || user)?.mobile} iconBg="bg-green-100 text-green-600" />
             <SectionRow icon={Mail} label={t("Email Address")} value={(profile || user)?.email} iconBg="bg-sky-100 text-sky-600" />
             <LanguagePicker />
             <SectionRow icon={MapPin} label={t("City / State")} value={[profile?.currentAddress?.city || user?.city, profile?.currentAddress?.state || user?.state].filter(Boolean).join(", ")} iconBg="bg-amber-100 text-amber-600" />

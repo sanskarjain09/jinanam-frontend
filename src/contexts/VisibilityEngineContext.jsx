@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { distanceToEntity } from "@/lib/geo";
 import { memberClient } from "@/lib/memberClient";
 import { useMemberAuth } from "@/contexts/MemberAuthContext";
@@ -163,6 +164,7 @@ const VisibilityEngineContext = createContext(null);
 
 export function VisibilityEngineProvider({ children }) {
   const { user } = useMemberAuth();
+  const { t } = useLanguage();
 
   // Default User Preferences & Location
   const [userPreferences, setUserPreferences] = useState(() => {
@@ -294,7 +296,7 @@ export function VisibilityEngineProvider({ children }) {
         // No unfollow route exists for this entity type. Flipping local
         // state to "not following" here would desync it from what the
         // server still has on record — worse than just explaining why.
-        toast.info("Unfollowing isn't available for this yet.");
+        toast.info(t("Unfollowing isn't available for this yet."));
         return;
       }
       try {
@@ -307,7 +309,8 @@ export function VisibilityEngineProvider({ children }) {
           setFollowedIds((prev) => prev.filter((id) => id !== entityId));
           dropMeta(entityId);
         } else {
-          toast.error("Couldn't unfollow — please try again.");
+          console.error("Failed to unfollow:", err);
+          toast.error(t("Couldn't unfollow — please try again."));
         }
       }
       return;
@@ -323,7 +326,8 @@ export function VisibilityEngineProvider({ children }) {
         setFollowedIds((prev) => [...prev, entityId]);
         setFollowedMeta((prev) => ({ ...prev, [entityId]: meta }));
       } else {
-        toast.error("Couldn't follow — please try again.");
+        console.error("Failed to follow:", err);
+        toast.error(t("Couldn't follow — please try again."));
       }
     }
   };
@@ -341,19 +345,19 @@ export function VisibilityEngineProvider({ children }) {
   const setFollowTier = (entityId, tier) => {
     const meta = followedMeta[entityId];
     if (!meta?.category) {
-      toast.error("Can't set a tier — this entity's type isn't known.");
+      toast.error(t("Can't set a tier — this entity's type isn't known."));
       return;
     }
     const caps = TIER_CAPS[meta.category];
     if (!caps || !(tier in caps)) {
-      toast.error("Tiering isn't available for this entity type yet.");
+      toast.error(t("Tiering isn't available for this entity type yet."));
       return;
     }
     const usedByOthers = Object.entries(followedMeta).filter(
       ([id, m]) => id !== entityId && m.category === meta.category && m.tier === tier
     ).length;
     if (usedByOthers >= caps[tier]) {
-      toast.error(`You can mark at most ${caps[tier]} ${meta.category}${caps[tier] > 1 ? "s" : ""} as ${tier}.`);
+      toast.error(t(`You can mark at most ${caps[tier]} ${meta.category}${caps[tier] > 1 ? "s" : ""} as ${tier}.`));
       return;
     }
     setFollowedMeta((prev) => ({ ...prev, [entityId]: { ...prev[entityId], tier } }));
