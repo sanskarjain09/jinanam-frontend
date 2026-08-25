@@ -335,7 +335,12 @@ export default function MemberEditProfilePage() {
       }
       navigate(-1);
     } catch (error) {
-      toast.error(error.message || t("Failed to update profile"));
+      let msg = error.response?.data?.error?.message || error.response?.data?.message || error.message || t("Failed to update profile");
+      if (error.response?.data?.error?.fieldErrors) {
+        const fields = Object.values(error.response.data.error.fieldErrors).flat();
+        if (fields.length > 0) msg += ": " + fields[0];
+      }
+      toast.error(msg);
     } finally {
       setBusy(false);
     }

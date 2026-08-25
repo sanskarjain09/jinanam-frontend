@@ -53,13 +53,17 @@ export default function ChangePasswordModal({ open, onClose, apiClient }) {
       } else {
         // Set new password
         await apiClient.post("/auth/password/set", {
-          newPassword: form.newPassword,
+          password: form.newPassword,
         });
       }
       toast.success(t("Password updated successfully."));
       handleClose();
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || t("Failed to update password");
+      let msg = err.response?.data?.error?.message || err.response?.data?.message || err.message || t("Failed to update password");
+      if (err.response?.data?.error?.fieldErrors) {
+        const fields = Object.values(err.response.data.error.fieldErrors).flat();
+        if (fields.length > 0) msg += ": " + fields[0];
+      }
       toast.error(msg);
     } finally {
       setLoading(false);
