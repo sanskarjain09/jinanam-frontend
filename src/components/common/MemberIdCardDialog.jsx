@@ -377,8 +377,15 @@ function EditPanel({ member, onSave, onCancel }) {
     if (!form.maritalStatus) { toast.error(t("Marital Status is required.")); return; }
     setSaving(true);
     try {
+      const nv = form.nativeVillage || {};
+      const nativeVillageString =
+        [nv.village, nv.landmark, nv.district, nv.city, nv.state, nv.pincode]
+          .filter(Boolean)
+          .join(", ") || undefined;
+
       const payload = {
         ...form,
+        nativeVillage: nativeVillageString,
         dob: form.dob ? new Date(form.dob).toISOString() : undefined,
         fullName: [form.firstName, form.middleName, form.surname].filter(Boolean).join(" "),
         profileCompletionPct: calculateCompletion()
